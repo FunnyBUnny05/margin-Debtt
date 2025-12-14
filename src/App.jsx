@@ -28,6 +28,13 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetch('./margin_data.json')
@@ -91,15 +98,15 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: '#0d0d1a', color: '#e0e0e0', padding: '20px', minHeight: '100vh', fontFamily: 'system-ui' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-          <div>
+    <div style={{ background: '#0d0d1a', color: '#e0e0e0', padding: isMobile ? '16px' : '20px', minHeight: '100vh', fontFamily: 'system-ui' }}>
+      <div style={{ maxWidth: isMobile ? '720px' : '1200px', width: '100%', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'flex-start', marginBottom: '8px', gap: isMobile ? '12px' : '0', flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left' }}>
+          <div style={{ width: '100%' }}>
             <h1 style={{ fontSize: '24px', marginBottom: '8px', color: '#fff' }}>FINRA Margin Debt Tracker</h1>
             <p style={{ color: '#888', marginBottom: '4px' }}>Securities margin account debit balances ($ billions)</p>
           </div>
           {metadata && (
-            <div style={{ textAlign: 'right', fontSize: '12px', color: '#666' }}>
+            <div style={{ textAlign: isMobile ? 'center' : 'right', fontSize: '12px', color: '#666', width: '100%' }}>
               <div>Last updated: {formatLastUpdated(metadata.lastUpdated)}</div>
               <a href={metadata.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
                 Source: {metadata.source}
@@ -107,8 +114,8 @@ export default function App() {
             </div>
           )}
         </div>
-        
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
           {['2y', '5y', '10y', 'all'].map(range => (
             <button
               key={range}
@@ -122,12 +129,12 @@ export default function App() {
                 cursor: 'pointer'
               }}
             >
-              {range.toUpperCase()}
-            </button>
+            {range.toUpperCase()}
+          </button>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
           <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
             <div style={{ color: '#888', fontSize: '12px' }}>Current ({currentDebt.date})</div>
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>${currentDebt.margin_debt_bn.toFixed(0)}B</div>
@@ -228,14 +235,14 @@ export default function App() {
               />
             </ComposedChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '12px', color: '#888' }}>
+          <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '12px', color: '#888', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start', textAlign: isMobile ? 'center' : 'left' }}>
             <span>🔴 +30% threshold (euphoria zone)</span>
             <span>🟢 -30% threshold (capitulation zone)</span>
           </div>
         </div>
 
-        <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888' }}>
-          <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction. 
+        <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
+          <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
           Data auto-updates weekly from FINRA.
         </div>
