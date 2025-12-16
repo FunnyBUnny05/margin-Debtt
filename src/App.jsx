@@ -8,12 +8,19 @@ const formatDate = (date) => {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const formatValue = (p) => {
+      if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
+      if (p.dataKey === 'close') return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(p.value ?? 0);
+      if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
+      return p.value;
+    };
+
     return (
       <div style={{ background: '#1a1a2e', border: '1px solid #444', padding: '10px', borderRadius: '4px' }}>
         <p style={{ color: '#fff', margin: 0, fontWeight: 'bold' }}>{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color, margin: '4px 0 0 0' }}>
-            {p.name}: {p.name === 'YoY Growth' ? `${p.value?.toFixed(1)}%` : `$${p.value?.toFixed(0)}B`}
+            {p.name}: {formatValue(p)}
           </p>
         ))}
       </div>
@@ -73,7 +80,9 @@ const formatDuration = (months) => {
 
 export default function App() {
   const [rawData, setRawData] = useState([]);
+  const [sp500Data, setSp500Data] = useState([]);
   const [metadata, setMetadata] = useState(null);
+  const [spMeta, setSpMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
@@ -86,17 +95,27 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetch('./margin_data.json')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load data');
-        return res.json();
-      })
-      .then(json => {
-        setRawData(json.data);
+    Promise.all([
+      fetch('./margin_data.json'),
+      fetch('./sp500_data.json')
+    ])
+      .then(async ([marginRes, spRes]) => {
+        if (!marginRes.ok) throw new Error('Failed to load margin data');
+        if (!spRes.ok) throw new Error('Failed to load S&P 500 data');
+        const [marginJson, spJson] = await Promise.all([marginRes.json(), spRes.json()]);
+
+        setRawData(marginJson.data);
         setMetadata({
-          lastUpdated: json.last_updated,
-          source: json.source,
-          sourceUrl: json.source_url
+          lastUpdated: marginJson.last_updated,
+          source: marginJson.source,
+          sourceUrl: marginJson.source_url
+        });
+
+        setSp500Data(spJson.data);
+        setSpMeta({
+          lastUpdated: spJson.last_updated,
+          source: spJson.source,
+          sourceUrl: spJson.source_url
         });
         setLoading(false);
       })
@@ -136,6 +155,13 @@ export default function App() {
   const filteredData = timeRange === 'all' ? data :
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
+
+  const spData = sp500Data;
+  const filteredSpData = timeRange === 'all' ? spData :
+    timeRange === '10y' ? spData.slice(-120) :
+    timeRange === '5y' ? spData.slice(-60) : spData.slice(-24);
+
+  const spInterval = Math.floor((filteredSpData.length || 1) / 8);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
@@ -219,44 +245,49 @@ export default function App() {
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Margin Debt Level</h2>
+          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>S&P 500 Index (proxy)</h2>
+          {spMeta && (
+            <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
+              <span>Derived locally for fast loads. Source: {spMeta.source}</span>
+            </div>
+          )}
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={filteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart data={filteredSpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="debtGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <linearGradient id="spGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#666" 
+              <XAxis
+                dataKey="date"
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
-                interval={Math.floor(filteredData.length / 8)}
+                interval={spInterval}
               />
-              <YAxis 
-                stroke="#666" 
+              <YAxis
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => `$${v}B`}
+                tickFormatter={(v) => `${v}`}
                 domain={['auto', 'auto']}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey="margin_debt_bn" 
-                stroke="#3b82f6" 
-                fill="url(#debtGradient)"
-                name="Margin Debt"
+              <Area
+                type="monotone"
+                dataKey="close"
+                stroke="#22d3ee"
+                fill="url(#spGradient)"
+                name="S&P 500 (proxy)"
               />
-              <Line 
-                type="monotone" 
-                dataKey="margin_debt_bn" 
-                stroke="#3b82f6" 
+              <Line
+                type="monotone"
+                dataKey="close"
+                stroke="#22d3ee"
                 strokeWidth={2}
                 dot={false}
-                name="Margin Debt"
+                name="S&P 500 (proxy)"
               />
             </ComposedChart>
           </ResponsiveContainer>
