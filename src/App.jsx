@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 
 const formatDate = (date) => {
+  if (!date) return '';
   const [year, month] = date.split('-');
   return `${month}/${year.slice(2)}`;
 };
@@ -34,6 +35,91 @@ const monthsBetweenInclusive = (startDate, endDate) => {
   const [endYear, endMonth] = endDate.split('-').map(Number);
   return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 };
+
+const normalizeMonthKey = (dateStr) => {
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed)) {
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  const parts = dateStr.split(/[-/]/);
+  if (parts.length >= 2) {
+    const [p1, p2] = parts;
+    // Handle formats like YYYY-MM or MM/YYYY
+    if (p1.length === 4) {
+      return `${p1}-${p2.padStart(2, '0')}`;
+    }
+    if (p2.length === 4) {
+      return `${p2}-${p1.padStart(2, '0')}`;
+    }
+  }
+
+  return dateStr;
+};
+
+const fetchWithTimeout = (url, timeoutMs = 12000) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const promise = fetch(url, { signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+  return { promise, controller };
+};
+
+const parseFinraMarginCsv = (text) => {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const dateIdx = headers.findIndex(h => h.includes('date'));
+  const debtIdx = headers.findIndex(h => h.includes('debit'));
+
+  if (dateIdx === -1 || debtIdx === -1) return [];
+
+  const rows = lines.slice(1)
+    .map(line => line.split(',').map(cell => cell.trim()))
+    .filter(parts => parts.length > Math.max(dateIdx, debtIdx));
+
+  const parsed = rows.map(parts => ({
+    date: normalizeMonthKey(parts[dateIdx]),
+    margin_debt: Number(parts[debtIdx].replace(/,/g, ''))
+  }))
+    .filter(d => d.date && !Number.isNaN(d.margin_debt))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return parsed.map((entry, idx) => {
+    const yearBack = idx >= 12 ? parsed[idx - 12].margin_debt : null;
+    const yoy_growth = yearBack ? ((entry.margin_debt / yearBack - 1) * 100) : null;
+    return { ...entry, yoy_growth: yoy_growth !== null ? Number(yoy_growth.toFixed(1)) : null };
+  });
+};
+
+const parseStooqCsv = (text) => {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const rows = lines.slice(1)
+    .map(line => line.split(',').map(cell => cell.trim()))
+    .filter(parts => parts.length >= 5)
+    .map(parts => ({
+      date: parts[0],
+      close: Number(parts[4])
+    }))
+    .filter(d => !Number.isNaN(d.close));
+
+  const monthly = new Map();
+  rows.forEach(row => {
+    const key = normalizeMonthKey(row.date);
+    const current = monthly.get(key);
+    if (!current || new Date(row.date) > new Date(current.original)) {
+      monthly.set(key, { date: key, close: row.close, original: row.date });
+    }
+  });
+
+  return Array.from(monthly.values())
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(({ date, close }) => ({ date, close }));
+};
+
 
 const computeThresholdDurations = (data, threshold) => {
   const series = data.filter(d => d.yoy_growth !== null);
@@ -85,6 +171,8 @@ export default function App() {
   const [spMeta, setSpMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [marginError, setMarginError] = useState(null);
+  const [spError, setSpError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
@@ -95,42 +183,107 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      fetch('./margin_data.json'),
-      fetch('./sp500_data.json')
-    ])
-      .then(async ([marginRes, spRes]) => {
-        if (!marginRes.ok) throw new Error('Failed to load margin data');
-        if (!spRes.ok) throw new Error('Failed to load S&P 500 data');
-        const [marginJson, spJson] = await Promise.all([marginRes.json(), spRes.json()]);
+    let cancelled = false;
 
-        setRawData(marginJson.data);
-        setMetadata({
-          lastUpdated: marginJson.last_updated,
-          source: marginJson.source,
-          sourceUrl: marginJson.source_url
-        });
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      setMarginError(null);
+      setSpError(null);
 
-        setSp500Data(spJson.data);
-        setSpMeta({
-          lastUpdated: spJson.last_updated,
-          source: spJson.source,
-          sourceUrl: spJson.source_url
-        });
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+      let marginController;
+      let spController;
+
+      const loadMarginLive = async () => {
+        const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
+        marginController = controller;
+
+        let res;
+        try {
+          res = await promise;
+        } catch (err) {
+          if (err.name === 'AbortError') throw new Error('FINRA margin request timed out');
+          throw err;
+        }
+
+        if (!res.ok) throw new Error('Failed to reach FINRA margin CSV');
+        const text = await res.text();
+        const parsed = parseFinraMarginCsv(text);
+        if (!parsed.length) throw new Error('No margin data parsed from FINRA');
+        if (!cancelled) {
+          setRawData(parsed);
+          setMetadata({
+            lastUpdated: parsed[parsed.length - 1]?.date,
+            source: 'FINRA Margin Statistics (live)',
+            sourceUrl: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics'
+          });
+        }
+      };
+
+      const loadSpLive = async () => {
+        const { promise, controller } = fetchWithTimeout('https://stooq.pl/q/d/l/?s=spx&i=d');
+        spController = controller;
+
+        let res;
+        try {
+          res = await promise;
+        } catch (err) {
+          if (err.name === 'AbortError') throw new Error('Stooq S&P 500 request timed out');
+          throw err;
+        }
+
+        if (!res.ok) throw new Error('Failed to reach Stooq S&P 500 CSV');
+        const text = await res.text();
+        const parsed = parseStooqCsv(text);
+        if (!parsed.length) throw new Error('No S&P 500 data parsed from Stooq');
+        if (!cancelled) {
+          setSp500Data(parsed);
+          setSpMeta({
+            lastUpdated: parsed[parsed.length - 1]?.date,
+            source: 'Stooq (^spx) daily (live)',
+            sourceUrl: 'https://stooq.pl/'
+          });
+        }
+      };
+
+      try {
+        const [marginResult, spResult] = await Promise.allSettled([loadMarginLive(), loadSpLive()]);
+
+        if (cancelled) return;
+
+        if (marginResult.status === 'rejected') {
+          setMarginError(marginResult.reason?.message || 'Unable to load margin data');
+        }
+
+        if (spResult.status === 'rejected') {
+          setSpError(spResult.reason?.message || 'Unable to load S&P 500 data');
+        }
+
+        if (marginResult.status === 'rejected' && spResult.status === 'rejected') {
+          setError('Unable to load FINRA or S&P 500 data right now. Please try again later.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+      marginController?.abort();
+      spController?.abort();
+    };
   }, []);
 
   if (loading) {
     return (
       <div style={{ background: '#0d0d1a', color: '#e0e0e0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading FINRA Data...</div>
-          <div style={{ color: '#888' }}>Fetching margin statistics</div>
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading live data...</div>
+          <div style={{ color: '#888' }}>Fetching FINRA margin stats and S&P 500 prices</div>
         </div>
       </div>
     );
@@ -142,6 +295,17 @@ export default function App() {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>Error Loading Data</div>
           <div>{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!rawData.length) {
+    return (
+      <div style={{ background: '#0d0d1a', color: '#ef4444', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Unable to load margin data</div>
+          <div>{marginError || 'No FINRA data available right now.'}</div>
         </div>
       </div>
     );
@@ -178,6 +342,7 @@ export default function App() {
   }));
   
   const formatLastUpdated = (iso) => {
+    if (!iso) return 'N/A';
     const d = new Date(iso);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -245,10 +410,15 @@ export default function App() {
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>S&P 500 Index (proxy)</h2>
+          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>S&P 500 Index</h2>
           {spMeta && (
             <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
-              <span>Derived locally for fast loads. Source: {spMeta.source}</span>
+              <span>Source: <a href={spMeta.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{spMeta.source}</a></span>
+            </div>
+          )}
+          {spError && (
+            <div style={{ background: '#3b1f1f', color: '#fca5a5', padding: '8px 10px', borderRadius: '6px', marginBottom: '10px', border: '1px solid #7f1d1d' }}>
+              Live S&P 500 data is unavailable right now ({spError}). The chart will populate automatically once the feed responds again.
             </div>
           )}
           <ResponsiveContainer width="100%" height={300}>
@@ -279,7 +449,7 @@ export default function App() {
                 dataKey="close"
                 stroke="#22d3ee"
                 fill="url(#spGradient)"
-                name="S&P 500 (proxy)"
+                name="S&P 500"
               />
               <Line
                 type="monotone"
@@ -287,7 +457,7 @@ export default function App() {
                 stroke="#22d3ee"
                 strokeWidth={2}
                 dot={false}
-                name="S&P 500 (proxy)"
+                name="S&P 500"
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -356,7 +526,7 @@ export default function App() {
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
           <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
-          Data auto-updates weekly from FINRA.
+          Margin debt and S&P 500 series update live from FINRA and Stooq (daily) on each page load.
         </div>
       </div>
     </div>
