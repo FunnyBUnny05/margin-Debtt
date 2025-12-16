@@ -8,12 +8,19 @@ const formatDate = (date) => {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const formatValue = (p) => {
+      if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
+      if (p.dataKey === 'close') return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(p.value ?? 0);
+      if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
+      return p.value;
+    };
+
     return (
       <div style={{ background: '#1a1a2e', border: '1px solid #444', padding: '10px', borderRadius: '4px' }}>
         <p style={{ color: '#fff', margin: 0, fontWeight: 'bold' }}>{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color, margin: '4px 0 0 0' }}>
-            {p.name}: {p.name === 'YoY Growth' ? `${p.value?.toFixed(1)}%` : `$${p.value?.toFixed(0)}B`}
+            {p.name}: {formatValue(p)}
           </p>
         ))}
       </div>
@@ -22,9 +29,60 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const monthsBetweenInclusive = (startDate, endDate) => {
+  const [startYear, startMonth] = startDate.split('-').map(Number);
+  const [endYear, endMonth] = endDate.split('-').map(Number);
+  return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+};
+
+const computeThresholdDurations = (data, threshold) => {
+  const series = data.filter(d => d.yoy_growth !== null);
+  if (series.length === 0) return { above: 0, below: 0 };
+
+  let currentAbove = series[0].yoy_growth >= threshold;
+  let streakStart = series[0];
+  const aboveDurations = [];
+  const belowDurations = [];
+
+  for (let i = 1; i < series.length; i++) {
+    const isAbove = series[i].yoy_growth >= threshold;
+    if (isAbove !== currentAbove) {
+      const duration = monthsBetweenInclusive(streakStart.date, series[i - 1].date);
+      (currentAbove ? aboveDurations : belowDurations).push(duration);
+      streakStart = series[i];
+      currentAbove = isAbove;
+    }
+  }
+
+  const finalDuration = monthsBetweenInclusive(streakStart.date, series[series.length - 1].date);
+  (currentAbove ? aboveDurations : belowDurations).push(finalDuration);
+
+  const avg = arr => (arr.length ? arr.reduce((sum, value) => sum + value, 0) / arr.length : 0);
+
+  return {
+    above: avg(aboveDurations),
+    below: avg(belowDurations)
+  };
+};
+
+const formatDuration = (months) => {
+  if (!months) return 'N/A';
+  const years = Math.floor(months / 12);
+  const remainingMonths = Math.round(months % 12);
+
+  if (years > 0) {
+    if (remainingMonths === 0) return `${years} yr${years > 1 ? 's' : ''}`;
+    return `${years} yr${years > 1 ? 's' : ''} ${remainingMonths} mo`;
+  }
+
+  return `${months.toFixed(1)} mo`;
+};
+
 export default function App() {
   const [rawData, setRawData] = useState([]);
+  const [sp500Data, setSp500Data] = useState([]);
   const [metadata, setMetadata] = useState(null);
+  const [spMeta, setSpMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
@@ -37,17 +95,27 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetch('./margin_data.json')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load data');
-        return res.json();
-      })
-      .then(json => {
-        setRawData(json.data);
+    Promise.all([
+      fetch('./margin_data.json'),
+      fetch('./sp500_data.json')
+    ])
+      .then(async ([marginRes, spRes]) => {
+        if (!marginRes.ok) throw new Error('Failed to load margin data');
+        if (!spRes.ok) throw new Error('Failed to load S&P 500 data');
+        const [marginJson, spJson] = await Promise.all([marginRes.json(), spRes.json()]);
+
+        setRawData(marginJson.data);
         setMetadata({
-          lastUpdated: json.last_updated,
-          source: json.source,
-          sourceUrl: json.source_url
+          lastUpdated: marginJson.last_updated,
+          source: marginJson.source,
+          sourceUrl: marginJson.source_url
+        });
+
+        setSp500Data(spJson.data);
+        setSpMeta({
+          lastUpdated: spJson.last_updated,
+          source: spJson.source,
+          sourceUrl: spJson.source_url
         });
         setLoading(false);
       })
@@ -84,13 +152,30 @@ export default function App() {
     margin_debt_bn: d.margin_debt / 1000
   }));
 
-  const filteredData = timeRange === 'all' ? data : 
+  const filteredData = timeRange === 'all' ? data :
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
+
+  const spData = sp500Data;
+  const filteredSpData = timeRange === 'all' ? spData :
+    timeRange === '10y' ? spData.slice(-120) :
+    timeRange === '5y' ? spData.slice(-60) : spData.slice(-24);
+
+  const spInterval = Math.floor((filteredSpData.length || 1) / 8);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
   const peak2000 = data.find(d => d.date === '2000-03') || data[0];
+  const yoyData = data.filter(d => d.yoy_growth !== null);
+
+  const thresholdSummaries = [
+    { value: 30, label: '+30% threshold', color: '#ef4444' },
+    { value: 0, label: '0% threshold', color: '#888' },
+    { value: -30, label: '-30% threshold', color: '#22c55e' }
+  ].map(threshold => ({
+    ...threshold,
+    durations: computeThresholdDurations(yoyData, threshold.value)
+  }));
   
   const formatLastUpdated = (iso) => {
     const d = new Date(iso);
@@ -160,44 +245,49 @@ export default function App() {
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Margin Debt Level</h2>
+          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>S&P 500 Index (proxy)</h2>
+          {spMeta && (
+            <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
+              <span>Derived locally for fast loads. Source: {spMeta.source}</span>
+            </div>
+          )}
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={filteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart data={filteredSpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="debtGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <linearGradient id="spGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#666" 
+              <XAxis
+                dataKey="date"
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
-                interval={Math.floor(filteredData.length / 8)}
+                interval={spInterval}
               />
-              <YAxis 
-                stroke="#666" 
+              <YAxis
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => `$${v}B`}
+                tickFormatter={(v) => `${v}`}
                 domain={['auto', 'auto']}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey="margin_debt_bn" 
-                stroke="#3b82f6" 
-                fill="url(#debtGradient)"
-                name="Margin Debt"
+              <Area
+                type="monotone"
+                dataKey="close"
+                stroke="#22d3ee"
+                fill="url(#spGradient)"
+                name="S&P 500 (proxy)"
               />
-              <Line 
-                type="monotone" 
-                dataKey="margin_debt_bn" 
-                stroke="#3b82f6" 
+              <Line
+                type="monotone"
+                dataKey="close"
+                stroke="#22d3ee"
                 strokeWidth={2}
                 dot={false}
-                name="Margin Debt"
+                name="S&P 500 (proxy)"
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -239,6 +329,28 @@ export default function App() {
             <span>🔴 +30% threshold (euphoria zone)</span>
             <span>🟢 -30% threshold (capitulation zone)</span>
           </div>
+        </div>
+
+        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
+          <h3 style={{ color: '#fff', fontSize: '15px', marginBottom: '12px' }}>Average time spent relative to thresholds</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+            {thresholdSummaries.map(threshold => (
+              <div key={threshold.value} style={{ background: '#131323', borderRadius: '8px', padding: '12px', border: `1px solid ${threshold.color}33` }}>
+                <div style={{ color: threshold.color, fontWeight: '600', marginBottom: '8px' }}>{threshold.label}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px' }}>
+                  <span>Above:</span>
+                  <span>{formatDuration(threshold.durations.above)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px', marginTop: '6px' }}>
+                  <span>Below:</span>
+                  <span>{formatDuration(threshold.durations.below)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ color: '#888', fontSize: '12px', marginTop: '10px', textAlign: isMobile ? 'center' : 'left' }}>
+            Durations are averaged across all streaks since YoY data begins. One month is assumed between observations.
+          </p>
         </div>
 
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
