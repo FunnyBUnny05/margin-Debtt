@@ -22,6 +22,55 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const monthsBetweenInclusive = (startDate, endDate) => {
+  const [startYear, startMonth] = startDate.split('-').map(Number);
+  const [endYear, endMonth] = endDate.split('-').map(Number);
+  return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+};
+
+const computeThresholdDurations = (data, threshold) => {
+  const series = data.filter(d => d.yoy_growth !== null);
+  if (series.length === 0) return { above: 0, below: 0 };
+
+  let currentAbove = series[0].yoy_growth >= threshold;
+  let streakStart = series[0];
+  const aboveDurations = [];
+  const belowDurations = [];
+
+  for (let i = 1; i < series.length; i++) {
+    const isAbove = series[i].yoy_growth >= threshold;
+    if (isAbove !== currentAbove) {
+      const duration = monthsBetweenInclusive(streakStart.date, series[i - 1].date);
+      (currentAbove ? aboveDurations : belowDurations).push(duration);
+      streakStart = series[i];
+      currentAbove = isAbove;
+    }
+  }
+
+  const finalDuration = monthsBetweenInclusive(streakStart.date, series[series.length - 1].date);
+  (currentAbove ? aboveDurations : belowDurations).push(finalDuration);
+
+  const avg = arr => (arr.length ? arr.reduce((sum, value) => sum + value, 0) / arr.length : 0);
+
+  return {
+    above: avg(aboveDurations),
+    below: avg(belowDurations)
+  };
+};
+
+const formatDuration = (months) => {
+  if (!months) return 'N/A';
+  const years = Math.floor(months / 12);
+  const remainingMonths = Math.round(months % 12);
+
+  if (years > 0) {
+    if (remainingMonths === 0) return `${years} yr${years > 1 ? 's' : ''}`;
+    return `${years} yr${years > 1 ? 's' : ''} ${remainingMonths} mo`;
+  }
+
+  return `${months.toFixed(1)} mo`;
+};
+
 export default function App() {
   const [rawData, setRawData] = useState([]);
   const [metadata, setMetadata] = useState(null);
@@ -84,13 +133,23 @@ export default function App() {
     margin_debt_bn: d.margin_debt / 1000
   }));
 
-  const filteredData = timeRange === 'all' ? data : 
+  const filteredData = timeRange === 'all' ? data :
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
   const peak2000 = data.find(d => d.date === '2000-03') || data[0];
+  const yoyData = data.filter(d => d.yoy_growth !== null);
+
+  const thresholdSummaries = [
+    { value: 30, label: '+30% threshold', color: '#ef4444' },
+    { value: 0, label: '0% threshold', color: '#888' },
+    { value: -30, label: '-30% threshold', color: '#22c55e' }
+  ].map(threshold => ({
+    ...threshold,
+    durations: computeThresholdDurations(yoyData, threshold.value)
+  }));
   
   const formatLastUpdated = (iso) => {
     const d = new Date(iso);
@@ -239,6 +298,28 @@ export default function App() {
             <span>🔴 +30% threshold (euphoria zone)</span>
             <span>🟢 -30% threshold (capitulation zone)</span>
           </div>
+        </div>
+
+        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
+          <h3 style={{ color: '#fff', fontSize: '15px', marginBottom: '12px' }}>Average time spent relative to thresholds</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
+            {thresholdSummaries.map(threshold => (
+              <div key={threshold.value} style={{ background: '#131323', borderRadius: '8px', padding: '12px', border: `1px solid ${threshold.color}33` }}>
+                <div style={{ color: threshold.color, fontWeight: '600', marginBottom: '8px' }}>{threshold.label}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px' }}>
+                  <span>Above:</span>
+                  <span>{formatDuration(threshold.durations.above)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px', marginTop: '6px' }}>
+                  <span>Below:</span>
+                  <span>{formatDuration(threshold.durations.below)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ color: '#888', fontSize: '12px', marginTop: '10px', textAlign: isMobile ? 'center' : 'left' }}>
+            Durations are averaged across all streaks since YoY data begins. One month is assumed between observations.
+          </p>
         </div>
 
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
