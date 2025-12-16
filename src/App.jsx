@@ -57,6 +57,14 @@ const normalizeMonthKey = (dateStr) => {
   return dateStr;
 };
 
+const fetchWithTimeout = (url, timeoutMs = 12000) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const promise = fetch(url, { signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+  return { promise, controller };
+};
+
 const parseFinraMarginCsv = (text) => {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
@@ -182,8 +190,21 @@ export default function App() {
       setMarginError(null);
       setSpError(null);
 
+      let marginController;
+      let spController;
+
       const loadMarginLive = async () => {
-        const res = await fetch('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
+        const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
+        marginController = controller;
+
+        let res;
+        try {
+          res = await promise;
+        } catch (err) {
+          if (err.name === 'AbortError') throw new Error('FINRA margin request timed out');
+          throw err;
+        }
+
         if (!res.ok) throw new Error('Failed to reach FINRA margin CSV');
         const text = await res.text();
         const parsed = parseFinraMarginCsv(text);
@@ -199,7 +220,17 @@ export default function App() {
       };
 
       const loadSpLive = async () => {
-        const res = await fetch('https://stooq.pl/q/d/l/?s=spx&i=d');
+        const { promise, controller } = fetchWithTimeout('https://stooq.pl/q/d/l/?s=spx&i=d');
+        spController = controller;
+
+        let res;
+        try {
+          res = await promise;
+        } catch (err) {
+          if (err.name === 'AbortError') throw new Error('Stooq S&P 500 request timed out');
+          throw err;
+        }
+
         if (!res.ok) throw new Error('Failed to reach Stooq S&P 500 CSV');
         const text = await res.text();
         const parsed = parseStooqCsv(text);
@@ -241,6 +272,8 @@ export default function App() {
 
     return () => {
       cancelled = true;
+      marginController?.abort();
+      spController?.abort();
     };
   }, []);
 
