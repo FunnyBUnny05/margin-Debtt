@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 
 const formatDate = (date) => {
+  if (!date) return '';
   const [year, month] = date.split('-');
   return `${month}/${year.slice(2)}`;
 };
@@ -161,6 +162,8 @@ export default function App() {
   const [spMeta, setSpMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [marginError, setMarginError] = useState(null);
+  const [spError, setSpError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
@@ -171,8 +174,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
       setLoading(true);
+      setError(null);
+      setMarginError(null);
+      setSpError(null);
 
       const loadMarginLive = async () => {
         const res = await fetch('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
@@ -180,12 +188,14 @@ export default function App() {
         const text = await res.text();
         const parsed = parseFinraMarginCsv(text);
         if (!parsed.length) throw new Error('No margin data parsed from FINRA');
-        setRawData(parsed);
-        setMetadata({
-          lastUpdated: parsed[parsed.length - 1]?.date,
-          source: 'FINRA Margin Statistics (live)',
-          sourceUrl: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics'
-        });
+        if (!cancelled) {
+          setRawData(parsed);
+          setMetadata({
+            lastUpdated: parsed[parsed.length - 1]?.date,
+            source: 'FINRA Margin Statistics (live)',
+            sourceUrl: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics'
+          });
+        }
       };
 
       const loadSpLive = async () => {
@@ -194,32 +204,52 @@ export default function App() {
         const text = await res.text();
         const parsed = parseStooqCsv(text);
         if (!parsed.length) throw new Error('No S&P 500 data parsed from Stooq');
-        setSp500Data(parsed);
-        setSpMeta({
-          lastUpdated: parsed[parsed.length - 1]?.date,
-          source: 'Stooq (^spx) daily (live)',
-          sourceUrl: 'https://stooq.pl/'
-        });
+        if (!cancelled) {
+          setSp500Data(parsed);
+          setSpMeta({
+            lastUpdated: parsed[parsed.length - 1]?.date,
+            source: 'Stooq (^spx) daily (live)',
+            sourceUrl: 'https://stooq.pl/'
+          });
+        }
       };
 
       try {
-        await Promise.all([loadMarginLive(), loadSpLive()]);
-      } catch (liveErr) {
-        setError(liveErr.message || 'Unable to load live data');
+        const [marginResult, spResult] = await Promise.allSettled([loadMarginLive(), loadSpLive()]);
+
+        if (cancelled) return;
+
+        if (marginResult.status === 'rejected') {
+          setMarginError(marginResult.reason?.message || 'Unable to load margin data');
+        }
+
+        if (spResult.status === 'rejected') {
+          setSpError(spResult.reason?.message || 'Unable to load S&P 500 data');
+        }
+
+        if (marginResult.status === 'rejected' && spResult.status === 'rejected') {
+          setError('Unable to load FINRA or S&P 500 data right now. Please try again later.');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {
     return (
       <div style={{ background: '#0d0d1a', color: '#e0e0e0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading FINRA Data...</div>
-          <div style={{ color: '#888' }}>Fetching margin statistics</div>
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading live data...</div>
+          <div style={{ color: '#888' }}>Fetching FINRA margin stats and S&P 500 prices</div>
         </div>
       </div>
     );
@@ -231,6 +261,17 @@ export default function App() {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>Error Loading Data</div>
           <div>{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!rawData.length) {
+    return (
+      <div style={{ background: '#0d0d1a', color: '#ef4444', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: '16px' }}>Unable to load margin data</div>
+          <div>{marginError || 'No FINRA data available right now.'}</div>
         </div>
       </div>
     );
@@ -267,6 +308,7 @@ export default function App() {
   }));
   
   const formatLastUpdated = (iso) => {
+    if (!iso) return 'N/A';
     const d = new Date(iso);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -338,6 +380,11 @@ export default function App() {
           {spMeta && (
             <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
               <span>Source: <a href={spMeta.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{spMeta.source}</a></span>
+            </div>
+          )}
+          {spError && (
+            <div style={{ background: '#3b1f1f', color: '#fca5a5', padding: '8px 10px', borderRadius: '6px', marginBottom: '10px', border: '1px solid #7f1d1d' }}>
+              Live S&P 500 data is unavailable right now ({spError}). The chart will populate automatically once the feed responds again.
             </div>
           )}
           <ResponsiveContainer width="100%" height={300}>
