@@ -93,31 +93,20 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
-const parseStooqCsv = (text) => {
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) return [];
+const parseAlphaVantageJson = (json) => {
+  const timeSeries = json['Monthly Time Series'];
+  if (!timeSeries) return [];
 
-  const rows = lines.slice(1)
-    .map(line => line.split(',').map(cell => cell.trim()))
-    .filter(parts => parts.length >= 5)
-    .map(parts => ({
-      date: parts[0],
-      close: Number(parts[4])
-    }))
-    .filter(d => !Number.isNaN(d.close));
+  const entries = Object.entries(timeSeries)
+    .map(([dateStr, values]) => {
+      const close = Number(values['4. close']);
+      const key = normalizeMonthKey(dateStr);
+      // SPY ETF tracks S&P 500 at ~1/10 scale, multiply to approximate index value
+      return { date: key, close: close * 10 };
+    })
+    .filter(d => d.date && !Number.isNaN(d.close));
 
-  const monthly = new Map();
-  rows.forEach(row => {
-    const key = normalizeMonthKey(row.date);
-    const current = monthly.get(key);
-    if (!current || new Date(row.date) > new Date(current.original)) {
-      monthly.set(key, { date: key, close: row.close, original: row.date });
-    }
-  });
-
-  return Array.from(monthly.values())
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map(({ date, close }) => ({ date, close }));
+  return entries.sort((a, b) => a.date.localeCompare(b.date));
 };
 
 
@@ -221,27 +210,33 @@ export default function App() {
       };
 
       const loadSpLive = async () => {
-        const { promise, controller } = fetchWithTimeout('https://stooq.pl/q/d/l/?s=spx&i=d');
+        const apiKey = 'R3H5ATD7AKLGLT36';
+        const { promise, controller } = fetchWithTimeout(
+          `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=SPY&apikey=${apiKey}`
+        );
         spController = controller;
 
         let res;
         try {
           res = await promise;
         } catch (err) {
-          if (err.name === 'AbortError') throw new Error('Stooq S&P 500 request timed out');
+          if (err.name === 'AbortError') throw new Error('Alpha Vantage S&P 500 request timed out');
           throw err;
         }
 
-        if (!res.ok) throw new Error('Failed to reach Stooq S&P 500 CSV');
-        const text = await res.text();
-        const parsed = parseStooqCsv(text);
-        if (!parsed.length) throw new Error('No S&P 500 data parsed from Stooq');
+        if (!res.ok) throw new Error('Failed to reach Alpha Vantage API');
+        const json = await res.json();
+        if (json['Error Message'] || json['Note']) {
+          throw new Error(json['Error Message'] || 'Alpha Vantage API rate limit reached');
+        }
+        const parsed = parseAlphaVantageJson(json);
+        if (!parsed.length) throw new Error('No S&P 500 data parsed from Alpha Vantage');
         if (!cancelled) {
           setSp500Data(parsed);
           setSpMeta({
             lastUpdated: parsed[parsed.length - 1]?.date,
-            source: 'Stooq (^spx) daily (live)',
-            sourceUrl: 'https://stooq.pl/'
+            source: 'Alpha Vantage (SPY monthly)',
+            sourceUrl: 'https://www.alphavantage.co/'
           });
         }
       };
@@ -562,7 +557,7 @@ export default function App() {
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
           <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
-          Margin debt and S&P 500 series update live from FINRA and Stooq (daily) on each page load.
+          Margin debt and S&P 500 series update live from FINRA and Alpha Vantage on each page load.
         </div>
       </div>
     </div>
