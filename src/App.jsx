@@ -78,6 +78,8 @@ const formatDuration = (months) => {
   return `${months.toFixed(1)} mo`;
 };
 
+const dataUrl = (fileName) => `${import.meta.env.BASE_URL}${fileName}`;
+
 export default function App() {
   const [rawData, setRawData] = useState([]);
   const [sp500Data, setSp500Data] = useState([]);
@@ -95,13 +97,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      fetch('./margin_data.json'),
-      fetch('./sp500_data.json')
-    ])
-      .then(async ([marginRes, spRes]) => {
-        if (!marginRes.ok) throw new Error('Failed to load margin data');
-        if (!spRes.ok) throw new Error('Failed to load S&P 500 data');
+    const loadData = async () => {
+      try {
+        const [marginRes, spRes] = await Promise.all([
+          fetch(dataUrl('margin_data.json')),
+          fetch(dataUrl('sp500_data.json'))
+        ]);
+
+        if (!marginRes.ok) throw new Error(`Failed to load margin data (${marginRes.status})`);
+        if (!spRes.ok) throw new Error(`Failed to load S&P 500 data (${spRes.status})`);
+
         const [marginJson, spJson] = await Promise.all([marginRes.json(), spRes.json()]);
 
         setRawData(marginJson.data);
@@ -118,11 +123,13 @@ export default function App() {
           sourceUrl: spJson.source_url
         });
         setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         setError(err.message);
         setLoading(false);
-      });
+      }
+    };
+
+    loadData();
   }, []);
 
   if (loading) {
