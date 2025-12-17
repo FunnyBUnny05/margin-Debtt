@@ -410,6 +410,7 @@ export default function App() {
             <ComposedChart
               data={filteredPcData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              syncId="chartSync"
               onMouseMove={handleChartMouseMove}
               onMouseLeave={handleChartMouseLeave}
             >
@@ -435,7 +436,7 @@ export default function App() {
               />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={1.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: '1.0', fill: '#f59e0b', fontSize: 10 }} />
-              {activeDate && <ReferenceLine x={activeDate} stroke="#fff" strokeOpacity={0.5} strokeWidth={1} />}
+              {activeDate && <ReferenceLine x={activeDate} stroke="#22d3ee" strokeWidth={2} />}
               <Area
                 type="monotone"
                 dataKey="ratio"
@@ -465,6 +466,7 @@ export default function App() {
             <ComposedChart
               data={filteredData.filter(d => d.yoy_growth !== null)}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              syncId="chartSync"
               onMouseMove={handleChartMouseMove}
               onMouseLeave={handleChartMouseLeave}
             >
@@ -486,7 +488,7 @@ export default function App() {
               <ReferenceLine y={0} stroke="#666" strokeWidth={2} />
               <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.5} />
               <ReferenceLine y={-30} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
-              {activeDate && <ReferenceLine x={activeDate} stroke="#fff" strokeOpacity={0.5} strokeWidth={1} />}
+              {activeDate && <ReferenceLine x={activeDate} stroke="#22d3ee" strokeWidth={2} />}
               <Line
                 type="monotone"
                 dataKey="yoy_growth"
