@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 
+const ALPHAVANTAGE_KEY = 'R3H5ATD7AKLGLT36';
+
 const formatDate = (date) => {
   const [year, month] = date.split('-');
   return `${month}/${year.slice(2)}`;
@@ -87,6 +89,7 @@ export default function App() {
   const [spMeta, setSpMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [spError, setSpError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
@@ -97,34 +100,72 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const fetchSp500FromApi = async () => {
+      const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=SPY&apikey=${ALPHAVANTAGE_KEY}`);
+      if (!res.ok) throw new Error(`Alpha Vantage request failed (${res.status})`);
+
+      const json = await res.json();
+      if (json['Error Message'] || !json['Monthly Time Series']) {
+        throw new Error('Alpha Vantage returned an unexpected response');
+      }
+
+      const formattedData = Object.entries(json['Monthly Time Series'])
+        .map(([date, values]) => ({
+          date: date.slice(0, 7),
+          close: parseFloat(values['4. close'])
+        }))
+        .filter(d => !Number.isNaN(d.close))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      return {
+        data: formattedData,
+        meta: {
+          lastUpdated: new Date().toISOString(),
+          source: 'Alpha Vantage (SPY monthly closes)',
+          sourceUrl: 'https://www.alphavantage.co/documentation/'
+        }
+      };
+    };
+
     const loadData = async () => {
       try {
-        const [marginRes, spRes] = await Promise.all([
-          fetch(dataUrl('margin_data.json')),
-          fetch(dataUrl('sp500_data.json'))
-        ]);
-
+        const marginRes = await fetch(dataUrl('margin_data.json'));
         if (!marginRes.ok) throw new Error(`Failed to load margin data (${marginRes.status})`);
-        if (!spRes.ok) throw new Error(`Failed to load S&P 500 data (${spRes.status})`);
 
-        const [marginJson, spJson] = await Promise.all([marginRes.json(), spRes.json()]);
-
+        const marginJson = await marginRes.json();
         setRawData(marginJson.data);
         setMetadata({
           lastUpdated: marginJson.last_updated,
           source: marginJson.source,
           sourceUrl: marginJson.source_url
         });
-
-        setSp500Data(spJson.data);
-        setSpMeta({
-          lastUpdated: spJson.last_updated,
-          source: spJson.source,
-          sourceUrl: spJson.source_url
-        });
-        setLoading(false);
       } catch (err) {
         setError(err.message);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data: spData, meta } = await fetchSp500FromApi();
+        setSp500Data(spData);
+        setSpMeta(meta);
+      } catch (apiErr) {
+        console.error(apiErr);
+        setSpError('Live S&P 500 feed unavailable, showing cached data.');
+        try {
+          const fallbackRes = await fetch(dataUrl('sp500_data.json'));
+          if (!fallbackRes.ok) throw new Error(`Fallback S&P 500 data failed (${fallbackRes.status})`);
+          const spJson = await fallbackRes.json();
+          setSp500Data(spJson.data);
+          setSpMeta({
+            lastUpdated: spJson.last_updated,
+            source: spJson.source,
+            sourceUrl: spJson.source_url
+          });
+        } catch (fallbackErr) {
+          setSpError('Unable to load S&P 500 data.');
+        }
+      } finally {
         setLoading(false);
       }
     };
@@ -257,6 +298,9 @@ export default function App() {
             <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
               <span>Derived locally for fast loads. Source: {spMeta.source}</span>
             </div>
+          )}
+          {spError && (
+            <div style={{ color: '#f97316', fontSize: '12px', marginBottom: '8px' }}>{spError}</div>
           )}
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={filteredSpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
