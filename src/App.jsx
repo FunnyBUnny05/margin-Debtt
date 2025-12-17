@@ -11,7 +11,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const formatValue = (p) => {
       if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
-      if (p.dataKey === 'close') return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(p.value ?? 0);
+      if (p.dataKey === 'ratio') return p.value?.toFixed(2);
       if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
       return p.value;
     };
@@ -45,7 +45,6 @@ const normalizeMonthKey = (dateStr) => {
   const parts = dateStr.split(/[-/]/);
   if (parts.length >= 2) {
     const [p1, p2] = parts;
-    // Handle formats like YYYY-MM or MM/YYYY
     if (p1.length === 4) {
       return `${p1}-${p2.padStart(2, '0')}`;
     }
@@ -93,23 +92,6 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
-const parseAlphaVantageJson = (json) => {
-  const timeSeries = json['Monthly Time Series'];
-  if (!timeSeries) return [];
-
-  const entries = Object.entries(timeSeries)
-    .map(([dateStr, values]) => {
-      const close = Number(values['4. close']);
-      const key = normalizeMonthKey(dateStr);
-      // SPY ETF tracks S&P 500 at ~1/10 scale, multiply to approximate index value
-      return { date: key, close: close * 10 };
-    })
-    .filter(d => d.date && !Number.isNaN(d.close));
-
-  return entries.sort((a, b) => a.date.localeCompare(b.date));
-};
-
-
 const computeThresholdDurations = (data, threshold) => {
   const series = data.filter(d => d.yoy_growth !== null);
   if (series.length === 0) return { above: 0, below: 0 };
@@ -155,13 +137,13 @@ const formatDuration = (months) => {
 
 export default function App() {
   const [rawData, setRawData] = useState([]);
-  const [sp500Data, setSp500Data] = useState([]);
+  const [putCallData, setPutCallData] = useState([]);
   const [metadata, setMetadata] = useState(null);
-  const [spMeta, setSpMeta] = useState(null);
+  const [pcMeta, setPcMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [marginError, setMarginError] = useState(null);
-  const [spError, setSpError] = useState(null);
+  const [pcError, setPcError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
@@ -178,10 +160,9 @@ export default function App() {
       setLoading(true);
       setError(null);
       setMarginError(null);
-      setSpError(null);
+      setPcError(null);
 
       let marginController;
-      let spController;
 
       const loadMarginLive = async () => {
         const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
@@ -209,34 +190,17 @@ export default function App() {
         }
       };
 
-      const loadSpLive = async () => {
-        const apiKey = 'R3H5ATD7AKLGLT36';
-        const { promise, controller } = fetchWithTimeout(
-          `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=SPY&apikey=${apiKey}`
-        );
-        spController = controller;
-
-        let res;
-        try {
-          res = await promise;
-        } catch (err) {
-          if (err.name === 'AbortError') throw new Error('Alpha Vantage S&P 500 request timed out');
-          throw err;
-        }
-
-        if (!res.ok) throw new Error('Failed to reach Alpha Vantage API');
+      const loadPutCallData = async () => {
+        const res = await fetch('./put_call_data.json');
+        if (!res.ok) throw new Error('Failed to load put/call data');
         const json = await res.json();
-        if (json['Error Message'] || json['Note']) {
-          throw new Error(json['Error Message'] || 'Alpha Vantage API rate limit reached');
-        }
-        const parsed = parseAlphaVantageJson(json);
-        if (!parsed.length) throw new Error('No S&P 500 data parsed from Alpha Vantage');
+        if (!json.data?.length) throw new Error('No put/call data in file');
         if (!cancelled) {
-          setSp500Data(parsed);
-          setSpMeta({
-            lastUpdated: parsed[parsed.length - 1]?.date,
-            source: 'Alpha Vantage (SPY monthly)',
-            sourceUrl: 'https://www.alphavantage.co/'
+          setPutCallData(json.data);
+          setPcMeta({
+            lastUpdated: json.last_updated,
+            source: json.source,
+            sourceUrl: json.source_url
           });
         }
       };
@@ -256,27 +220,11 @@ export default function App() {
         }
       };
 
-      const loadSpFallback = async () => {
-        const res = await fetch('./sp500_data.json');
-        if (!res.ok) throw new Error('Failed to load local S&P data');
-        const json = await res.json();
-        if (!json.data?.length) throw new Error('No S&P data in local file');
-        if (!cancelled) {
-          setSp500Data(json.data);
-          setSpMeta({
-            lastUpdated: json.last_updated,
-            source: json.source + ' (cached)',
-            sourceUrl: json.source_url
-          });
-        }
-      };
-
       try {
-        const [marginResult, spResult] = await Promise.allSettled([loadMarginLive(), loadSpLive()]);
+        const [marginResult, pcResult] = await Promise.allSettled([loadMarginLive(), loadPutCallData()]);
 
         if (cancelled) return;
 
-        // If live margin fetch failed, try local fallback
         if (marginResult.status === 'rejected') {
           try {
             await loadMarginFallback();
@@ -285,13 +233,8 @@ export default function App() {
           }
         }
 
-        // If live S&P fetch failed, try local fallback
-        if (spResult.status === 'rejected') {
-          try {
-            await loadSpFallback();
-          } catch (fallbackErr) {
-            setSpError(spResult.reason?.message || 'Unable to load S&P 500 data');
-          }
+        if (pcResult.status === 'rejected') {
+          setPcError(pcResult.reason?.message || 'Unable to load put/call ratio data');
         }
       } finally {
         if (!cancelled) {
@@ -305,7 +248,6 @@ export default function App() {
     return () => {
       cancelled = true;
       marginController?.abort();
-      spController?.abort();
     };
   }, []);
 
@@ -314,7 +256,7 @@ export default function App() {
       <div style={{ background: '#0d0d1a', color: '#e0e0e0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading live data...</div>
-          <div style={{ color: '#888' }}>Fetching FINRA margin stats and S&P 500 prices</div>
+          <div style={{ color: '#888' }}>Fetching FINRA margin stats and put/call ratio</div>
         </div>
       </div>
     );
@@ -351,17 +293,18 @@ export default function App() {
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
 
-  const spData = sp500Data;
-  const filteredSpData = timeRange === 'all' ? spData :
-    timeRange === '10y' ? spData.slice(-120) :
-    timeRange === '5y' ? spData.slice(-60) : spData.slice(-24);
+  const filteredPcData = timeRange === 'all' ? putCallData :
+    timeRange === '10y' ? putCallData.slice(-120) :
+    timeRange === '5y' ? putCallData.slice(-60) : putCallData.slice(-24);
 
-  const spInterval = Math.floor((filteredSpData.length || 1) / 8);
+  const pcInterval = Math.floor((filteredPcData.length || 1) / 8);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
   const peak2000 = data.find(d => d.date === '2000-03') || data[0];
   const yoyData = data.filter(d => d.yoy_growth !== null);
+
+  const currentPc = putCallData.length > 0 ? putCallData[putCallData.length - 1] : null;
 
   const thresholdSummaries = [
     { value: 30, label: '+30% threshold', color: '#ef4444' },
@@ -371,7 +314,7 @@ export default function App() {
     ...threshold,
     durations: computeThresholdDurations(yoyData, threshold.value)
   }));
-  
+
   const formatLastUpdated = (iso) => {
     if (!iso) return 'N/A';
     const d = new Date(iso);
@@ -433,31 +376,31 @@ export default function App() {
             </div>
           </div>
           <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>vs 2000 Peak</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#a855f7' }}>
-              +{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
+            <div style={{ color: '#888', fontSize: '12px' }}>Put/Call Ratio</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: currentPc ? (currentPc.ratio > 1 ? '#22c55e' : '#ef4444') : '#888' }}>
+              {currentPc ? currentPc.ratio.toFixed(2) : 'N/A'}
             </div>
           </div>
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>S&P 500 Index</h2>
-          {spMeta && (
+          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>CBOE Equity Put/Call Ratio</h2>
+          {pcMeta && (
             <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
-              <span>Source: <a href={spMeta.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{spMeta.source}</a></span>
+              <span>Source: <a href={pcMeta.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{pcMeta.source}</a></span>
             </div>
           )}
-          {spError && (
+          {pcError && (
             <div style={{ background: '#3b1f1f', color: '#fca5a5', padding: '8px 10px', borderRadius: '6px', marginBottom: '10px', border: '1px solid #7f1d1d' }}>
-              Live S&P 500 data is unavailable right now ({spError}). The chart will populate automatically once the feed responds again.
+              Put/call ratio data is unavailable ({pcError}).
             </div>
           )}
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={filteredSpData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart data={filteredPcData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="spGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                <linearGradient id="pcGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -466,32 +409,37 @@ export default function App() {
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
-                interval={spInterval}
+                interval={pcInterval}
               />
               <YAxis
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => `${v}`}
+                tickFormatter={(v) => v.toFixed(1)}
                 domain={['auto', 'auto']}
               />
               <Tooltip content={<CustomTooltip />} />
+              <ReferenceLine y={1.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: '1.0', fill: '#f59e0b', fontSize: 10 }} />
               <Area
                 type="monotone"
-                dataKey="close"
-                stroke="#22d3ee"
-                fill="url(#spGradient)"
-                name="S&P 500"
+                dataKey="ratio"
+                stroke="#a855f7"
+                fill="url(#pcGradient)"
+                name="Put/Call Ratio"
               />
               <Line
                 type="monotone"
-                dataKey="close"
-                stroke="#22d3ee"
+                dataKey="ratio"
+                stroke="#a855f7"
                 strokeWidth={2}
                 dot={false}
-                name="S&P 500"
+                name="Put/Call Ratio"
               />
             </ComposedChart>
           </ResponsiveContainer>
+          <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '12px', color: '#888', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            <span>📈 Above 1.0 = bearish sentiment (more puts)</span>
+            <span>📉 Below 1.0 = bullish sentiment (more calls)</span>
+          </div>
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
@@ -499,15 +447,15 @@ export default function App() {
           <ResponsiveContainer width="100%" height={250}>
             <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#666" 
+              <XAxis
+                dataKey="date"
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
                 interval={Math.floor(filteredData.length / 8)}
               />
-              <YAxis 
-                stroke="#666" 
+              <YAxis
+                stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={(v) => `${v}%`}
                 domain={['auto', 'auto']}
@@ -516,9 +464,9 @@ export default function App() {
               <ReferenceLine y={0} stroke="#666" strokeWidth={2} />
               <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.5} />
               <ReferenceLine y={-30} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
-              <Line 
-                type="monotone" 
-                dataKey="yoy_growth" 
+              <Line
+                type="monotone"
+                dataKey="yoy_growth"
                 stroke="#f59e0b"
                 strokeWidth={2}
                 dot={false}
@@ -557,7 +505,7 @@ export default function App() {
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
           <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
-          Margin debt and S&P 500 series update live from FINRA and Alpha Vantage on each page load.
+          High put/call ratios (above 1.0) often signal market bottoms, while low ratios signal excessive optimism.
         </div>
       </div>
     </div>
