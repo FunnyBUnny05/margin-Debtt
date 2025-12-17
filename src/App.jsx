@@ -246,21 +246,57 @@ export default function App() {
         }
       };
 
+      const loadMarginFallback = async () => {
+        const res = await fetch('./margin_data.json');
+        if (!res.ok) throw new Error('Failed to load local margin data');
+        const json = await res.json();
+        if (!json.data?.length) throw new Error('No margin data in local file');
+        if (!cancelled) {
+          setRawData(json.data);
+          setMetadata({
+            lastUpdated: json.last_updated,
+            source: json.source + ' (cached)',
+            sourceUrl: json.source_url
+          });
+        }
+      };
+
+      const loadSpFallback = async () => {
+        const res = await fetch('./sp500_data.json');
+        if (!res.ok) throw new Error('Failed to load local S&P data');
+        const json = await res.json();
+        if (!json.data?.length) throw new Error('No S&P data in local file');
+        if (!cancelled) {
+          setSp500Data(json.data);
+          setSpMeta({
+            lastUpdated: json.last_updated,
+            source: json.source + ' (cached)',
+            sourceUrl: json.source_url
+          });
+        }
+      };
+
       try {
         const [marginResult, spResult] = await Promise.allSettled([loadMarginLive(), loadSpLive()]);
 
         if (cancelled) return;
 
+        // If live margin fetch failed, try local fallback
         if (marginResult.status === 'rejected') {
-          setMarginError(marginResult.reason?.message || 'Unable to load margin data');
+          try {
+            await loadMarginFallback();
+          } catch (fallbackErr) {
+            setMarginError(marginResult.reason?.message || 'Unable to load margin data');
+          }
         }
 
+        // If live S&P fetch failed, try local fallback
         if (spResult.status === 'rejected') {
-          setSpError(spResult.reason?.message || 'Unable to load S&P 500 data');
-        }
-
-        if (marginResult.status === 'rejected' && spResult.status === 'rejected') {
-          setError('Unable to load FINRA or S&P 500 data right now. Please try again later.');
+          try {
+            await loadSpFallback();
+          } catch (fallbackErr) {
+            setSpError(spResult.reason?.message || 'Unable to load S&P 500 data');
+          }
         }
       } finally {
         if (!cancelled) {
