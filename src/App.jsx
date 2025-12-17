@@ -146,6 +146,17 @@ export default function App() {
   const [pcError, setPcError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
+  const [activeDate, setActiveDate] = useState(null);
+
+  const handleChartMouseMove = (e) => {
+    if (e && e.activeLabel) {
+      setActiveDate(e.activeLabel);
+    }
+  };
+
+  const handleChartMouseLeave = () => {
+    setActiveDate(null);
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 640);
@@ -396,7 +407,12 @@ export default function App() {
             </div>
           )}
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={filteredPcData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart
+              data={filteredPcData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              onMouseMove={handleChartMouseMove}
+              onMouseLeave={handleChartMouseLeave}
+            >
               <defs>
                 <linearGradient id="pcGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
@@ -419,6 +435,7 @@ export default function App() {
               />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={1.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: '1.0', fill: '#f59e0b', fontSize: 10 }} />
+              {activeDate && <ReferenceLine x={activeDate} stroke="#fff" strokeOpacity={0.5} strokeWidth={1} />}
               <Area
                 type="monotone"
                 dataKey="ratio"
@@ -445,7 +462,12 @@ export default function App() {
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
           <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Year-over-Year Growth Rate</h2>
           <ResponsiveContainer width="100%" height={250}>
-            <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ComposedChart
+              data={filteredData.filter(d => d.yoy_growth !== null)}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              onMouseMove={handleChartMouseMove}
+              onMouseLeave={handleChartMouseLeave}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
               <XAxis
                 dataKey="date"
@@ -464,6 +486,7 @@ export default function App() {
               <ReferenceLine y={0} stroke="#666" strokeWidth={2} />
               <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.5} />
               <ReferenceLine y={-30} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
+              {activeDate && <ReferenceLine x={activeDate} stroke="#fff" strokeOpacity={0.5} strokeWidth={1} />}
               <Line
                 type="monotone"
                 dataKey="yoy_growth"
