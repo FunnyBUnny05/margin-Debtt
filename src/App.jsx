@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 
 const formatDate = (date) => {
@@ -146,17 +146,6 @@ export default function App() {
   const [pcError, setPcError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
-  const [activeDate, setActiveDate] = useState(null);
-
-  const handleChartMouseMove = (e) => {
-    if (e && e.activeLabel) {
-      setActiveDate(e.activeLabel);
-    }
-  };
-
-  const handleChartMouseLeave = () => {
-    setActiveDate(null);
-  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 640);
@@ -304,11 +293,27 @@ export default function App() {
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
 
-  const filteredPcData = timeRange === 'all' ? putCallData :
-    timeRange === '10y' ? putCallData.slice(-120) :
-    timeRange === '5y' ? putCallData.slice(-60) : putCallData.slice(-24);
+  // Create a merged dataset with all dates from both sources for proper sync
+  const mergedData = useMemo(() => {
+    const marginMap = new Map(filteredData.map(d => [d.date, d]));
+    const pcMap = new Map(putCallData.map(d => [d.date, d]));
 
-  const pcInterval = Math.floor((filteredPcData.length || 1) / 8);
+    // Get all unique dates from both datasets
+    const allDates = [...new Set([...marginMap.keys(), ...pcMap.keys()])].sort();
+
+    return allDates.map(date => ({
+      date,
+      margin_debt_bn: marginMap.get(date)?.margin_debt_bn ?? null,
+      yoy_growth: marginMap.get(date)?.yoy_growth ?? null,
+      ratio: pcMap.get(date)?.ratio ?? null
+    }));
+  }, [filteredData, putCallData]);
+
+  const filteredMergedData = timeRange === 'all' ? mergedData :
+    timeRange === '10y' ? mergedData.slice(-120) :
+    timeRange === '5y' ? mergedData.slice(-60) : mergedData.slice(-24);
+
+  const chartInterval = Math.floor((filteredMergedData.length || 1) / 8);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
@@ -408,11 +413,9 @@ export default function App() {
           )}
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart
-              data={filteredPcData}
+              data={filteredMergedData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               syncId="chartSync"
-              onMouseMove={handleChartMouseMove}
-              onMouseLeave={handleChartMouseLeave}
             >
               <defs>
                 <linearGradient id="pcGradient" x1="0" y1="0" x2="0" y2="1">
@@ -426,23 +429,26 @@ export default function App() {
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
-                interval={pcInterval}
+                interval={chartInterval}
               />
               <YAxis
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => v.toFixed(1)}
+                tickFormatter={(v) => v ? v.toFixed(1) : ''}
                 domain={['auto', 'auto']}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: '#22d3ee', strokeWidth: 2 }}
+              />
               <ReferenceLine y={1.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: '1.0', fill: '#f59e0b', fontSize: 10 }} />
-              {activeDate && <ReferenceLine x={activeDate} stroke="#22d3ee" strokeWidth={2} />}
               <Area
                 type="monotone"
                 dataKey="ratio"
                 stroke="#a855f7"
                 fill="url(#pcGradient)"
                 name="Put/Call Ratio"
+                connectNulls
               />
               <Line
                 type="monotone"
@@ -451,6 +457,7 @@ export default function App() {
                 strokeWidth={2}
                 dot={false}
                 name="Put/Call Ratio"
+                connectNulls
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -464,11 +471,9 @@ export default function App() {
           <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Year-over-Year Growth Rate</h2>
           <ResponsiveContainer width="100%" height={250}>
             <ComposedChart
-              data={filteredData.filter(d => d.yoy_growth !== null)}
+              data={filteredMergedData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               syncId="chartSync"
-              onMouseMove={handleChartMouseMove}
-              onMouseLeave={handleChartMouseLeave}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
               <XAxis
@@ -476,19 +481,21 @@ export default function App() {
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
                 tickFormatter={formatDate}
-                interval={Math.floor(filteredData.length / 8)}
+                interval={chartInterval}
               />
               <YAxis
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => `${v}%`}
+                tickFormatter={(v) => v != null ? `${v}%` : ''}
                 domain={['auto', 'auto']}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: '#22d3ee', strokeWidth: 2 }}
+              />
               <ReferenceLine y={0} stroke="#666" strokeWidth={2} />
               <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.5} />
               <ReferenceLine y={-30} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
-              {activeDate && <ReferenceLine x={activeDate} stroke="#22d3ee" strokeWidth={2} />}
               <Line
                 type="monotone"
                 dataKey="yoy_growth"
@@ -496,6 +503,7 @@ export default function App() {
                 strokeWidth={2}
                 dot={false}
                 name="YoY Growth"
+                connectNulls
               />
             </ComposedChart>
           </ResponsiveContainer>
