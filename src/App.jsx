@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -11,7 +11,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const formatValue = (p) => {
       if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
-      if (p.dataKey === 'ratio') return p.value?.toFixed(2);
       if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
       return p.value;
     };
@@ -28,12 +27,6 @@ const CustomTooltip = ({ active, payload, label }) => {
     );
   }
   return null;
-};
-
-const monthsBetweenInclusive = (startDate, endDate) => {
-  const [startYear, startMonth] = startDate.split('-').map(Number);
-  const [endYear, endMonth] = endDate.split('-').map(Number);
-  return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 };
 
 const normalizeMonthKey = (dateStr) => {
@@ -92,58 +85,11 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
-const computeThresholdDurations = (data, threshold) => {
-  const series = data.filter(d => d.yoy_growth !== null);
-  if (series.length === 0) return { above: 0, below: 0 };
-
-  let currentAbove = series[0].yoy_growth >= threshold;
-  let streakStart = series[0];
-  const aboveDurations = [];
-  const belowDurations = [];
-
-  for (let i = 1; i < series.length; i++) {
-    const isAbove = series[i].yoy_growth >= threshold;
-    if (isAbove !== currentAbove) {
-      const duration = monthsBetweenInclusive(streakStart.date, series[i - 1].date);
-      (currentAbove ? aboveDurations : belowDurations).push(duration);
-      streakStart = series[i];
-      currentAbove = isAbove;
-    }
-  }
-
-  const finalDuration = monthsBetweenInclusive(streakStart.date, series[series.length - 1].date);
-  (currentAbove ? aboveDurations : belowDurations).push(finalDuration);
-
-  const avg = arr => (arr.length ? arr.reduce((sum, value) => sum + value, 0) / arr.length : 0);
-
-  return {
-    above: avg(aboveDurations),
-    below: avg(belowDurations)
-  };
-};
-
-const formatDuration = (months) => {
-  if (!months) return 'N/A';
-  const years = Math.floor(months / 12);
-  const remainingMonths = Math.round(months % 12);
-
-  if (years > 0) {
-    if (remainingMonths === 0) return `${years} yr${years > 1 ? 's' : ''}`;
-    return `${years} yr${years > 1 ? 's' : ''} ${remainingMonths} mo`;
-  }
-
-  return `${months.toFixed(1)} mo`;
-};
-
 export default function App() {
   const [rawData, setRawData] = useState([]);
-  const [putCallData, setPutCallData] = useState([]);
   const [metadata, setMetadata] = useState(null);
-  const [pcMeta, setPcMeta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [marginError, setMarginError] = useState(null);
-  const [pcError, setPcError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
@@ -155,14 +101,11 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    let marginController;
 
     const loadData = async () => {
       setLoading(true);
       setError(null);
-      setMarginError(null);
-      setPcError(null);
-
-      let marginController;
 
       const loadMarginLive = async () => {
         const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
@@ -190,21 +133,6 @@ export default function App() {
         }
       };
 
-      const loadPutCallData = async () => {
-        const res = await fetch('./put_call_data.json');
-        if (!res.ok) throw new Error('Failed to load put/call data');
-        const json = await res.json();
-        if (!json.data?.length) throw new Error('No put/call data in file');
-        if (!cancelled) {
-          setPutCallData(json.data);
-          setPcMeta({
-            lastUpdated: json.last_updated,
-            source: json.source,
-            sourceUrl: json.source_url
-          });
-        }
-      };
-
       const loadMarginFallback = async () => {
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load local margin data');
@@ -221,20 +149,12 @@ export default function App() {
       };
 
       try {
-        const [marginResult, pcResult] = await Promise.allSettled([loadMarginLive(), loadPutCallData()]);
-
-        if (cancelled) return;
-
-        if (marginResult.status === 'rejected') {
-          try {
-            await loadMarginFallback();
-          } catch (fallbackErr) {
-            setMarginError(marginResult.reason?.message || 'Unable to load margin data');
-          }
-        }
-
-        if (pcResult.status === 'rejected') {
-          setPcError(pcResult.reason?.message || 'Unable to load put/call ratio data');
+        await loadMarginLive();
+      } catch (liveErr) {
+        try {
+          await loadMarginFallback();
+        } catch (fallbackErr) {
+          setError(liveErr.message || 'Unable to load margin data');
         }
       } finally {
         if (!cancelled) {
@@ -256,7 +176,7 @@ export default function App() {
       <div style={{ background: '#0d0d1a', color: '#e0e0e0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>Loading live data...</div>
-          <div style={{ color: '#888' }}>Fetching FINRA margin stats and put/call ratio</div>
+          <div style={{ color: '#888' }}>Fetching FINRA margin statistics</div>
         </div>
       </div>
     );
@@ -278,7 +198,7 @@ export default function App() {
       <div style={{ background: '#0d0d1a', color: '#ef4444', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '24px', marginBottom: '16px' }}>Unable to load margin data</div>
-          <div>{marginError || 'No FINRA data available right now.'}</div>
+          <div>No FINRA data available right now.</div>
         </div>
       </div>
     );
@@ -293,43 +213,11 @@ export default function App() {
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
 
-  // Create a merged dataset with all dates from both sources for proper sync
-  const mergedData = useMemo(() => {
-    const marginMap = new Map(filteredData.map(d => [d.date, d]));
-    const pcMap = new Map(putCallData.map(d => [d.date, d]));
-
-    // Get all unique dates from both datasets
-    const allDates = [...new Set([...marginMap.keys(), ...pcMap.keys()])].sort();
-
-    return allDates.map(date => ({
-      date,
-      margin_debt_bn: marginMap.get(date)?.margin_debt_bn ?? null,
-      yoy_growth: marginMap.get(date)?.yoy_growth ?? null,
-      ratio: pcMap.get(date)?.ratio ?? null
-    }));
-  }, [filteredData, putCallData]);
-
-  const filteredMergedData = timeRange === 'all' ? mergedData :
-    timeRange === '10y' ? mergedData.slice(-120) :
-    timeRange === '5y' ? mergedData.slice(-60) : mergedData.slice(-24);
-
-  const chartInterval = Math.floor((filteredMergedData.length || 1) / 8);
+  const chartInterval = Math.floor((filteredData.length || 1) / 8);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
   const peak2000 = data.find(d => d.date === '2000-03') || data[0];
-  const yoyData = data.filter(d => d.yoy_growth !== null);
-
-  const currentPc = putCallData.length > 0 ? putCallData[putCallData.length - 1] : null;
-
-  const thresholdSummaries = [
-    { value: 30, label: '+30% threshold', color: '#ef4444' },
-    { value: 0, label: '0% threshold', color: '#888' },
-    { value: -30, label: '-30% threshold', color: '#22c55e' }
-  ].map(threshold => ({
-    ...threshold,
-    durations: computeThresholdDurations(yoyData, threshold.value)
-  }));
 
   const formatLastUpdated = (iso) => {
     if (!iso) return 'N/A';
@@ -392,35 +280,21 @@ export default function App() {
             </div>
           </div>
           <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>Put/Call Ratio</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: currentPc ? (currentPc.ratio > 1 ? '#22c55e' : '#ef4444') : '#888' }}>
-              {currentPc ? currentPc.ratio.toFixed(2) : 'N/A'}
+            <div style={{ color: '#888', fontSize: '12px' }}>vs 2000 Peak</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#a855f7' }}>
+              +{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
             </div>
           </div>
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '8px', color: '#fff' }}>CBOE Equity Put/Call Ratio</h2>
-          {pcMeta && (
-            <div style={{ color: '#666', fontSize: '12px', marginBottom: '8px' }}>
-              <span>Source: <a href={pcMeta.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>{pcMeta.source}</a></span>
-            </div>
-          )}
-          {pcError && (
-            <div style={{ background: '#3b1f1f', color: '#fca5a5', padding: '8px 10px', borderRadius: '6px', marginBottom: '10px', border: '1px solid #7f1d1d' }}>
-              Put/call ratio data is unavailable ({pcError}).
-            </div>
-          )}
+          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Margin Debt Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart
-              data={filteredMergedData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              syncId="chartSync"
-            >
+            <ComposedChart data={filteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="pcGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -434,47 +308,33 @@ export default function App() {
               <YAxis
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => v ? v.toFixed(1) : ''}
+                tickFormatter={(v) => `$${v}B`}
                 domain={['auto', 'auto']}
               />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ stroke: '#22d3ee', strokeWidth: 2 }}
-              />
-              <ReferenceLine y={1.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.7} label={{ value: '1.0', fill: '#f59e0b', fontSize: 10 }} />
+              <Tooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
-                dataKey="ratio"
-                stroke="#a855f7"
-                fill="url(#pcGradient)"
-                name="Put/Call Ratio"
-                connectNulls
+                dataKey="margin_debt_bn"
+                stroke="#ef4444"
+                fill="url(#marginGradient)"
+                name="Margin Debt"
               />
               <Line
                 type="monotone"
-                dataKey="ratio"
-                stroke="#a855f7"
+                dataKey="margin_debt_bn"
+                stroke="#ef4444"
                 strokeWidth={2}
                 dot={false}
-                name="Put/Call Ratio"
-                connectNulls
+                name="Margin Debt"
               />
             </ComposedChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '12px', color: '#888', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-            <span>📈 Above 1.0 = bearish sentiment (more puts)</span>
-            <span>📉 Below 1.0 = bullish sentiment (more calls)</span>
-          </div>
         </div>
 
         <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
           <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Year-over-Year Growth Rate</h2>
           <ResponsiveContainer width="100%" height={250}>
-            <ComposedChart
-              data={filteredMergedData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              syncId="chartSync"
-            >
+            <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
               <XAxis
                 dataKey="date"
@@ -486,13 +346,10 @@ export default function App() {
               <YAxis
                 stroke="#666"
                 tick={{ fill: '#888', fontSize: 11 }}
-                tickFormatter={(v) => v != null ? `${v}%` : ''}
+                tickFormatter={(v) => `${v}%`}
                 domain={['auto', 'auto']}
               />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ stroke: '#22d3ee', strokeWidth: 2 }}
-              />
+              <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={0} stroke="#666" strokeWidth={2} />
               <ReferenceLine y={30} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.5} />
               <ReferenceLine y={-30} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
@@ -503,7 +360,6 @@ export default function App() {
                 strokeWidth={2}
                 dot={false}
                 name="YoY Growth"
-                connectNulls
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -513,32 +369,9 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
-          <h3 style={{ color: '#fff', fontSize: '15px', marginBottom: '12px' }}>Average time spent relative to thresholds</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))', gap: '12px' }}>
-            {thresholdSummaries.map(threshold => (
-              <div key={threshold.value} style={{ background: '#131323', borderRadius: '8px', padding: '12px', border: `1px solid ${threshold.color}33` }}>
-                <div style={{ color: threshold.color, fontWeight: '600', marginBottom: '8px' }}>{threshold.label}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px' }}>
-                  <span>Above:</span>
-                  <span>{formatDuration(threshold.durations.above)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#e0e0e0', fontSize: '13px', marginTop: '6px' }}>
-                  <span>Below:</span>
-                  <span>{formatDuration(threshold.durations.below)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p style={{ color: '#888', fontSize: '12px', marginTop: '10px', textAlign: isMobile ? 'center' : 'left' }}>
-            Durations are averaged across all streaks since YoY data begins. One month is assumed between observations.
-          </p>
-        </div>
-
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
           <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
-          High put/call ratios (above 1.0) often signal market bottoms, while low ratios signal excessive optimism.
         </div>
       </div>
     </div>
