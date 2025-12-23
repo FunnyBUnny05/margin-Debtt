@@ -264,27 +264,50 @@ export default function App() {
       }
     });
 
-    // Handle ongoing periods
-    if (currentAbovePeriod) aboveThirty.push(currentAbovePeriod.count);
-    if (currentBelowPeriod) belowNegThirty.push(currentBelowPeriod.count);
+    // Determine current status
+    const latestPoint = data[data.length - 1];
+    let currentStatus = 'neutral';
+    let currentDuration = 0;
 
-    const avgAbove = aboveThirty.length > 0
-      ? aboveThirty.reduce((a, b) => a + b, 0) / aboveThirty.length
+    if (latestPoint && latestPoint.yoy_growth !== null) {
+      if (latestPoint.yoy_growth >= 30 && currentAbovePeriod) {
+        currentStatus = 'above30';
+        currentDuration = currentAbovePeriod.count;
+      } else if (latestPoint.yoy_growth <= -30 && currentBelowPeriod) {
+        currentStatus = 'belowNeg30';
+        currentDuration = currentBelowPeriod.count;
+      }
+    }
+
+    // Handle completed periods (not ongoing)
+    const completedAbove = currentStatus === 'above30' ? aboveThirty : [...aboveThirty];
+    const completedBelow = currentStatus === 'belowNeg30' ? belowNegThirty : [...belowNegThirty];
+
+    if (currentAbovePeriod && currentStatus !== 'above30') completedAbove.push(currentAbovePeriod.count);
+    if (currentBelowPeriod && currentStatus !== 'belowNeg30') completedBelow.push(currentBelowPeriod.count);
+
+    const avgAbove = completedAbove.length > 0
+      ? completedAbove.reduce((a, b) => a + b, 0) / completedAbove.length
       : 0;
-    const avgBelow = belowNegThirty.length > 0
-      ? belowNegThirty.reduce((a, b) => a + b, 0) / belowNegThirty.length
+    const avgBelow = completedBelow.length > 0
+      ? completedBelow.reduce((a, b) => a + b, 0) / completedBelow.length
       : 0;
 
     return {
       above30: {
         avgMonths: avgAbove,
-        occurrences: aboveThirty.length,
-        periods: aboveThirty
+        occurrences: completedAbove.length,
+        periods: completedAbove
       },
       belowNeg30: {
         avgMonths: avgBelow,
-        occurrences: belowNegThirty.length,
-        periods: belowNegThirty
+        occurrences: completedBelow.length,
+        periods: completedBelow
+      },
+      current: {
+        status: currentStatus,
+        duration: currentDuration,
+        yoyGrowth: latestPoint?.yoy_growth
       }
     };
   };
@@ -442,6 +465,43 @@ export default function App() {
 
         <div style={{ marginTop: '20px', background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
           <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Threshold Duration Statistics</h2>
+
+          <div style={{ marginBottom: '20px', padding: '16px', background: thresholdStats.current.status === 'above30' ? '#ef44441a' : thresholdStats.current.status === 'belowNeg30' ? '#22c55e1a' : '#0d0d1a', borderRadius: '8px', border: thresholdStats.current.status === 'above30' ? '2px solid #ef4444' : thresholdStats.current.status === 'belowNeg30' ? '2px solid #22c55e' : '1px solid #333' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#fff' }}>Current Status</div>
+            {thresholdStats.current.status === 'above30' ? (
+              <div>
+                <div style={{ color: '#ef4444', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+                  🔴 Above +30% Threshold
+                </div>
+                <div style={{ color: '#aaa', fontSize: '14px' }}>
+                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{thresholdStats.current.duration} {thresholdStats.current.duration === 1 ? 'month' : 'months'}</span>
+                </div>
+                <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
+                  Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
+                </div>
+              </div>
+            ) : thresholdStats.current.status === 'belowNeg30' ? (
+              <div>
+                <div style={{ color: '#22c55e', fontSize: '18px', fontWeight: 'bold', marginBottom: '4px' }}>
+                  🟢 Below -30% Threshold
+                </div>
+                <div style={{ color: '#aaa', fontSize: '14px' }}>
+                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{thresholdStats.current.duration} {thresholdStats.current.duration === 1 ? 'month' : 'months'}</span>
+                </div>
+                <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
+                  Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ color: '#888', fontSize: '16px' }}>No - Currently in neutral zone</div>
+                <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>
+                  Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}% (between -30% and +30%)
+                </div>
+              </div>
+            )}
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
             <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #ef444433' }}>
               <div style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>🔴 Above +30% Threshold (Euphoria)</div>
