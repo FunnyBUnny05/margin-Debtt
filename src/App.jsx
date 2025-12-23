@@ -225,6 +225,72 @@ export default function App() {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  const calculateThresholdStats = (data) => {
+    const aboveThirty = [];
+    const belowNegThirty = [];
+
+    let currentAbovePeriod = null;
+    let currentBelowPeriod = null;
+
+    data.forEach((point, idx) => {
+      if (point.yoy_growth === null) return;
+
+      // Track periods above +30%
+      if (point.yoy_growth >= 30) {
+        if (!currentAbovePeriod) {
+          currentAbovePeriod = { start: idx, count: 1 };
+        } else {
+          currentAbovePeriod.count++;
+        }
+      } else {
+        if (currentAbovePeriod) {
+          aboveThirty.push(currentAbovePeriod.count);
+          currentAbovePeriod = null;
+        }
+      }
+
+      // Track periods below -30%
+      if (point.yoy_growth <= -30) {
+        if (!currentBelowPeriod) {
+          currentBelowPeriod = { start: idx, count: 1 };
+        } else {
+          currentBelowPeriod.count++;
+        }
+      } else {
+        if (currentBelowPeriod) {
+          belowNegThirty.push(currentBelowPeriod.count);
+          currentBelowPeriod = null;
+        }
+      }
+    });
+
+    // Handle ongoing periods
+    if (currentAbovePeriod) aboveThirty.push(currentAbovePeriod.count);
+    if (currentBelowPeriod) belowNegThirty.push(currentBelowPeriod.count);
+
+    const avgAbove = aboveThirty.length > 0
+      ? aboveThirty.reduce((a, b) => a + b, 0) / aboveThirty.length
+      : 0;
+    const avgBelow = belowNegThirty.length > 0
+      ? belowNegThirty.reduce((a, b) => a + b, 0) / belowNegThirty.length
+      : 0;
+
+    return {
+      above30: {
+        avgMonths: avgAbove,
+        occurrences: aboveThirty.length,
+        periods: aboveThirty
+      },
+      belowNeg30: {
+        avgMonths: avgBelow,
+        occurrences: belowNegThirty.length,
+        periods: belowNegThirty
+      }
+    };
+  };
+
+  const thresholdStats = calculateThresholdStats(data);
+
   return (
     <div style={{ background: '#0d0d1a', color: '#e0e0e0', padding: isMobile ? '16px' : '20px', minHeight: '100vh', fontFamily: 'system-ui' }}>
       <div style={{ maxWidth: isMobile ? '720px' : '1200px', width: '100%', margin: '0 auto' }}>
@@ -372,6 +438,66 @@ export default function App() {
         <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
           <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
           2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
+        </div>
+
+        <div style={{ marginTop: '20px', background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
+          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Threshold Duration Statistics</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+            <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #ef444433' }}>
+              <div style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>🔴 Above +30% Threshold (Euphoria)</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '13px' }}>Average duration:</span>
+                  <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                    {thresholdStats.above30.avgMonths > 0
+                      ? `${thresholdStats.above30.avgMonths.toFixed(1)} months`
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '13px' }}>Number of occurrences:</span>
+                  <span style={{ color: '#fff', fontSize: '16px' }}>{thresholdStats.above30.occurrences}</span>
+                </div>
+                {thresholdStats.above30.periods.length > 0 && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #333' }}>
+                    <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Duration of each period (months):</div>
+                    <div style={{ color: '#aaa', fontSize: '12px' }}>
+                      {thresholdStats.above30.periods.join(', ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #22c55e33' }}>
+              <div style={{ color: '#22c55e', fontSize: '14px', fontWeight: 'bold', marginBottom: '12px' }}>🟢 Below -30% Threshold (Capitulation)</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '13px' }}>Average duration:</span>
+                  <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                    {thresholdStats.belowNeg30.avgMonths > 0
+                      ? `${thresholdStats.belowNeg30.avgMonths.toFixed(1)} months`
+                      : 'N/A'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#888', fontSize: '13px' }}>Number of occurrences:</span>
+                  <span style={{ color: '#fff', fontSize: '16px' }}>{thresholdStats.belowNeg30.occurrences}</span>
+                </div>
+                {thresholdStats.belowNeg30.periods.length > 0 && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #333' }}>
+                    <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Duration of each period (months):</div>
+                    <div style={{ color: '#aaa', fontSize: '12px' }}>
+                      {thresholdStats.belowNeg30.periods.join(', ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '12px', color: '#666', fontStyle: 'italic', textAlign: isMobile ? 'center' : 'left' }}>
+            Statistics calculated from all available historical data. Each period represents consecutive months where YoY growth remained above/below the threshold.
+          </div>
         </div>
       </div>
     </div>
