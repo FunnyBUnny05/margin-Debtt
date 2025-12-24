@@ -225,6 +225,21 @@ export default function App() {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
+  const formatDuration = (months) => {
+    if (months === 0) return 'N/A';
+    const wholeMonths = Math.floor(months);
+    const remainderMonths = months - wholeMonths;
+    const days = Math.round(remainderMonths * 30);
+
+    if (wholeMonths === 0) {
+      return `${days} ${days === 1 ? 'day' : 'days'}`;
+    } else if (days === 0) {
+      return `${wholeMonths} ${wholeMonths === 1 ? 'month' : 'months'}`;
+    } else {
+      return `${wholeMonths} ${wholeMonths === 1 ? 'month' : 'months'}, ${days} ${days === 1 ? 'day' : 'days'}`;
+    }
+  };
+
   const calculateThresholdStats = (data) => {
     const aboveThirty = [];
     const belowNegThirty = [];
@@ -474,7 +489,7 @@ export default function App() {
                   🔴 Above +30% Threshold
                 </div>
                 <div style={{ color: '#aaa', fontSize: '14px' }}>
-                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{thresholdStats.current.duration} {thresholdStats.current.duration === 1 ? 'month' : 'months'}</span>
+                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{formatDuration(thresholdStats.current.duration)}</span>
                 </div>
                 <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
                   Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
@@ -486,7 +501,7 @@ export default function App() {
                   🟢 Below -30% Threshold
                 </div>
                 <div style={{ color: '#aaa', fontSize: '14px' }}>
-                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{thresholdStats.current.duration} {thresholdStats.current.duration === 1 ? 'month' : 'months'}</span>
+                  Duration: <span style={{ color: '#fff', fontWeight: 'bold' }}>{formatDuration(thresholdStats.current.duration)}</span>
                 </div>
                 <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
                   Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
@@ -509,9 +524,7 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#888', fontSize: '13px' }}>Average duration:</span>
                   <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-                    {thresholdStats.above30.avgMonths > 0
-                      ? `${thresholdStats.above30.avgMonths.toFixed(1)} months`
-                      : 'N/A'}
+                    {formatDuration(thresholdStats.above30.avgMonths)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -535,9 +548,7 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#888', fontSize: '13px' }}>Average duration:</span>
                   <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
-                    {thresholdStats.belowNeg30.avgMonths > 0
-                      ? `${thresholdStats.belowNeg30.avgMonths.toFixed(1)} months`
-                      : 'N/A'}
+                    {formatDuration(thresholdStats.belowNeg30.avgMonths)}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
