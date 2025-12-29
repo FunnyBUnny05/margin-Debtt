@@ -655,6 +655,14 @@ export default function App() {
               const avgBonds = aaiiData.reduce((sum, d) => sum + (d.bonds || 0), 0) / aaiiData.length;
               const avgCash = aaiiData.reduce((sum, d) => sum + (d.cash || 0), 0) / aaiiData.length;
 
+              // Calculate min and max values
+              const minStocks = Math.min(...aaiiData.map(d => d.stocks || Infinity));
+              const maxStocks = Math.max(...aaiiData.map(d => d.stocks || -Infinity));
+              const minBonds = Math.min(...aaiiData.map(d => d.bonds || Infinity));
+              const maxBonds = Math.max(...aaiiData.map(d => d.bonds || -Infinity));
+              const minCash = Math.min(...aaiiData.map(d => d.cash || Infinity));
+              const maxCash = Math.max(...aaiiData.map(d => d.cash || -Infinity));
+
               return (
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px', textAlign: isMobile ? 'center' : 'left' }}>
@@ -686,6 +694,46 @@ export default function App() {
                       <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #22c55e33' }}>
                         <div style={{ color: '#888', fontSize: '12px' }}>Avg Cash</div>
                         <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#22c55e' }}>{avgCash.toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#888', marginBottom: '12px', textAlign: isMobile ? 'center' : 'left' }}>Historical Extremes</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+                      <div>
+                        <h4 style={{ fontSize: '12px', color: '#666', marginBottom: '8px', textAlign: isMobile ? 'center' : 'left' }}>Lowest Allocations</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center' }}>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #3b82f622' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Stocks</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>{minStocks.toFixed(1)}%</div>
+                          </div>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #f59e0b22' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Bonds</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#f59e0b' }}>{minBonds.toFixed(1)}%</div>
+                          </div>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #22c55e22' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Cash</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#22c55e' }}>{minCash.toFixed(1)}%</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: '12px', color: '#666', marginBottom: '8px', textAlign: isMobile ? 'center' : 'left' }}>Highest Allocations</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center' }}>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #3b82f622' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Stocks</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>{maxStocks.toFixed(1)}%</div>
+                          </div>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #f59e0b22' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Bonds</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#f59e0b' }}>{maxBonds.toFixed(1)}%</div>
+                          </div>
+                          <div style={{ background: '#0d0d1a', padding: '12px', borderRadius: '8px', border: '1px solid #22c55e22' }}>
+                            <div style={{ color: '#888', fontSize: '11px' }}>Cash</div>
+                            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#22c55e' }}>{maxCash.toFixed(1)}%</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
