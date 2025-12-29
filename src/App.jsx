@@ -650,9 +650,14 @@ export default function App() {
               const currentAllocation = aaiiData[aaiiData.length - 1];
               const aaiiChartInterval = Math.floor((aaiiFilteredData.length || 1) / 8);
 
+              // Calculate historical averages
+              const avgStocks = aaiiData.reduce((sum, d) => sum + (d.stocks || 0), 0) / aaiiData.length;
+              const avgBonds = aaiiData.reduce((sum, d) => sum + (d.bonds || 0), 0) / aaiiData.length;
+              const avgCash = aaiiData.reduce((sum, d) => sum + (d.cash || 0), 0) / aaiiData.length;
+
               return (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px', textAlign: isMobile ? 'center' : 'left' }}>
                     <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
                       <div style={{ color: '#888', fontSize: '12px' }}>Stocks Allocation ({currentAllocation?.date})</div>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>{currentAllocation?.stocks?.toFixed(1) || 'N/A'}%</div>
@@ -664,6 +669,24 @@ export default function App() {
                     <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
                       <div style={{ color: '#888', fontSize: '12px' }}>Cash Allocation</div>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>{currentAllocation?.cash?.toFixed(1) || 'N/A'}%</div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#888', marginBottom: '12px', textAlign: isMobile ? 'center' : 'left' }}>Historical Average (Since 1987)</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: '16px', textAlign: isMobile ? 'center' : 'left' }}>
+                      <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #3b82f633' }}>
+                        <div style={{ color: '#888', fontSize: '12px' }}>Avg Stocks</div>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>{avgStocks.toFixed(1)}%</div>
+                      </div>
+                      <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #f59e0b33' }}>
+                        <div style={{ color: '#888', fontSize: '12px' }}>Avg Bonds</div>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#f59e0b' }}>{avgBonds.toFixed(1)}%</div>
+                      </div>
+                      <div style={{ background: '#0d0d1a', padding: '16px', borderRadius: '8px', border: '1px solid #22c55e33' }}>
+                        <div style={{ color: '#888', fontSize: '12px' }}>Avg Cash</div>
+                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#22c55e' }}>{avgCash.toFixed(1)}%</div>
+                      </div>
                     </div>
                   </div>
 
