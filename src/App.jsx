@@ -88,9 +88,12 @@ const parseFinraMarginCsv = (text) => {
 export default function App() {
   const [rawData, setRawData] = useState([]);
   const [metadata, setMetadata] = useState(null);
+  const [aaiiRawData, setAaiiRawData] = useState([]);
+  const [aaiiMetadata, setAaiiMetadata] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
+  const [dataSource, setDataSource] = useState('margin');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
   useEffect(() => {
@@ -148,14 +151,34 @@ export default function App() {
         }
       };
 
-      try {
-        await loadMarginLive();
-      } catch (liveErr) {
-        try {
-          await loadMarginFallback();
-        } catch (fallbackErr) {
-          setError(liveErr.message || 'Unable to load margin data');
+      const loadAaiiData = async () => {
+        const res = await fetch('./aaii_allocation_data.json');
+        if (!res.ok) throw new Error('Failed to load AAII allocation data');
+        const json = await res.json();
+        if (!json.data?.length) throw new Error('No AAII data in local file');
+        if (!cancelled) {
+          setAaiiRawData(json.data);
+          setAaiiMetadata({
+            lastUpdated: json.last_updated,
+            source: json.source,
+            sourceUrl: json.source_url
+          });
         }
+      };
+
+      try {
+        await Promise.all([
+          loadMarginLive().catch(async (liveErr) => {
+            await loadMarginFallback().catch((fallbackErr) => {
+              throw liveErr;
+            });
+          }),
+          loadAaiiData().catch(() => {
+            // AAII data is optional, don't fail if missing
+          })
+        ]);
+      } catch (err) {
+        setError(err.message || 'Unable to load data');
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -334,17 +357,52 @@ export default function App() {
       <div style={{ maxWidth: isMobile ? '720px' : '1200px', width: '100%', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'flex-start', marginBottom: '8px', gap: isMobile ? '12px' : '0', flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left' }}>
           <div style={{ width: '100%' }}>
-            <h1 style={{ fontSize: '24px', marginBottom: '8px', color: '#fff' }}>FINRA Margin Debt Tracker</h1>
-            <p style={{ color: '#888', marginBottom: '4px' }}>Securities margin account debit balances ($ billions)</p>
+            <h1 style={{ fontSize: '24px', marginBottom: '8px', color: '#fff' }}>
+              {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : 'AAII Asset Allocation Survey'}
+            </h1>
+            <p style={{ color: '#888', marginBottom: '4px' }}>
+              {dataSource === 'margin' ? 'Securities margin account debit balances ($ billions)' : 'Individual investor asset allocation (%)'}
+            </p>
           </div>
-          {metadata && (
+          {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
             <div style={{ textAlign: isMobile ? 'center' : 'right', fontSize: '12px', color: '#666', width: '100%' }}>
-              <div>Last updated: {formatLastUpdated(metadata.lastUpdated)}</div>
-              <a href={metadata.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
-                Source: {metadata.source}
+              <div>Last updated: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}</div>
+              <a href={dataSource === 'margin' ? metadata?.sourceUrl : aaiiMetadata?.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+                Source: {dataSource === 'margin' ? metadata?.source : aaiiMetadata?.source}
               </a>
             </div>
           )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+          <button
+            onClick={() => setDataSource('margin')}
+            style={{
+              padding: '8px 20px',
+              background: dataSource === 'margin' ? '#ef4444' : '#1a1a2e',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            FINRA Margin Debt
+          </button>
+          <button
+            onClick={() => setDataSource('aaii')}
+            style={{
+              padding: '8px 20px',
+              background: dataSource === 'aaii' ? '#3b82f6' : '#1a1a2e',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            AAII Allocation
+          </button>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
@@ -366,33 +424,36 @@ export default function App() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
-          <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>Current ({currentDebt.date})</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>${currentDebt.margin_debt_bn.toFixed(0)}B</div>
-          </div>
-          <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>YoY Growth</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: currentDebt.yoy_growth > 0 ? '#ef4444' : '#22c55e' }}>
-              {currentDebt.yoy_growth > 0 ? '+' : ''}{currentDebt.yoy_growth?.toFixed(1) || 'N/A'}%
+        {dataSource === 'margin' && (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
+            <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>Current ({currentDebt.date})</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>${currentDebt.margin_debt_bn.toFixed(0)}B</div>
+            </div>
+            <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>YoY Growth</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: currentDebt.yoy_growth > 0 ? '#ef4444' : '#22c55e' }}>
+                {currentDebt.yoy_growth > 0 ? '+' : ''}{currentDebt.yoy_growth?.toFixed(1) || 'N/A'}%
+              </div>
+            </div>
+            <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>vs 2021 Peak</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
+                {currentDebt.margin_debt >= peak2021.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2021.margin_debt - 1) * 100).toFixed(0)}%
+              </div>
+            </div>
+            <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#888', fontSize: '12px' }}>vs 2000 Peak</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#a855f7' }}>
+                +{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
+              </div>
             </div>
           </div>
-          <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>vs 2021 Peak</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>
-              {currentDebt.margin_debt >= peak2021.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2021.margin_debt - 1) * 100).toFixed(0)}%
-            </div>
-          </div>
-          <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-            <div style={{ color: '#888', fontSize: '12px' }}>vs 2000 Peak</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#a855f7' }}>
-              +{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
-            </div>
-          </div>
-        </div>
+        )}
 
-        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Margin Debt Over Time</h2>
+        {dataSource === 'margin' && (
+          <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Margin Debt Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={filteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
@@ -434,9 +495,11 @@ export default function App() {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        )}
 
-        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Year-over-Year Growth Rate</h2>
+        {dataSource === 'margin' && (
+          <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
+            <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Year-over-Year Growth Rate</h2>
           <ResponsiveContainer width="100%" height={250}>
             <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -472,14 +535,18 @@ export default function App() {
             <span>🟢 -30% threshold (capitulation zone)</span>
           </div>
         </div>
+        )}
 
-        <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
-          <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
-          2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
-        </div>
+        {dataSource === 'margin' && (
+          <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
+            <strong style={{ color: '#f59e0b' }}>Historical pattern:</strong> Sustained 30%+ YoY margin debt growth has preceded every major market correction.
+            2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis. 2021 peak (+71% YoY) → 2022 bear market.
+          </div>
+        )}
 
-        <div style={{ marginTop: '20px', background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
-          <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Threshold Duration Statistics</h2>
+        {dataSource === 'margin' && (
+          <div style={{ marginTop: '20px', background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
+            <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Threshold Duration Statistics</h2>
 
           <div style={{ marginBottom: '20px', padding: '16px', background: thresholdStats.current.status === 'above30' ? '#ef44441a' : thresholdStats.current.status === 'belowNeg30' ? '#22c55e1a' : '#0d0d1a', borderRadius: '8px', border: thresholdStats.current.status === 'above30' ? '2px solid #ef4444' : thresholdStats.current.status === 'belowNeg30' ? '2px solid #22c55e' : '1px solid #333' }}>
             <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#fff' }}>Current Status</div>
@@ -570,6 +637,115 @@ export default function App() {
             Statistics calculated from all available historical data. Each period represents consecutive months where YoY growth remained above/below the threshold.
           </div>
         </div>
+        )}
+
+        {dataSource === 'aaii' && aaiiRawData.length > 0 && (
+          <>
+            {(() => {
+              const aaiiData = aaiiRawData;
+              const aaiiFilteredData = timeRange === 'all' ? aaiiData :
+                timeRange === '10y' ? aaiiData.slice(-120) :
+                timeRange === '5y' ? aaiiData.slice(-60) : aaiiData.slice(-24);
+
+              const currentAllocation = aaiiData[aaiiData.length - 1];
+              const aaiiChartInterval = Math.floor((aaiiFilteredData.length || 1) / 8);
+
+              return (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
+                    <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ color: '#888', fontSize: '12px' }}>Stocks Allocation ({currentAllocation?.date})</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>{currentAllocation?.stocks?.toFixed(1) || 'N/A'}%</div>
+                    </div>
+                    <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ color: '#888', fontSize: '12px' }}>Bonds Allocation</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f59e0b' }}>{currentAllocation?.bonds?.toFixed(1) || 'N/A'}%</div>
+                    </div>
+                    <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
+                      <div style={{ color: '#888', fontSize: '12px' }}>Cash Allocation</div>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>{currentAllocation?.cash?.toFixed(1) || 'N/A'}%</div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '16px', marginBottom: '16px', color: '#fff' }}>Asset Allocation Over Time</h2>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="bondsGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                          </linearGradient>
+                          <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#666"
+                          tick={{ fill: '#888', fontSize: 11 }}
+                          tickFormatter={formatDate}
+                          interval={aaiiChartInterval}
+                        />
+                        <YAxis
+                          stroke="#666"
+                          tick={{ fill: '#888', fontSize: 11 }}
+                          tickFormatter={(v) => `${v}%`}
+                          domain={[0, 100]}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="stocks"
+                          stroke="#3b82f6"
+                          fill="url(#stocksGradient)"
+                          name="Stocks"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="bonds"
+                          stroke="#f59e0b"
+                          fill="url(#bondsGradient)"
+                          name="Bonds"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="cash"
+                          stroke="#22c55e"
+                          fill="url(#cashGradient)"
+                          name="Cash"
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                    <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: '12px', color: '#888', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start', textAlign: isMobile ? 'center' : 'left' }}>
+                      <span style={{ color: '#3b82f6' }}>● Stocks</span>
+                      <span style={{ color: '#f59e0b' }}>● Bonds</span>
+                      <span style={{ color: '#22c55e' }}>● Cash</span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '20px', padding: '16px', background: '#1a1a2e', borderRadius: '8px', fontSize: '13px', color: '#888', textAlign: isMobile ? 'center' : 'left' }}>
+                    <strong style={{ color: '#3b82f6' }}>About AAII Asset Allocation:</strong> The AAII Asset Allocation Survey tracks how individual investors allocate their portfolios among stocks, bonds, and cash.
+                    Extreme allocations to stocks often signal euphoria, while high cash levels may indicate fear or caution in the markets.
+                  </div>
+                </>
+              );
+            })()}
+          </>
+        )}
+
+        {dataSource === 'aaii' && aaiiRawData.length === 0 && (
+          <div style={{ marginTop: '20px', padding: '40px', background: '#1a1a2e', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ fontSize: '18px', color: '#888', marginBottom: '12px' }}>No AAII Data Available</div>
+            <div style={{ fontSize: '14px', color: '#666' }}>Please provide the AAII allocation data to display charts.</div>
+          </div>
+        )}
       </div>
     </div>
   );
