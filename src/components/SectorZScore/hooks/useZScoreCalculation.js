@@ -17,30 +17,65 @@ const calculateReturns = (prices, periodWeeks) => {
   return returns;
 };
 
-const alignDates = (sectorReturns, benchmarkReturns) => {
-  // Create a map of benchmark returns by date string
-  const benchmarkMap = new Map();
-  for (const br of benchmarkReturns) {
-    const dateKey = br.date.toISOString().split('T')[0];
-    benchmarkMap.set(dateKey, br.return);
+// Binary search helper to find nearest date within tolerance
+const findNearestDate = (sortedDates, targetTimestamp, tolerance) => {
+  let left = 0;
+  let right = sortedDates.length - 1;
+  let nearest = null;
+  let minDiff = Infinity;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    const midTimestamp = sortedDates[mid].timestamp;
+    const diff = Math.abs(targetTimestamp - midTimestamp);
+
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearest = sortedDates[mid];
+    }
+
+    if (midTimestamp < targetTimestamp) {
+      left = mid + 1;
+    } else if (midTimestamp > targetTimestamp) {
+      right = mid - 1;
+    } else {
+      break; // Exact match found
+    }
   }
 
+  return minDiff <= tolerance ? nearest : null;
+};
+
+const alignDates = (sectorReturns, benchmarkReturns) => {
+  // Create both a map and sorted array for efficient lookups
+  const benchmarkMap = new Map();
+  const benchmarkDates = [];
+
+  for (const br of benchmarkReturns) {
+    const dateKey = br.date.toISOString().split('T')[0];
+    const timestamp = br.date.getTime();
+    benchmarkMap.set(dateKey, br.return);
+    benchmarkDates.push({ timestamp, dateKey, return: br.return });
+  }
+
+  // Sort by timestamp for binary search
+  benchmarkDates.sort((a, b) => a.timestamp - b.timestamp);
+
   const aligned = [];
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
   for (const sr of sectorReturns) {
     const dateKey = sr.date.toISOString().split('T')[0];
 
-    // Try to find matching benchmark date (allow 7 day window)
+    // Try exact match first (O(1))
     let benchmarkReturn = benchmarkMap.get(dateKey);
 
+    // If no exact match, use binary search to find nearest date (O(log n))
     if (benchmarkReturn === undefined) {
-      // Look for nearby dates
-      const sectorDate = sr.date.getTime();
-      for (const [key, value] of benchmarkMap) {
-        const benchDate = new Date(key).getTime();
-        if (Math.abs(sectorDate - benchDate) <= 7 * 24 * 60 * 60 * 1000) {
-          benchmarkReturn = value;
-          break;
-        }
+      const sectorTimestamp = sr.date.getTime();
+      const nearest = findNearestDate(benchmarkDates, sectorTimestamp, SEVEN_DAYS_MS);
+      if (nearest) {
+        benchmarkReturn = nearest.return;
       }
     }
 
@@ -62,13 +97,22 @@ const calculateZScores = (alignedData, windowWeeks) => {
 
   const zScores = [];
 
-  for (let i = windowWeeks; i < alignedData.length; i++) {
-    const window = alignedData.slice(i - windowWeeks, i);
-    const relativeReturns = window.map(d => d.relativeReturn);
+  // Initialize the first window
+  let sum = 0;
+  let sumSq = 0;
 
-    const mean = relativeReturns.reduce((a, b) => a + b, 0) / relativeReturns.length;
-    const variance = relativeReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / relativeReturns.length;
-    const stdDev = Math.sqrt(variance);
+  for (let i = 0; i < windowWeeks; i++) {
+    const val = alignedData[i].relativeReturn;
+    sum += val;
+    sumSq += val * val;
+  }
+
+  // Calculate Z-scores using sliding window
+  for (let i = windowWeeks; i < alignedData.length; i++) {
+    // Calculate mean and standard deviation for current window
+    const mean = sum / windowWeeks;
+    const variance = (sumSq / windowWeeks) - (mean * mean);
+    const stdDev = Math.sqrt(Math.max(0, variance)); // Ensure non-negative
 
     const currentRelReturn = alignedData[i].relativeReturn;
     let zScore = stdDev > 0 ? (currentRelReturn - mean) / stdDev : 0;
@@ -83,6 +127,13 @@ const calculateZScores = (alignedData, windowWeeks) => {
       sectorReturn: alignedData[i].sectorReturn,
       benchmarkReturn: alignedData[i].benchmarkReturn
     });
+
+    // Update sliding window: remove oldest, add current
+    const oldVal = alignedData[i - windowWeeks].relativeReturn;
+    const newVal = currentRelReturn;
+
+    sum = sum - oldVal + newVal;
+    sumSq = sumSq - (oldVal * oldVal) + (newVal * newVal);
   }
 
   return zScores;
@@ -94,12 +145,15 @@ const aggregateToMonthly = (zScores) => {
   const monthlyMap = new Map();
 
   for (const entry of zScores) {
-    const monthKey = `${entry.date.getFullYear()}-${String(entry.date.getMonth() + 1).padStart(2, '0')}`;
+    // Use numeric key: year * 12 + month (faster than string concatenation)
+    const monthKey = entry.date.getFullYear() * 12 + entry.date.getMonth();
     // Keep the last entry for each month
     monthlyMap.set(monthKey, entry);
   }
 
-  return Array.from(monthlyMap.values()).sort((a, b) => a.date - b.date);
+  // Input is already sorted, so Map values maintain insertion order
+  // No need to sort again since we iterate in chronological order
+  return Array.from(monthlyMap.values());
 };
 
 export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnPeriod, zWindow) => {

@@ -21,13 +21,31 @@ const fetchWithTimeout = async (url, timeoutMs = 15000) => {
   }
 };
 
-// Convert cached data back to proper Date objects
+// Cache to store hydrated prices to prevent unnecessary re-renders
+const hydrationCache = new Map();
+
+// Convert cached data back to proper Date objects (memoized)
 const hydratePrices = (prices) => {
   if (!prices || !Array.isArray(prices)) return null;
-  return prices.map(p => ({
+
+  // Create a cache key based on first and last date + length
+  const cacheKey = `${prices[0]?.date}_${prices[prices.length - 1]?.date}_${prices.length}`;
+
+  // Return cached hydrated data if available
+  if (hydrationCache.has(cacheKey)) {
+    return hydrationCache.get(cacheKey);
+  }
+
+  // Hydrate the prices
+  const hydrated = prices.map(p => ({
     date: new Date(p.date),
     price: p.price
   }));
+
+  // Cache the hydrated result
+  hydrationCache.set(cacheKey, hydrated);
+
+  return hydrated;
 };
 
 const parseYahooData = (data) => {
