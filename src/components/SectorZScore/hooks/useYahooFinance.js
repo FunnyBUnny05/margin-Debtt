@@ -21,6 +21,15 @@ const fetchWithTimeout = async (url, timeoutMs = 15000) => {
   }
 };
 
+// Convert cached data back to proper Date objects
+const hydratePrices = (prices) => {
+  if (!prices || !Array.isArray(prices)) return null;
+  return prices.map(p => ({
+    date: new Date(p.date),
+    price: p.price
+  }));
+};
+
 const parseYahooData = (data) => {
   const result = data?.chart?.result?.[0];
   if (!result) return null;
@@ -49,7 +58,7 @@ const fetchYahooData = async (symbol) => {
   const cacheKey = `yahoo_${symbol}`;
   const cached = getCached(cacheKey);
   if (cached) {
-    return cached;
+    return hydratePrices(cached);
   }
 
   const endDate = Math.floor(Date.now() / 1000);
@@ -85,7 +94,7 @@ const fetchStooqData = async (symbol) => {
   const cacheKey = `stooq_${symbol}`;
   const cached = getCached(cacheKey);
   if (cached) {
-    return cached;
+    return hydratePrices(cached);
   }
 
   const stooqSymbol = symbol.toLowerCase() + '.us';
