@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
+import { SectorZScore } from './components/SectorZScore';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -358,10 +359,10 @@ export default function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'flex-start', marginBottom: '8px', gap: isMobile ? '12px' : '0', flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left' }}>
           <div style={{ width: '100%' }}>
             <h1 style={{ fontSize: '24px', marginBottom: '8px', color: '#fff' }}>
-              {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : 'AAII Asset Allocation Survey'}
+              {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : dataSource === 'aaii' ? 'AAII Asset Allocation Survey' : 'Sector Z-Score Dashboard'}
             </h1>
             <p style={{ color: '#888', marginBottom: '4px' }}>
-              {dataSource === 'margin' ? 'Securities margin account debit balances ($ billions)' : 'Individual investor asset allocation (%)'}
+              {dataSource === 'margin' ? 'Securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation (%)' : 'Relative sector performance vs benchmark'}
             </p>
           </div>
           {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -403,26 +404,42 @@ export default function App() {
           >
             AAII Allocation
           </button>
+          <button
+            onClick={() => setDataSource('sectors')}
+            style={{
+              padding: '8px 20px',
+              background: dataSource === 'sectors' ? '#a855f7' : '#1a1a2e',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Sector Z-Score
+          </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-          {['2y', '5y', '10y', 'all'].map(range => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              style={{
-                padding: '6px 16px',
-                background: timeRange === range ? '#3b82f6' : '#1a1a2e',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-            {range.toUpperCase()}
-          </button>
-          ))}
-        </div>
+        {dataSource !== 'sectors' && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            {['2y', '5y', '10y', 'all'].map(range => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                style={{
+                  padding: '6px 16px',
+                  background: timeRange === range ? '#3b82f6' : '#1a1a2e',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+              {range.toUpperCase()}
+            </button>
+            ))}
+          </div>
+        )}
 
         {dataSource === 'margin' && (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px', textAlign: isMobile ? 'center' : 'left' }}>
@@ -816,6 +833,10 @@ export default function App() {
             <div style={{ fontSize: '18px', color: '#888', marginBottom: '12px' }}>No AAII Data Available</div>
             <div style={{ fontSize: '14px', color: '#666' }}>Please provide the AAII allocation data to display charts.</div>
           </div>
+        )}
+
+        {dataSource === 'sectors' && (
+          <SectorZScore isMobile={isMobile} />
         )}
       </div>
     </div>
