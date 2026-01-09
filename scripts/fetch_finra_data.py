@@ -10,23 +10,31 @@ import requests
 from datetime import datetime
 from pathlib import Path
 
-FINRA_URL = "https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx"
+FINRA_CSV_URL = "https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv"
+FINRA_EXCEL_URL = "https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx"
 OUTPUT_PATH = Path(__file__).parent.parent / "public" / "margin_data.json"
 
 def fetch_finra_data():
-    """Download and parse FINRA margin statistics Excel file."""
-    print(f"Fetching FINRA data from {FINRA_URL}")
-    
-    # Download Excel file
-    response = requests.get(FINRA_URL, timeout=30)
-    response.raise_for_status()
-    
-    # Parse Excel
-    df = pd.read_excel(response.content, engine='openpyxl')
-    
+    """Download and parse FINRA margin statistics file."""
+    print(f"Fetching FINRA data from {FINRA_CSV_URL}")
+
+    # Try CSV first (faster and more reliable)
+    try:
+        response = requests.get(FINRA_CSV_URL, timeout=30)
+        response.raise_for_status()
+        from io import StringIO
+        df = pd.read_csv(StringIO(response.text))
+        print("Successfully fetched CSV data")
+    except Exception as e:
+        print(f"CSV fetch failed: {e}, trying Excel...")
+        response = requests.get(FINRA_EXCEL_URL, timeout=30)
+        response.raise_for_status()
+        df = pd.read_excel(response.content, engine='openpyxl')
+        print("Successfully fetched Excel data")
+
     # Clean column names
     df.columns = df.columns.str.strip()
-    
+
     # Find the margin debt column (debit balances)
     debit_col = [c for c in df.columns if 'Debit' in c and 'Margin' in c][0]
     

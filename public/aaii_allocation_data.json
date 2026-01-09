@@ -1,5 +1,6 @@
 {
   "last_updated": "2025-11-30T00:00:00Z",
+  "last_checked": "2026-01-09T16:05:12.647738Z",
   "source": "AAII Asset Allocation Survey",
   "source_url": "https://www.aaii.com/",
   "data": [
@@ -2745,5 +2746,6 @@
       "bonds": 14,
       "cash": 14.8
     }
-  ]
+  ],
+  "note": "AAII Asset Allocation data requires membership access. Manual updates recommended."
 }
