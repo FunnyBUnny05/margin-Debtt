@@ -1,8 +1,8 @@
-name: Update FINRA Data & Deploy
+name: Update Market Data & Deploy
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
   workflow_dispatch:
   push:
     branches: [main]
@@ -17,24 +17,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+
       - name: Install Python dependencies
-        run: pip install pandas openpyxl requests
-      
+        run: pip install pandas openpyxl requests beautifulsoup4
+
       - name: Fetch FINRA margin data
         run: python scripts/fetch_finra_data.py
-      
+
+      - name: Fetch AAII allocation data
+        run: python scripts/fetch_aaii_allocation.py
+
+      - name: Fetch CBOE Put/Call ratio data
+        run: python scripts/fetch_cboe_putcall.py
+
       - name: Commit updated data
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add public/margin_data.json
-          git diff --staged --quiet || git commit -m "Update FINRA margin data $(date +'%Y-%m-%d')"
+          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json
+          git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
   build-deploy:
