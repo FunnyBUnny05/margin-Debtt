@@ -22,6 +22,41 @@ export const useAlphaVantage = () => {
   const [data, setData] = useState(null);
 
   /**
+   * Fetches balance sheet data and calculates financial ratios
+   */
+  const fetchBalanceSheetRatios = async (ticker) => {
+    try {
+      const balanceUrl = `${ALPHA_VANTAGE_BASE_URL}?function=BALANCE_SHEET&symbol=${ticker.toUpperCase()}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+      const balanceResponse = await fetch(balanceUrl);
+      const balanceData = await balanceResponse.json();
+
+      // Get most recent quarterly balance sheet
+      const quarterlyReport = balanceData.quarterlyReports?.[0];
+
+      if (!quarterlyReport) {
+        return { current_ratio: 0, quick_ratio: 0, debt_to_equity: 0 };
+      }
+
+      // Extract balance sheet items
+      const currentAssets = safeFloat(quarterlyReport.totalCurrentAssets);
+      const currentLiabilities = safeFloat(quarterlyReport.totalCurrentLiabilities);
+      const inventory = safeFloat(quarterlyReport.inventory);
+      const totalDebt = safeFloat(quarterlyReport.shortLongTermDebtTotal) + safeFloat(quarterlyReport.longTermDebt);
+      const totalEquity = safeFloat(quarterlyReport.totalShareholderEquity);
+
+      // Calculate ratios
+      const current_ratio = currentLiabilities > 0 ? currentAssets / currentLiabilities : 0;
+      const quick_ratio = currentLiabilities > 0 ? (currentAssets - inventory) / currentLiabilities : 0;
+      const debt_to_equity = totalEquity > 0 ? totalDebt / totalEquity : 0;
+
+      return { current_ratio, quick_ratio, debt_to_equity };
+    } catch (error) {
+      console.warn('Error fetching balance sheet data:', error);
+      return { current_ratio: 0, quick_ratio: 0, debt_to_equity: 0 };
+    }
+  };
+
+  /**
    * Fetches and analyzes stock data for a given ticker
    */
   const analyzeStock = async (ticker) => {
@@ -35,6 +70,7 @@ export const useAlphaVantage = () => {
     setData(null);
 
     try {
+      // Fetch overview data
       const url = `${ALPHA_VANTAGE_BASE_URL}?function=OVERVIEW&symbol=${ticker.toUpperCase()}&apikey=${ALPHA_VANTAGE_API_KEY}`;
       const response = await fetch(url);
       const apiData = await response.json();
@@ -43,6 +79,9 @@ export const useAlphaVantage = () => {
       if (!apiData.Symbol) {
         throw new Error(apiData.Note || apiData['Error Message'] || 'Invalid ticker symbol or API error');
       }
+
+      // Fetch balance sheet ratios
+      const balanceSheetRatios = await fetchBalanceSheetRatios(ticker);
 
       // Extract and convert metrics
       const metrics = {
@@ -54,9 +93,9 @@ export const useAlphaVantage = () => {
         operating_margin: safeFloat(apiData.OperatingMarginTTM) * 100,
         roe: safeFloat(apiData.ReturnOnEquityTTM) * 100,
         roa: safeFloat(apiData.ReturnOnAssetsTTM) * 100,
-        current_ratio: safeFloat(apiData.CurrentRatio),
-        quick_ratio: safeFloat(apiData.QuickRatio),
-        debt_to_equity: safeFloat(apiData.DebtToEquity),
+        current_ratio: balanceSheetRatios.current_ratio,
+        quick_ratio: balanceSheetRatios.quick_ratio,
+        debt_to_equity: balanceSheetRatios.debt_to_equity,
         beta: safeFloat(apiData.Beta),
         revenue_growth: safeFloat(apiData.QuarterlyRevenueGrowthYOY) * 100,
         eps_growth: safeFloat(apiData.QuarterlyEarningsGrowthYOY) * 100,
