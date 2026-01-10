@@ -6,7 +6,9 @@ import {
   SCORE_WEIGHTS,
   RATING_THRESHOLDS,
   SCORE_COLORS,
-  STATUS_THRESHOLDS
+  STATUS_THRESHOLDS,
+  SECTOR_THRESHOLDS,
+  DEFAULT_SECTOR
 } from '../constants';
 
 /**
@@ -59,16 +61,24 @@ const calculateAverageScore = (scores) => {
 };
 
 /**
+ * Gets sector-specific thresholds or defaults
+ */
+export const getSectorThresholds = (sector) => {
+  return SECTOR_THRESHOLDS[sector] || SECTOR_THRESHOLDS[DEFAULT_SECTOR];
+};
+
+/**
  * Calculates valuation score based on P/E, PEG, P/B, and P/S ratios
  */
-export const calculateValuationScore = (metrics) => {
+export const calculateValuationScore = (metrics, sector) => {
+  const thresholds = getSectorThresholds(sector);
   const scores = [];
 
   if (metrics.pe_ratio > 0) {
     scores.push(scoreMetric(
       metrics.pe_ratio,
-      VALUATION_THRESHOLDS.PE_RATIO.good,
-      VALUATION_THRESHOLDS.PE_RATIO.bad,
+      thresholds.PE_RATIO.good,
+      thresholds.PE_RATIO.bad,
       true
     ));
   }
@@ -76,8 +86,8 @@ export const calculateValuationScore = (metrics) => {
   if (metrics.peg_ratio > 0) {
     scores.push(scoreMetric(
       metrics.peg_ratio,
-      VALUATION_THRESHOLDS.PEG_RATIO.good,
-      VALUATION_THRESHOLDS.PEG_RATIO.bad,
+      thresholds.PEG_RATIO.good,
+      thresholds.PEG_RATIO.bad,
       true
     ));
   }
@@ -85,8 +95,8 @@ export const calculateValuationScore = (metrics) => {
   if (metrics.pb_ratio > 0) {
     scores.push(scoreMetric(
       metrics.pb_ratio,
-      VALUATION_THRESHOLDS.PB_RATIO.good,
-      VALUATION_THRESHOLDS.PB_RATIO.bad,
+      thresholds.PB_RATIO.good,
+      thresholds.PB_RATIO.bad,
       true
     ));
   }
@@ -94,8 +104,8 @@ export const calculateValuationScore = (metrics) => {
   if (metrics.ps_ratio > 0) {
     scores.push(scoreMetric(
       metrics.ps_ratio,
-      VALUATION_THRESHOLDS.PS_RATIO.good,
-      VALUATION_THRESHOLDS.PS_RATIO.bad,
+      thresholds.PS_RATIO.good,
+      thresholds.PS_RATIO.bad,
       true
     ));
   }
@@ -106,14 +116,15 @@ export const calculateValuationScore = (metrics) => {
 /**
  * Calculates profitability score based on margins and returns
  */
-export const calculateProfitabilityScore = (metrics) => {
+export const calculateProfitabilityScore = (metrics, sector) => {
+  const thresholds = getSectorThresholds(sector);
   const scores = [];
 
   if (metrics.profit_margin > 0) {
     scores.push(scoreMetric(
       metrics.profit_margin,
-      PROFITABILITY_THRESHOLDS.PROFIT_MARGIN.good,
-      PROFITABILITY_THRESHOLDS.PROFIT_MARGIN.bad,
+      thresholds.PROFIT_MARGIN.good,
+      thresholds.PROFIT_MARGIN.bad,
       false
     ));
   }
@@ -121,8 +132,8 @@ export const calculateProfitabilityScore = (metrics) => {
   if (metrics.operating_margin > 0) {
     scores.push(scoreMetric(
       metrics.operating_margin,
-      PROFITABILITY_THRESHOLDS.OPERATING_MARGIN.good,
-      PROFITABILITY_THRESHOLDS.OPERATING_MARGIN.bad,
+      thresholds.OPERATING_MARGIN.good,
+      thresholds.OPERATING_MARGIN.bad,
       false
     ));
   }
@@ -130,8 +141,8 @@ export const calculateProfitabilityScore = (metrics) => {
   if (metrics.roe > 0) {
     scores.push(scoreMetric(
       metrics.roe,
-      PROFITABILITY_THRESHOLDS.ROE.good,
-      PROFITABILITY_THRESHOLDS.ROE.bad,
+      thresholds.ROE.good,
+      thresholds.ROE.bad,
       false
     ));
   }
@@ -139,8 +150,8 @@ export const calculateProfitabilityScore = (metrics) => {
   if (metrics.roa > 0) {
     scores.push(scoreMetric(
       metrics.roa,
-      PROFITABILITY_THRESHOLDS.ROA.good,
-      PROFITABILITY_THRESHOLDS.ROA.bad,
+      thresholds.ROA.good,
+      thresholds.ROA.bad,
       false
     ));
   }
@@ -151,14 +162,15 @@ export const calculateProfitabilityScore = (metrics) => {
 /**
  * Calculates financial health score based on liquidity and leverage ratios
  */
-export const calculateHealthScore = (metrics) => {
+export const calculateHealthScore = (metrics, sector) => {
+  const thresholds = getSectorThresholds(sector);
   const scores = [];
 
   if (metrics.current_ratio > 0) {
     scores.push(scoreMetric(
       metrics.current_ratio,
-      HEALTH_THRESHOLDS.CURRENT_RATIO.good,
-      HEALTH_THRESHOLDS.CURRENT_RATIO.bad,
+      thresholds.CURRENT_RATIO.good,
+      thresholds.CURRENT_RATIO.bad,
       false
     ));
   }
@@ -166,8 +178,8 @@ export const calculateHealthScore = (metrics) => {
   if (metrics.quick_ratio > 0) {
     scores.push(scoreMetric(
       metrics.quick_ratio,
-      HEALTH_THRESHOLDS.QUICK_RATIO.good,
-      HEALTH_THRESHOLDS.QUICK_RATIO.bad,
+      thresholds.QUICK_RATIO.good,
+      thresholds.QUICK_RATIO.bad,
       false
     ));
   }
@@ -175,8 +187,8 @@ export const calculateHealthScore = (metrics) => {
   if (metrics.debt_to_equity >= 0) {
     scores.push(scoreMetric(
       metrics.debt_to_equity,
-      HEALTH_THRESHOLDS.DEBT_TO_EQUITY.good,
-      HEALTH_THRESHOLDS.DEBT_TO_EQUITY.bad,
+      thresholds.DEBT_TO_EQUITY.good,
+      thresholds.DEBT_TO_EQUITY.bad,
       true
     ));
   }
@@ -187,14 +199,15 @@ export const calculateHealthScore = (metrics) => {
 /**
  * Calculates growth score based on revenue and EPS growth
  */
-export const calculateGrowthScore = (metrics) => {
+export const calculateGrowthScore = (metrics, sector) => {
+  const thresholds = getSectorThresholds(sector);
   const scores = [];
 
   if (metrics.revenue_growth !== 0) {
     scores.push(scoreMetric(
       metrics.revenue_growth,
-      GROWTH_THRESHOLDS.REVENUE_GROWTH.good,
-      GROWTH_THRESHOLDS.REVENUE_GROWTH.bad,
+      thresholds.REVENUE_GROWTH.good,
+      thresholds.REVENUE_GROWTH.bad,
       false
     ));
   }
@@ -202,8 +215,8 @@ export const calculateGrowthScore = (metrics) => {
   if (metrics.eps_growth !== 0) {
     scores.push(scoreMetric(
       metrics.eps_growth,
-      GROWTH_THRESHOLDS.EPS_GROWTH.good,
-      GROWTH_THRESHOLDS.EPS_GROWTH.bad,
+      thresholds.EPS_GROWTH.good,
+      thresholds.EPS_GROWTH.bad,
       false
     ));
   }
