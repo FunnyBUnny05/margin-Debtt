@@ -41,7 +41,9 @@ export const useAlphaVantage = () => {
       const currentAssets = safeFloat(quarterlyReport.totalCurrentAssets);
       const currentLiabilities = safeFloat(quarterlyReport.totalCurrentLiabilities);
       const inventory = safeFloat(quarterlyReport.inventory);
-      const totalDebt = safeFloat(quarterlyReport.shortLongTermDebtTotal) + safeFloat(quarterlyReport.longTermDebt);
+      const totalDebt = safeFloat(quarterlyReport.debtLongtermAndShorttermCombinedAmount) ||
+                       (safeFloat(quarterlyReport.shortTermDebt) + safeFloat(quarterlyReport.longTermDebt)) ||
+                       (safeFloat(quarterlyReport.currentDebt) + safeFloat(quarterlyReport.longTermDebtNoncurrent));
       const totalEquity = safeFloat(quarterlyReport.totalShareholderEquity);
 
       // Calculate ratios
@@ -102,12 +104,15 @@ export const useAlphaVantage = () => {
         dividend_yield: safeFloat(apiData.DividendYield) * 100
       };
 
-      // Calculate scores
+      // Get sector for sector-specific scoring
+      const sector = apiData.Sector || 'Technology';
+
+      // Calculate scores with sector-specific thresholds
       const scores = {
-        valuation: calculateValuationScore(metrics),
-        profitability: calculateProfitabilityScore(metrics),
-        health: calculateHealthScore(metrics),
-        growth: calculateGrowthScore(metrics)
+        valuation: calculateValuationScore(metrics, sector),
+        profitability: calculateProfitabilityScore(metrics, sector),
+        health: calculateHealthScore(metrics, sector),
+        growth: calculateGrowthScore(metrics, sector)
       };
 
       const overallScore = calculateOverallScore(scores);
