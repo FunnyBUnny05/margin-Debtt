@@ -74,12 +74,15 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#1a1a2e',
-            titleColor: '#fff',
-            bodyColor: '#e0e0e0',
-            borderColor: '#444',
+            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e0e7ff',
+            borderColor: 'rgba(167, 139, 250, 0.3)',
             borderWidth: 1,
-            padding: 10,
+            padding: 12,
+            cornerRadius: 8,
+            bodyFont: { size: 12 },
+            titleFont: { size: 13, weight: '600' },
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
@@ -109,12 +112,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
               }
             },
             grid: {
-              color: '#333',
+              color: 'rgba(255, 255, 255, 0.08)',
               drawBorder: false
             },
             ticks: {
-              color: '#888',
-              font: { size: 11 },
+              color: 'var(--text-tertiary)',
+              font: { size: 11, weight: '500' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
@@ -122,12 +125,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
             min: -6,
             max: 6,
             grid: {
-              color: '#333',
+              color: 'rgba(255, 255, 255, 0.08)',
               drawBorder: false
             },
             ticks: {
-              color: '#888',
-              font: { size: 11 },
+              color: 'var(--text-tertiary)',
+              font: { size: 11, weight: '500' },
               stepSize: 2
             }
           }
@@ -143,9 +146,9 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
 
             // Draw reference lines at -2, 0, +2
             const lines = [
-              { y: 2, color: '#22c55e', label: 'Extended (+2)' },
-              { y: 0, color: '#666', label: '' },
-              { y: -2, color: '#ef4444', label: 'Cyclical Low (-2)' }
+              { y: 2, color: 'rgba(255, 107, 107, 0.6)', label: 'Extended (+2)' },
+              { y: 0, color: 'rgba(255, 255, 255, 0.15)', label: '' },
+              { y: -2, color: 'rgba(81, 207, 102, 0.6)', label: 'Cyclical Low (-2)' }
             ];
 
             lines.forEach((line) => {

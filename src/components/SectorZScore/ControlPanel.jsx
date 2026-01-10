@@ -2,23 +2,40 @@ import React from 'react';
 import { BENCHMARKS, RETURN_PERIODS, Z_WINDOWS } from './constants';
 
 const SelectDropdown = ({ label, value, options, onChange, isMobile }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-    <label style={{ color: '#888', fontSize: '11px', textTransform: 'uppercase' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: isMobile ? '1 1 100%' : '1 1 auto' }}>
+    <label style={{
+      color: 'var(--text-tertiary)',
+      fontSize: '11px',
+      textTransform: 'uppercase',
+      fontWeight: '600',
+      letterSpacing: '0.5px'
+    }}>
       {label}
     </label>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        background: '#0d0d1a',
-        color: '#e0e0e0',
-        border: '1px solid #333',
-        borderRadius: '4px',
-        padding: isMobile ? '8px 10px' : '6px 10px',
+        background: 'var(--glass-bg)',
+        color: 'var(--text-primary)',
+        border: '1px solid var(--glass-border)',
+        borderRadius: 'var(--radius-md)',
+        padding: isMobile ? '10px 12px' : '8px 12px',
         fontSize: '13px',
+        fontWeight: '500',
         cursor: 'pointer',
         outline: 'none',
-        minWidth: isMobile ? '100%' : '120px'
+        minWidth: isMobile ? '100%' : '140px',
+        transition: 'all var(--transition-smooth)',
+        backdropFilter: 'blur(8px)'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.borderColor = 'var(--accent-purple)';
+        e.target.style.boxShadow = '0 0 0 3px rgba(167, 139, 250, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.borderColor = 'var(--glass-border)';
+        e.target.style.boxShadow = 'none';
       }}
     >
       {options.map((opt) => (
@@ -56,15 +73,14 @@ export const ControlPanel = ({
 
   return (
     <div
+      className="glass-card"
       style={{
         display: 'flex',
         gap: isMobile ? '12px' : '20px',
-        marginBottom: '20px',
+        marginBottom: '24px',
         flexWrap: 'wrap',
         justifyContent: isMobile ? 'center' : 'flex-start',
-        background: '#1a1a2e',
-        padding: '16px',
-        borderRadius: '8px'
+        padding: isMobile ? '20px' : '24px'
       }}
     >
       <SelectDropdown

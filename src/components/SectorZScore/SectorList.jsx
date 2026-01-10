@@ -9,18 +9,25 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
 
   return (
     <div
+      className="glass-card"
       style={{
-        background: '#1a1a2e',
-        borderRadius: '8px',
-        padding: '16px',
+        padding: isMobile ? '20px' : '24px',
         height: '100%',
         display: 'flex',
         flexDirection: 'column'
       }}
     >
-      <h3 style={{ color: '#fff', fontSize: '14px', margin: '0 0 12px 0' }}>
-        Sectors by Z-Score (Cheapest First)
-      </h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '20px' }}>🎯</div>
+        <h3 style={{
+          color: 'var(--text-primary)',
+          fontSize: '15px',
+          fontWeight: '600',
+          margin: 0
+        }}>
+          Sectors (Cheapest First)
+        </h3>
+      </div>
       <div
         style={{
           flex: 1,
@@ -36,41 +43,72 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              padding: '8px 10px',
-              marginBottom: '4px',
-              borderRadius: '4px',
+              padding: '10px 12px',
+              marginBottom: '6px',
+              borderRadius: 'var(--radius-md)',
               cursor: 'pointer',
-              background: selectedSector === sector.symbol ? '#3b82f61a' : 'transparent',
-              border: selectedSector === sector.symbol ? '1px solid #3b82f6' : '1px solid transparent',
-              transition: 'background 0.15s ease'
+              background: selectedSector === sector.symbol
+                ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.05) 100%)'
+                : 'rgba(255, 255, 255, 0.03)',
+              border: selectedSector === sector.symbol
+                ? '1px solid var(--accent-purple)'
+                : '1px solid transparent',
+              transition: 'all var(--transition-smooth)',
+              boxShadow: selectedSector === sector.symbol
+                ? '0 0 20px rgba(167, 139, 250, 0.2)'
+                : 'none'
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSector !== sector.symbol) {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                e.currentTarget.style.transform = 'translateX(2px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedSector !== sector.symbol) {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
               <div
                 style={{
-                  width: '8px',
-                  height: '8px',
+                  width: '10px',
+                  height: '10px',
                   borderRadius: '50%',
                   background: sector.color,
+                  boxShadow: `0 0 8px ${sector.color}66`,
+                  border: '2px solid rgba(255,255,255,0.15)',
                   flexShrink: 0
                 }}
               />
-              <span style={{ color: '#e0e0e0', fontSize: '13px', fontWeight: 'bold' }}>
+              <span style={{
+                color: 'var(--text-primary)',
+                fontSize: '13px',
+                fontWeight: '700'
+              }}>
                 {sector.symbol}
               </span>
               {!isMobile && (
-                <span style={{ color: '#888', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span style={{
+                  color: 'var(--text-tertiary)',
+                  fontSize: '11px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
                   {sector.name}
                 </span>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
               <span
                 style={{
-                  color: sector.currentZScore < 0 ? '#22c55e' : '#ef4444',
-                  fontWeight: 'bold',
+                  color: sector.currentZScore < 0 ? 'var(--accent-emerald)' : 'var(--accent-coral)',
+                  fontWeight: '700',
                   fontSize: '13px',
-                  minWidth: '45px',
+                  minWidth: '50px',
                   textAlign: 'right'
                 }}
               >
@@ -81,8 +119,14 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
           </div>
         ))}
         {sorted.length === 0 && (
-          <div style={{ color: '#666', textAlign: 'center', padding: '20px', fontSize: '13px' }}>
-            Loading sector data...
+          <div style={{
+            color: 'var(--text-tertiary)',
+            textAlign: 'center',
+            padding: '40px 20px',
+            fontSize: '13px'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px' }} className="pulse-animation">⏳</div>
+            <div>Loading sector data...</div>
           </div>
         )}
       </div>
