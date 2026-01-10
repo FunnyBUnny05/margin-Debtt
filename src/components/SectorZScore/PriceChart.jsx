@@ -102,20 +102,25 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
             display: true,
             position: 'top',
             labels: {
-              color: '#888',
-              font: { size: 11 },
+              color: 'var(--text-secondary)',
+              font: { size: 11, weight: '500' },
               usePointStyle: true,
-              padding: 15
+              padding: 15,
+              boxWidth: 6,
+              boxHeight: 6
             }
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#1a1a2e',
-            titleColor: '#fff',
-            bodyColor: '#e0e0e0',
-            borderColor: '#444',
+            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            titleColor: '#ffffff',
+            bodyColor: '#e0e7ff',
+            borderColor: 'rgba(167, 139, 250, 0.3)',
             borderWidth: 1,
-            padding: 10,
+            padding: 12,
+            cornerRadius: 8,
+            bodyFont: { size: 12 },
+            titleFont: { size: 13, weight: '600' },
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
@@ -142,23 +147,23 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
               }
             },
             grid: {
-              color: '#333',
+              color: 'rgba(255, 255, 255, 0.08)',
               drawBorder: false
             },
             ticks: {
-              color: '#888',
-              font: { size: 11 },
+              color: 'var(--text-tertiary)',
+              font: { size: 11, weight: '500' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
           y: {
             grid: {
-              color: '#333',
+              color: 'rgba(255, 255, 255, 0.08)',
               drawBorder: false
             },
             ticks: {
-              color: '#888',
-              font: { size: 11 },
+              color: 'var(--text-tertiary)',
+              font: { size: 11, weight: '500' },
               callback: (value) => `${value >= 0 ? '+' : ''}${value}%`
             }
           }
@@ -176,8 +181,8 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
 
             ctx.save();
             ctx.beginPath();
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1.5;
             ctx.moveTo(xAxis.left, yPixel);
             ctx.lineTo(xAxis.right, yPixel);
             ctx.stroke();
@@ -201,13 +206,16 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
         style={{
           height: '100%',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#666',
-          fontSize: '14px'
+          gap: '12px'
         }}
       >
-        Select a sector to view price performance
+        <div style={{ fontSize: '48px', opacity: 0.5 }}>📊</div>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
+          Select a sector to view price performance
+        </div>
       </div>
     );
   }

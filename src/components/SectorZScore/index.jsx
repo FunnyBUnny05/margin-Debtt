@@ -9,67 +9,64 @@ import { PriceChart } from './PriceChart';
 import { SignalBadge } from './SignalBadge';
 
 const LoadingState = ({ progress }) => (
-  <div
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '60px 20px',
-      color: '#888'
-    }}
-  >
-    <div
-      style={{
-        width: '40px',
-        height: '40px',
-        border: '3px solid #333',
-        borderTopColor: '#3b82f6',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        marginBottom: '16px'
-      }}
-    />
-    <style>
-      {`@keyframes spin { to { transform: rotate(360deg); } }`}
-    </style>
-    <div style={{ fontSize: '16px', marginBottom: '8px' }}>Loading sector data...</div>
+  <div className="glass-card" style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '60px 20px',
+    margin: '24px 0'
+  }}>
+    <div style={{ fontSize: '48px', marginBottom: '24px' }} className="pulse-animation">
+      🎯
+    </div>
+    <div style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
+      Loading Sector Analysis
+    </div>
     {progress.total > 0 && (
-      <div style={{ fontSize: '13px', color: '#666' }}>
-        Fetched {progress.current} of {progress.total} symbols
-      </div>
+      <>
+        <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
+          Fetching {progress.current} of {progress.total} symbols
+        </div>
+        <div style={{ width: '200px', height: '4px', background: 'var(--glass-bg)', borderRadius: '999px', overflow: 'hidden' }}>
+          <div
+            style={{
+              width: `${(progress.current / progress.total) * 100}%`,
+              height: '100%',
+              background: 'var(--gradient-purple)',
+              transition: 'width 0.3s ease',
+              borderRadius: '999px'
+            }}
+          />
+        </div>
+      </>
     )}
   </div>
 );
 
 const ErrorState = ({ error, onRetry }) => (
-  <div
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '60px 20px',
-      color: '#ef4444'
-    }}
-  >
-    <div style={{ fontSize: '18px', marginBottom: '12px' }}>Error Loading Data</div>
-    <div style={{ fontSize: '14px', color: '#888', marginBottom: '20px', textAlign: 'center' }}>
+  <div className="glass-card" style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '60px 20px',
+    margin: '24px 0',
+    border: '1px solid rgba(239, 68, 68, 0.3)'
+  }}>
+    <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚠️</div>
+    <div style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
+      Couldn't Load Sector Data
+    </div>
+    <div style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '24px', textAlign: 'center', maxWidth: '400px' }}>
       {error}
     </div>
     <button
       onClick={onRetry}
-      style={{
-        padding: '10px 24px',
-        background: '#3b82f6',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontSize: '14px'
-      }}
+      className="btn-primary"
+      style={{ background: 'var(--gradient-purple)' }}
     >
-      Retry
+      🔄 Retry
     </button>
   </div>
 );
@@ -89,83 +86,110 @@ const StatCards = ({ sectors, isMobile }) => {
 
   return (
     <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-        gap: '16px',
-        marginBottom: '24px'
-      }}
+      className="responsive-grid"
+      style={{ marginBottom: '24px' }}
     >
-      <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-        <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Cheapest Sector</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Cheapest Sector Card */}
+      <div className="stat-card animate-in" style={{
+        borderLeft: '3px solid var(--accent-emerald)',
+        background: 'linear-gradient(135deg, rgba(81, 207, 102, 0.05) 0%, rgba(81, 207, 102, 0) 100%), var(--glass-bg)'
+      }}>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          🔻 Cheapest Sector
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
           <div
             style={{
-              width: '10px',
-              height: '10px',
+              width: '16px',
+              height: '16px',
               borderRadius: '50%',
-              background: cheapest.color
+              background: cheapest.color,
+              boxShadow: `0 0 12px ${cheapest.color}66`,
+              border: '2px solid rgba(255,255,255,0.2)'
             }}
           />
-          <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#22c55e' }}>
+          <span style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
             {cheapest.symbol}
           </span>
         </div>
-        <div style={{ fontSize: '13px', color: '#888', marginTop: '4px' }}>
-          Z-Score: {cheapest.currentZScore.toFixed(2)}
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Z-Score:</span>
+          <span style={{ fontWeight: '600' }}>{cheapest.currentZScore.toFixed(2)}</span>
         </div>
       </div>
 
-      <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-        <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Most Extended</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Most Extended Card */}
+      <div className="stat-card animate-in" style={{
+        borderLeft: '3px solid var(--accent-coral)',
+        background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.05) 0%, rgba(255, 107, 107, 0) 100%), var(--glass-bg)',
+        animationDelay: '0.1s'
+      }}>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          🔺 Most Extended
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
           <div
             style={{
-              width: '10px',
-              height: '10px',
+              width: '16px',
+              height: '16px',
               borderRadius: '50%',
-              background: mostExtended.color
+              background: mostExtended.color,
+              boxShadow: `0 0 12px ${mostExtended.color}66`,
+              border: '2px solid rgba(255,255,255,0.2)'
             }}
           />
-          <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#ef4444' }}>
+          <span style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--accent-coral)' }}>
             {mostExtended.symbol}
           </span>
         </div>
-        <div style={{ fontSize: '13px', color: '#888', marginTop: '4px' }}>
-          Z-Score: {mostExtended.currentZScore.toFixed(2)}
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Z-Score:</span>
+          <span style={{ fontWeight: '600' }}>{mostExtended.currentZScore.toFixed(2)}</span>
         </div>
       </div>
 
-      <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-        <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Avg Z-Score</div>
-        <div
-          style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: avgZScore < 0 ? '#22c55e' : avgZScore > 0 ? '#ef4444' : '#888'
-          }}
-        >
-          {avgZScore.toFixed(2)}
+      {/* Average Z-Score Card */}
+      <div className="stat-card animate-in" style={{
+        borderLeft: '3px solid var(--accent-purple)',
+        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.05) 0%, rgba(167, 139, 250, 0) 100%), var(--glass-bg)',
+        animationDelay: '0.2s'
+      }}>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          📊 Average Z-Score
         </div>
-        <div style={{ marginTop: '4px' }}>
-          <SignalBadge zScore={avgZScore} />
+        <div style={{
+          fontSize: isMobile ? '28px' : '32px',
+          fontWeight: '700',
+          color: avgZScore < -1 ? 'var(--accent-emerald)' : avgZScore > 1 ? 'var(--accent-coral)' : 'var(--accent-blue)',
+          marginBottom: '8px'
+        }}>
+          {avgZScore >= 0 ? '+' : ''}{avgZScore.toFixed(2)}
         </div>
+        <SignalBadge zScore={avgZScore} />
       </div>
 
-      <div style={{ background: '#1a1a2e', padding: '16px', borderRadius: '8px' }}>
-        <div style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>Signal Count</div>
-        <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-          <div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#22c55e' }}>
+      {/* Signal Count Card */}
+      <div className="stat-card animate-in" style={{
+        borderLeft: '3px solid var(--accent-cyan)',
+        background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.05) 0%, rgba(34, 211, 238, 0) 100%), var(--glass-bg)',
+        animationDelay: '0.3s'
+      }}>
+        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          🎯 Signal Count
+        </div>
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
               {cyclicalLowCount}
             </div>
-            <div style={{ fontSize: '10px', color: '#888' }}>Cyclical Low</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Cyclical Low</div>
           </div>
-          <div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444' }}>
+          <div style={{ width: '1px', background: 'var(--glass-border)' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--accent-coral)' }}>
               {extendedCount}
             </div>
-            <div style={{ fontSize: '10px', color: '#888' }}>Extended</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Extended</div>
           </div>
         </div>
       </div>
@@ -227,41 +251,46 @@ export const SectorZScore = ({ isMobile }) => {
 
       <StatCards sectors={sectors} isMobile={isMobile} />
 
+      {/* Charts Layout */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 280px',
-          gap: '16px',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 320px',
+          gap: '20px',
           marginBottom: '24px'
         }}
       >
-        <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
-          <h2 style={{ fontSize: '16px', color: '#fff', margin: '0 0 16px 0' }}>
-            Z-Score Over Time
-          </h2>
-          <div style={{ height: isMobile ? '280px' : '350px' }}>
+        {/* Z-Score Chart */}
+        <div className="glass-card" style={{ padding: isMobile ? '20px' : '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ fontSize: '24px' }}>📈</div>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', margin: 0 }}>
+              Z-Score Over Time
+            </h2>
+          </div>
+          <div style={{ height: isMobile ? '300px' : '380px' }}>
             <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} />
           </div>
           <div
             style={{
               display: 'flex',
-              gap: '16px',
-              marginTop: '12px',
-              fontSize: '11px',
-              color: '#888',
+              gap: '24px',
+              marginTop: '16px',
+              fontSize: '12px',
               flexWrap: 'wrap',
               justifyContent: isMobile ? 'center' : 'flex-start'
             }}
           >
-            <span>
-              <span style={{ color: '#ef4444' }}>---</span> Cyclical Low (-2)
-            </span>
-            <span>
-              <span style={{ color: '#22c55e' }}>---</span> Extended (+2)
-            </span>
+            <div className="badge badge-warning" style={{ background: 'rgba(255, 107, 107, 0.12)', fontSize: '11px' }}>
+              <span>🔴</span> Cyclical Low (-2)
+            </div>
+            <div className="badge badge-success" style={{ background: 'rgba(81, 207, 102, 0.12)', fontSize: '11px' }}>
+              <span>🟢</span> Extended (+2)
+            </div>
           </div>
         </div>
 
+        {/* Sector List */}
         <SectorList
           sectors={sectors}
           selectedSector={selectedSector}
@@ -270,16 +299,40 @@ export const SectorZScore = ({ isMobile }) => {
         />
       </div>
 
-      <div style={{ background: '#1a1a2e', borderRadius: '8px', padding: '20px' }}>
-        <h2 style={{ fontSize: '16px', color: '#fff', margin: '0 0 16px 0' }}>
-          Price Performance vs {benchmark}
-          {selectedSectorData && (
-            <span style={{ fontWeight: 'normal', color: '#888', marginLeft: '8px' }}>
-              ({selectedSectorData.symbol} - {selectedSectorData.name})
+      {/* Price Performance Chart */}
+      <div className="glass-card" style={{ padding: isMobile ? '20px' : '28px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+          <div style={{ fontSize: '24px' }}>📊</div>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', margin: 0 }}>
+            Price Performance vs {benchmark}
+          </h2>
+        </div>
+        {selectedSectorData && (
+          <div style={{
+            fontSize: '14px',
+            color: 'var(--text-tertiary)',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                background: selectedSectorData.color,
+                boxShadow: `0 0 8px ${selectedSectorData.color}66`
+              }}
+            />
+            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+              {selectedSectorData.symbol}
             </span>
-          )}
-        </h2>
-        <div style={{ height: isMobile ? '250px' : '300px' }}>
+            <span>-</span>
+            <span>{selectedSectorData.name}</span>
+          </div>
+        )}
+        <div style={{ height: isMobile ? '280px' : '340px' }}>
           <PriceChart
             sectors={sectors}
             selectedSector={selectedSector}
@@ -290,22 +343,23 @@ export const SectorZScore = ({ isMobile }) => {
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: '20px',
-          padding: '16px',
-          background: '#1a1a2e',
-          borderRadius: '8px',
-          fontSize: '13px',
-          color: '#888',
-          textAlign: isMobile ? 'center' : 'left'
-        }}
-      >
-        <strong style={{ color: '#a855f7' }}>About Z-Scores:</strong> The Z-score measures how many
-        standard deviations a sector's relative performance is from its historical mean. Negative
-        Z-scores (below -2) indicate sectors that are historically cheap relative to the benchmark,
-        potentially signaling buying opportunities. Positive Z-scores (above +2) indicate extended
-        sectors that may be due for mean reversion.
+      {/* About Section */}
+      <div className="glass-card" style={{
+        padding: isMobile ? '20px' : '24px',
+        borderLeft: '4px solid var(--accent-purple)'
+      }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+          <div style={{ fontSize: '32px' }}>💡</div>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: 'var(--accent-purple)', fontSize: '15px' }}>About Z-Scores:</strong>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px', lineHeight: '1.6', margin: '8px 0 0 0' }}>
+              The Z-score measures how many standard deviations a sector's relative performance is from its historical mean.
+              Negative Z-scores (below -2) indicate sectors that are historically cheap relative to the benchmark,
+              potentially signaling buying opportunities. Positive Z-scores (above +2) indicate extended
+              sectors that may be due for mean reversion.
+            </p>
+          </div>
+        </div>
       </div>
     </>
   );
