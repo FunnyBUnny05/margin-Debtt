@@ -57,31 +57,87 @@ const alignDates = (sectorReturns, benchmarkReturns) => {
   return aligned;
 };
 
-const calculateZScores = (alignedData, windowWeeks) => {
+/**
+ * Calculate structural baseline - the long-term average relative return
+ * This represents the sector's "normal" performance vs benchmark
+ *
+ * Example: If Technology historically returns -0.5% vs SPY over 10 years,
+ * that's the structural baseline. Current performance is compared to this baseline.
+ */
+const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
+  if (alignedData.length < baselinePeriod) {
+    // If we don't have enough data for baseline period, use all available data
+    baselinePeriod = alignedData.length;
+  }
+
+  // Use the first N periods to establish the structural baseline
+  const baselineWindow = alignedData.slice(0, baselinePeriod);
+  const relativeReturns = baselineWindow.map(d => d.relativeReturn);
+
+  const sum = relativeReturns.reduce((a, b) => a + b, 0);
+  const baseline = sum / relativeReturns.length;
+
+  return baseline;
+};
+
+/**
+ * Calculate Z-scores using excess returns (adjusted for structural baseline)
+ *
+ * Old Method (FLAWED):
+ *   Z-Score = (Current Relative Return - Rolling Mean) / StdDev
+ *   Problem: Doesn't account for sector's structural relationship with benchmark
+ *
+ * New Method (IMPROVED):
+ *   1. Calculate Structural Baseline = 10-year average relative return
+ *   2. Calculate Excess Return = Current Relative Return - Structural Baseline
+ *   3. Z-Score = (Current Excess Return - Rolling Mean of Excess) / StdDev
+ *
+ * Example:
+ *   Sector baseline: -0.5% (typically underperforms SPY by 0.5%)
+ *   Current relative return: -1.5% vs SPY
+ *   Excess return: -1.5% - (-0.5%) = -1.0%
+ *   If this -1.0% excess is 2 std devs below mean → Z-Score = -2.0 (CHEAP)
+ */
+const calculateZScores = (alignedData, windowWeeks, baselinePeriod) => {
   if (alignedData.length < windowWeeks) return [];
+
+  // Calculate the structural baseline for this sector
+  const structuralBaseline = calculateStructuralBaseline(alignedData, baselinePeriod);
+
+  // Add excess returns to each data point
+  const dataWithExcess = alignedData.map(d => ({
+    ...d,
+    excessReturn: d.relativeReturn - structuralBaseline
+  }));
 
   const zScores = [];
 
-  for (let i = windowWeeks; i < alignedData.length; i++) {
-    const window = alignedData.slice(i - windowWeeks, i);
-    const relativeReturns = window.map(d => d.relativeReturn);
+  for (let i = windowWeeks; i < dataWithExcess.length; i++) {
+    const window = dataWithExcess.slice(i - windowWeeks, i);
+    const excessReturns = window.map(d => d.excessReturn);
 
-    const mean = relativeReturns.reduce((a, b) => a + b, 0) / relativeReturns.length;
-    const variance = relativeReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / relativeReturns.length;
+    // Calculate mean and stdDev of EXCESS returns (not relative returns)
+    const mean = excessReturns.reduce((a, b) => a + b, 0) / excessReturns.length;
+    const variance = excessReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / excessReturns.length;
     const stdDev = Math.sqrt(variance);
 
-    const currentRelReturn = alignedData[i].relativeReturn;
-    let zScore = stdDev > 0 ? (currentRelReturn - mean) / stdDev : 0;
+    const currentExcessReturn = dataWithExcess[i].excessReturn;
+    const currentRelReturn = dataWithExcess[i].relativeReturn;
+
+    // Calculate Z-Score based on excess returns
+    let zScore = stdDev > 0 ? (currentExcessReturn - mean) / stdDev : 0;
 
     // Clamp z-score to -6 to +6
     zScore = Math.max(-6, Math.min(6, zScore));
 
     zScores.push({
-      date: alignedData[i].date,
+      date: dataWithExcess[i].date,
       zScore,
       relativeReturn: currentRelReturn,
-      sectorReturn: alignedData[i].sectorReturn,
-      benchmarkReturn: alignedData[i].benchmarkReturn
+      excessReturn: currentExcessReturn,
+      structuralBaseline,
+      sectorReturn: dataWithExcess[i].sectorReturn,
+      benchmarkReturn: dataWithExcess[i].benchmarkReturn
     });
   }
 
@@ -102,7 +158,7 @@ const aggregateToMonthly = (zScores) => {
   return Array.from(monthlyMap.values()).sort((a, b) => a.date - b.date);
 };
 
-export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnPeriod, zWindow) => {
+export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnPeriod, zWindow, baselinePeriod = 520) => {
   return useMemo(() => {
     if (!benchmarkData || Object.keys(sectorData).length === 0) {
       return { sectors: [], dates: [], loading: true };
@@ -117,18 +173,25 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
           ...sector,
           zScores: [],
           currentZScore: null,
-          avgZScore: null
+          avgZScore: null,
+          structuralBaseline: null,
+          excessReturn: null
         };
       }
 
       const sectorReturns = calculateReturns(prices, returnPeriod);
       const alignedData = alignDates(sectorReturns, benchmarkReturns);
-      const zScores = calculateZScores(alignedData, zWindow);
+      const zScores = calculateZScores(alignedData, zWindow, baselinePeriod);
       const monthlyZScores = aggregateToMonthly(zScores);
 
-      const currentZScore = monthlyZScores.length > 0
-        ? monthlyZScores[monthlyZScores.length - 1].zScore
+      const currentData = monthlyZScores.length > 0
+        ? monthlyZScores[monthlyZScores.length - 1]
         : null;
+
+      const currentZScore = currentData ? currentData.zScore : null;
+      const structuralBaseline = currentData ? currentData.structuralBaseline : null;
+      const excessReturn = currentData ? currentData.excessReturn : null;
+      const relativeReturn = currentData ? currentData.relativeReturn : null;
 
       const avgZScore = monthlyZScores.length > 0
         ? monthlyZScores.reduce((sum, d) => sum + d.zScore, 0) / monthlyZScores.length
@@ -139,6 +202,9 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
         zScores: monthlyZScores,
         currentZScore,
         avgZScore,
+        structuralBaseline,
+        excessReturn,
+        relativeReturn,
         prices
       };
     });
@@ -158,7 +224,7 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
       dates: sortedDates,
       loading: false
     };
-  }, [sectorData, benchmarkData, sectors, returnPeriod, zWindow]);
+  }, [sectorData, benchmarkData, sectors, returnPeriod, zWindow, baselinePeriod]);
 };
 
 export default useZScoreCalculation;

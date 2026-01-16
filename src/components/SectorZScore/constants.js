@@ -47,4 +47,15 @@ export const SIGNAL_THRESHOLDS = {
   EXTENDED: 2
 };
 
+// Structural baseline period for calculating long-term average relative returns
+// This represents the sector's "normal" performance vs benchmark
+export const BASELINE_PERIODS = [
+  { value: 260, label: '5Y', years: 5 },
+  { value: 520, label: '10Y', years: 10 },
+  { value: 780, label: '15Y', years: 15 },
+  { value: 1040, label: '20Y', years: 20 }
+];
+
+export const DEFAULT_BASELINE_PERIOD = 520; // 10 years
+
 export const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
