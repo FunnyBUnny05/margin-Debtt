@@ -38,23 +38,33 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
     const validSectors = sectors.filter(s => s.zScores && s.zScores.length > 0);
     if (validSectors.length === 0) return;
 
+    // Only show selected sector if one is selected
+    const sectorsToShow = selectedSector
+      ? validSectors.filter(s => s.symbol === selectedSector)
+      : validSectors;
+
+    if (sectorsToShow.length === 0) return;
+
     const ctx = chartRef.current.getContext('2d');
 
-    const datasets = validSectors.map((sector) => {
-      const isSelected = selectedSector === sector.symbol;
+    const datasets = sectorsToShow.map((sector) => {
       return {
         label: sector.symbol,
         data: sector.zScores.map((d) => ({
           x: d.date,
-          y: d.zScore
+          y: d.zScore,
+          excessReturn: d.excessReturn,
+          relativeReturn: d.relativeReturn,
+          structuralBaseline: d.structuralBaseline
         })),
         borderColor: sector.color,
         backgroundColor: sector.color + '20',
-        borderWidth: isSelected ? 3 : 1,
+        borderWidth: 3,
         pointRadius: 0,
-        pointHoverRadius: isSelected ? 6 : 4,
-        tension: 0.1,
-        order: isSelected ? 0 : 1
+        pointHoverRadius: 6,
+        pointHitRadius: 15, // Makes hover easier - larger detection area
+        tension: 0.3,
+        fill: false
       };
     });
 
@@ -65,8 +75,9 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
         responsive: true,
         maintainAspectRatio: false,
         interaction: {
-          mode: 'index',
-          intersect: false
+          mode: 'nearest',
+          intersect: false,
+          axis: 'x'
         },
         plugins: {
           legend: {
@@ -74,31 +85,56 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
           },
           tooltip: {
             enabled: true,
-            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            backgroundColor: 'rgba(15, 23, 42, 0.98)',
             titleColor: '#ffffff',
             bodyColor: '#e0e7ff',
-            borderColor: 'rgba(167, 139, 250, 0.3)',
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8,
-            bodyFont: { size: 12 },
-            titleFont: { size: 13, weight: '600' },
+            borderColor: 'rgba(167, 139, 250, 0.5)',
+            borderWidth: 2,
+            padding: 16,
+            cornerRadius: 12,
+            bodyFont: { size: 13 },
+            titleFont: { size: 14, weight: '700' },
+            bodySpacing: 8,
+            displayColors: false,
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
                   const date = new Date(items[0].parsed.x);
-                  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                  const sector = items[0].dataset.label;
+                  return `${sector} - ${date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
                 }
                 return '';
               },
               label: (context) => {
-                return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                const dataPoint = context.raw;
+                const lines = [];
+                lines.push(`Z-Score: ${context.parsed.y.toFixed(2)}`);
+
+                if (dataPoint.structuralBaseline !== undefined) {
+                  lines.push(`Baseline: ${dataPoint.structuralBaseline >= 0 ? '+' : ''}${dataPoint.structuralBaseline.toFixed(2)}%`);
+                }
+
+                if (dataPoint.relativeReturn !== undefined) {
+                  lines.push(`Relative: ${dataPoint.relativeReturn >= 0 ? '+' : ''}${dataPoint.relativeReturn.toFixed(2)}%`);
+                }
+
+                if (dataPoint.excessReturn !== undefined) {
+                  lines.push(`Excess: ${dataPoint.excessReturn >= 0 ? '+' : ''}${dataPoint.excessReturn.toFixed(2)}%`);
+                }
+
+                return lines;
+              },
+              labelTextColor: (context) => {
+                return '#cbd5e1';
+              },
+              afterLabel: (context) => {
+                const zScore = context.parsed.y;
+                if (zScore <= -2) return '\n🔴 Cyclical Low (CHEAP)';
+                if (zScore >= 2) return '\n🟢 Extended (EXPENSIVE)';
+                if (zScore < -1) return '\n🟡 Somewhat Cheap';
+                if (zScore > 1) return '\n🟡 Somewhat Extended';
+                return '\n⚪ Neutral';
               }
-            },
-            filter: (item) => {
-              // Only show selected sector in tooltip, or all if none selected
-              if (!selectedSector) return true;
-              return item.dataset.label === selectedSector;
             }
           }
         },
