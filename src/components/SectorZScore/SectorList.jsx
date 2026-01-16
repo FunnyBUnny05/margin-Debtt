@@ -160,7 +160,7 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                 lineHeight: '1.6'
               }}>
                 <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                  📊 Breakdown:
+                  📊 Current Breakdown:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -209,12 +209,72 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                     color: 'var(--text-tertiary)',
                     fontStyle: 'italic'
                   }}>
-                    {sector.currentZScore <= -2
-                      ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year average`
-                      : sector.currentZScore >= 2
-                      ? `Outperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year average`
-                      : 'Performance near its historical norm'}
+                    {sector.excessReturn !== null && sector.excessReturn !== undefined && (
+                      <>
+                        {sector.excessReturn < -5
+                          ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year average`
+                          : sector.excessReturn > 5
+                          ? `Outperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year average`
+                          : Math.abs(sector.excessReturn) > 2
+                          ? sector.excessReturn < 0
+                            ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% vs its structural baseline`
+                            : `Outperforming ${Math.abs(sector.excessReturn).toFixed(2)}% vs its structural baseline`
+                          : 'Performance near its historical norm'}
+                      </>
+                    )}
                   </div>
+
+                  {/* Time Spent in Zones */}
+                  {sector.zScores && sector.zScores.length > 0 && (() => {
+                    const totalPoints = sector.zScores.length;
+                    const cyclicalLowCount = sector.zScores.filter(z => z.zScore <= -2).length;
+                    const cheapCount = sector.zScores.filter(z => z.zScore > -2 && z.zScore <= -1).length;
+                    const neutralCount = sector.zScores.filter(z => z.zScore > -1 && z.zScore < 1).length;
+                    const extendedLightCount = sector.zScores.filter(z => z.zScore >= 1 && z.zScore < 2).length;
+                    const extendedCount = sector.zScores.filter(z => z.zScore >= 2).length;
+
+                    const cyclicalLowPct = (cyclicalLowCount / totalPoints) * 100;
+                    const cheapPct = (cheapCount / totalPoints) * 100;
+                    const neutralPct = (neutralCount / totalPoints) * 100;
+                    const extendedLightPct = (extendedLightCount / totalPoints) * 100;
+                    const extendedPct = (extendedCount / totalPoints) * 100;
+
+                    return (
+                      <>
+                        <div style={{
+                          marginTop: '16px',
+                          paddingTop: '12px',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+                        }}>
+                          <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                            ⏱️ Historical Time Spent:
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-tertiary)' }}>🔴 Cyclical Low (≤ -2):</span>
+                              <span style={{ color: '#51cf66', fontWeight: '600' }}>{cyclicalLowPct.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-tertiary)' }}>🟡 Somewhat Cheap (-1 to -2):</span>
+                              <span style={{ color: '#fbbf24', fontWeight: '600' }}>{cheapPct.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-tertiary)' }}>⚪ Neutral (-1 to +1):</span>
+                              <span style={{ color: '#6366f1', fontWeight: '600' }}>{neutralPct.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-tertiary)' }}>🟡 Somewhat Extended (+1 to +2):</span>
+                              <span style={{ color: '#fbbf24', fontWeight: '600' }}>{extendedLightPct.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: 'var(--text-tertiary)' }}>🟢 Extended (≥ +2):</span>
+                              <span style={{ color: '#ff6b6b', fontWeight: '600' }}>{extendedPct.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
