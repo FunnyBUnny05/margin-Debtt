@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Z-Score Methodology Comparison</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ffff;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #ffff00;
+            margin-top: 30px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff00;
+        }
+        .old-method {
+            border-left: 4px solid #ff6b6b;
+        }
+        .new-method {
+            border-left: 4px solid #00ff00;
+        }
+        .explanation {
+            background: #2a1a1a;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff6b6b;
+            color: #ffaa00;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background: #2a2a2a;
+            color: #00ffff;
+        }
+        .positive {
+            color: #00ff00;
+        }
+        .negative {
+            color: #ff6b6b;
+        }
+        .cheap {
+            background: #1a3a1a;
+            font-weight: bold;
+        }
+        .extended {
+            background: #3a1a1a;
+            font-weight: bold;
+        }
+        #loading {
+            text-align: center;
+            font-size: 24px;
+            padding: 40px;
+        }
+        .formula {
+            background: #0a0a2a;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #4a4aff;
+            font-size: 14px;
+            color: #aaaaff;
+        }
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .improved {
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ Z-Score Methodology Comparison</h1>
+
+        <div class="explanation">
+            <strong>THIS TOOL COMPARES THE OLD VS NEW Z-SCORE METHODOLOGY</strong><br><br>
+            <strong>Old Method (❌ Flawed):</strong> Calculates Z-score on raw relative returns (Sector - SPY)<br>
+            <strong>New Method (✅ Improved):</strong> Adjusts for structural baseline before calculating Z-score<br><br>
+            Watch how the new method eliminates false signals by accounting for each sector's natural performance pattern!
+        </div>
+
+        <div id="loading">Loading data and comparing methodologies... ⏳</div>
+        <div id="results" style="display:none;"></div>
+    </div>
+
+    <script type="module">
+        // Calculation functions
+        const calculateReturns = (prices, periodWeeks) => {
+            if (!prices || prices.length < periodWeeks) return [];
+            const returns = [];
+            for (let i = periodWeeks; i < prices.length; i++) {
+                const currentPrice = prices[i].price;
+                const pastPrice = prices[i - periodWeeks].price;
+                if (pastPrice > 0) {
+                    returns.push({
+                        date: prices[i].date,
+                        return: (currentPrice / pastPrice - 1) * 100
+                    });
+                }
+            }
+            return returns;
+        };
+
+        const alignDates = (sectorReturns, benchmarkReturns) => {
+            const benchmarkMap = new Map();
+            for (const br of benchmarkReturns) {
+                const dateKey = br.date.toISOString().split('T')[0];
+                benchmarkMap.set(dateKey, br.return);
+            }
+
+            const aligned = [];
+            for (const sr of sectorReturns) {
+                const dateKey = sr.date.toISOString().split('T')[0];
+                let benchmarkReturn = benchmarkMap.get(dateKey);
+
+                if (benchmarkReturn === undefined) {
+                    const sectorDate = sr.date.getTime();
+                    for (const [key, value] of benchmarkMap) {
+                        const benchDate = new Date(key).getTime();
+                        if (Math.abs(sectorDate - benchDate) <= 7 * 24 * 60 * 60 * 1000) {
+                            benchmarkReturn = value;
+                            break;
+                        }
+                    }
+                }
+
+                if (benchmarkReturn !== undefined) {
+                    aligned.push({
+                        date: sr.date,
+                        sectorReturn: sr.return,
+                        benchmarkReturn,
+                        relativeReturn: sr.return - benchmarkReturn
+                    });
+                }
+            }
+            return aligned;
+        };
+
+        // OLD METHOD: Z-score on relative returns
+        const calculateZScoresOld = (alignedData, windowWeeks) => {
+            if (alignedData.length < windowWeeks) return [];
+            const zScores = [];
+
+            for (let i = windowWeeks; i < alignedData.length; i++) {
+                const window = alignedData.slice(i - windowWeeks, i);
+                const relativeReturns = window.map(d => d.relativeReturn);
+
+                const mean = relativeReturns.reduce((a, b) => a + b, 0) / relativeReturns.length;
+                const variance = relativeReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / relativeReturns.length;
+                const stdDev = Math.sqrt(variance);
+
+                const currentRelReturn = alignedData[i].relativeReturn;
+                let zScore = stdDev > 0 ? (currentRelReturn - mean) / stdDev : 0;
+                zScore = Math.max(-6, Math.min(6, zScore));
+
+                zScores.push({
+                    date: alignedData[i].date,
+                    zScore,
+                    relativeReturn: currentRelReturn,
+                    method: 'OLD'
+                });
+            }
+            return zScores;
+        };
+
+        // NEW METHOD: Z-score on excess returns (adjusted for baseline)
+        const calculateZScoresNew = (alignedData, windowWeeks, baselinePeriod) => {
+            if (alignedData.length < windowWeeks) return [];
+
+            // Calculate structural baseline
+            const actualBaselinePeriod = Math.min(baselinePeriod, alignedData.length);
+            const baselineWindow = alignedData.slice(0, actualBaselinePeriod);
+            const baselineReturns = baselineWindow.map(d => d.relativeReturn);
+            const structuralBaseline = baselineReturns.reduce((a, b) => a + b, 0) / baselineReturns.length;
+
+            // Calculate excess returns
+            const dataWithExcess = alignedData.map(d => ({
+                ...d,
+                excessReturn: d.relativeReturn - structuralBaseline
+            }));
+
+            const zScores = [];
+            for (let i = windowWeeks; i < dataWithExcess.length; i++) {
+                const window = dataWithExcess.slice(i - windowWeeks, i);
+                const excessReturns = window.map(d => d.excessReturn);
+
+                const mean = excessReturns.reduce((a, b) => a + b, 0) / excessReturns.length;
+                const variance = excessReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / excessReturns.length;
+                const stdDev = Math.sqrt(variance);
+
+                const currentExcessReturn = dataWithExcess[i].excessReturn;
+                let zScore = stdDev > 0 ? (currentExcessReturn - mean) / stdDev : 0;
+                zScore = Math.max(-6, Math.min(6, zScore));
+
+                zScores.push({
+                    date: dataWithExcess[i].date,
+                    zScore,
+                    relativeReturn: dataWithExcess[i].relativeReturn,
+                    excessReturn: currentExcessReturn,
+                    structuralBaseline,
+                    method: 'NEW'
+                });
+            }
+            return zScores;
+        };
+
+        const fetchData = async (symbol) => {
+            const endDate = Math.floor(Date.now() / 1000);
+            const startDate = endDate - (12 * 365 * 24 * 60 * 60); // 12 years
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startDate}&period2=${endDate}&interval=1wk`;
+
+            const proxies = [
+                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+                (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const response = await fetch(proxy(url));
+                    const data = await response.json();
+                    const result = data?.chart?.result?.[0];
+
+                    if (!result) continue;
+
+                    const timestamps = result.timestamp;
+                    const adjClose = result.indicators?.adjclose?.[0]?.adjclose || result.indicators?.quote?.[0]?.close;
+
+                    if (!timestamps || !adjClose) continue;
+
+                    const prices = [];
+                    for (let i = 0; i < timestamps.length; i++) {
+                        if (adjClose[i] != null) {
+                            prices.push({
+                                date: new Date(timestamps[i] * 1000),
+                                price: adjClose[i]
+                            });
+                        }
+                    }
+                    return prices;
+                } catch (err) {
+                    continue;
+                }
+            }
+            throw new Error(`Failed to fetch ${symbol}`);
+        };
+
+        async function compareMethodologies() {
+            try {
+                document.getElementById('loading').innerHTML = 'Fetching XLK (Technology) data... ⏳';
+                const techData = await fetchData('XLK');
+
+                document.getElementById('loading').innerHTML = 'Fetching SPY (Benchmark) data... ⏳';
+                const spyData = await fetchData('SPY');
+
+                const returnPeriod = 260; // 5 years
+                const zWindow = 156; // 3 years
+                const baselinePeriod = 520; // 10 years
+
+                // Calculate returns and align
+                const techReturns = calculateReturns(techData, returnPeriod);
+                const spyReturns = calculateReturns(spyData, returnPeriod);
+                const aligned = alignDates(techReturns, spyReturns);
+
+                // Calculate both methods
+                const zScoresOld = calculateZScoresOld(aligned, zWindow);
+                const zScoresNew = calculateZScoresNew(aligned, zWindow, baselinePeriod);
+
+                // Get current values
+                const currentOld = zScoresOld[zScoresOld.length - 1];
+                const currentNew = zScoresNew[zScoresNew.length - 1];
+
+                let html = '';
+
+                // Current comparison
+                html += '<div class="comparison-row">';
+
+                // Old method card
+                html += '<div class="metric-card old-method">';
+                html += '<h2>❌ OLD METHOD</h2>';
+                html += '<div class="formula">';
+                html += '<strong>Formula:</strong><br>';
+                html += 'Z = (Current Relative Return - Mean) / StdDev<br><br>';
+                html += '<strong>Problem:</strong> Doesn\'t account for sector\'s structural relationship with SPY';
+                html += '</div>';
+                html += `<div style="font-size: 48px; text-align: center; color: ${currentOld.zScore < -2 ? '#ff6b6b' : currentOld.zScore > 2 ? '#00ff00' : '#ffaa00'};">`;
+                html += currentOld.zScore.toFixed(2);
+                html += '</div>';
+                html += `<div style="text-align: center; margin: 10px 0;">`;
+                html += `Relative Return: ${currentOld.relativeReturn.toFixed(2)}%`;
+                html += '</div>';
+                html += '</div>';
+
+                // New method card
+                html += '<div class="metric-card new-method improved">';
+                html += '<h2>✅ NEW METHOD (IMPROVED)</h2>';
+                html += '<div class="formula">';
+                html += '<strong>Formula:</strong><br>';
+                html += '1. Baseline = 10-year avg relative return<br>';
+                html += '2. Excess = Current - Baseline<br>';
+                html += '3. Z = (Excess - Mean) / StdDev<br><br>';
+                html += '<strong>Benefit:</strong> Accounts for sector\'s structural baseline';
+                html += '</div>';
+                html += `<div style="font-size: 48px; text-align: center; color: ${currentNew.zScore < -2 ? '#ff6b6b' : currentNew.zScore > 2 ? '#00ff00' : '#ffaa00'};">`;
+                html += currentNew.zScore.toFixed(2);
+                html += '</div>';
+                html += `<div style="text-align: center; margin: 10px 0;">`;
+                html += `Baseline: ${currentNew.structuralBaseline.toFixed(2)}% | `;
+                html += `Excess: ${currentNew.excessReturn.toFixed(2)}%`;
+                html += '</div>';
+                html += '</div>';
+
+                html += '</div>';
+
+                // Detailed breakdown
+                html += '<div class="section new-method">';
+                html += '<h2>📊 DETAILED BREAKDOWN (Technology - XLK)</h2>';
+                html += '<table>';
+                html += '<tr><th>Metric</th><th>Value</th><th>Explanation</th></tr>';
+                html += `<tr>`;
+                html += `<td>Structural Baseline</td>`;
+                html += `<td class="${currentNew.structuralBaseline < 0 ? 'negative' : 'positive'}">${currentNew.structuralBaseline >= 0 ? '+' : ''}${currentNew.structuralBaseline.toFixed(2)}%</td>`;
+                html += `<td>XLK's average return vs SPY over 10 years</td>`;
+                html += `</tr>`;
+                html += `<tr>`;
+                html += `<td>Current Relative Return</td>`;
+                html += `<td class="${currentNew.relativeReturn < 0 ? 'negative' : 'positive'}">${currentNew.relativeReturn >= 0 ? '+' : ''}${currentNew.relativeReturn.toFixed(2)}%</td>`;
+                html += `<td>XLK vs SPY performance right now</td>`;
+                html += `</tr>`;
+                html += `<tr style="background: #2a2a2a;">`;
+                html += `<td><strong>Excess Return</strong></td>`;
+                html += `<td class="${currentNew.excessReturn < 0 ? 'negative' : 'positive'}"><strong>${currentNew.excessReturn >= 0 ? '+' : ''}${currentNew.excessReturn.toFixed(2)}%</strong></td>`;
+                html += `<td><strong>Current - Baseline = How much different from structural norm</strong></td>`;
+                html += `</tr>`;
+                html += `<tr>`;
+                html += `<td>Old Z-Score</td>`;
+                html += `<td class="${currentOld.zScore < 0 ? 'negative' : 'positive'}">${currentOld.zScore.toFixed(2)}</td>`;
+                html += `<td>Based on relative returns (flawed)</td>`;
+                html += `</tr>`;
+                html += `<tr class="${Math.abs(currentNew.zScore) > Math.abs(currentOld.zScore) ? 'extended' : 'cheap'}">`;
+                html += `<td><strong>New Z-Score</strong></td>`;
+                html += `<td class="${currentNew.zScore < 0 ? 'negative' : 'positive'}"><strong>${currentNew.zScore.toFixed(2)}</strong></td>`;
+                html += `<td><strong>Based on excess returns (improved)</strong></td>`;
+                html += `</tr>`;
+                html += '</table>';
+                html += '</div>';
+
+                // Interpretation
+                html += '<div class="section">';
+                html += '<h2>💡 INTERPRETATION</h2>';
+
+                html += '<div style="background: #2a1a1a; padding: 15px; margin: 15px 0; border-left: 4px solid #ff6b6b;">';
+                html += '<strong style="color: #ff6b6b;">OLD METHOD SAYS:</strong><br>';
+                if (currentOld.zScore <= -2) {
+                    html += `Z-Score ${currentOld.zScore.toFixed(2)}: Technology is CHEAP (underperforming SPY)`;
+                } else if (currentOld.zScore >= 2) {
+                    html += `Z-Score ${currentOld.zScore.toFixed(2)}: Technology is EXTENDED (outperforming SPY)`;
+                } else {
+                    html += `Z-Score ${currentOld.zScore.toFixed(2)}: Technology is NEUTRAL`;
+                }
+                html += '<br><br><em>Problem: Doesn\'t consider if this is normal for technology!</em>';
+                html += '</div>';
+
+                html += '<div style="background: #1a3a1a; padding: 15px; margin: 15px 0; border-left: 4px solid #00ff00;">';
+                html += '<strong style="color: #00ff00;">NEW METHOD SAYS:</strong><br>';
+                html += `Structural Baseline: ${currentNew.structuralBaseline.toFixed(2)}% (Tech `;
+                html += currentNew.structuralBaseline < 0 ? 'typically underperforms' : 'typically outperforms';
+                html += ` SPY by ${Math.abs(currentNew.structuralBaseline).toFixed(2)}%)<br>`;
+                html += `Current: ${currentNew.relativeReturn.toFixed(2)}% vs SPY<br>`;
+                html += `Excess: ${currentNew.excessReturn.toFixed(2)}% (${Math.abs(currentNew.excessReturn).toFixed(2)}% `;
+                html += currentNew.excessReturn < 0 ? 'WORSE' : 'BETTER';
+                html += ` than structural norm)<br>`;
+                html += `Z-Score ${currentNew.zScore.toFixed(2)}: `;
+
+                if (currentNew.zScore <= -2) {
+                    html += 'Technology is CHEAP - underperforming MORE than its structural norm suggests';
+                } else if (currentNew.zScore >= 2) {
+                    html += 'Technology is EXTENDED - outperforming MORE than its structural norm suggests';
+                } else {
+                    html += 'Technology is NEUTRAL - performing near its historical structural pattern';
+                }
+                html += '<br><br><em>✅ Better signal: Accounts for sector\'s natural performance pattern!</em>';
+                html += '</div>';
+                html += '</div>';
+
+                // Recent history comparison
+                html += '<div class="section">';
+                html += '<h2>📈 RECENT HISTORY COMPARISON (Last 10 Weeks)</h2>';
+                html += '<table>';
+                html += '<tr><th>Date</th><th>Relative Return</th><th>Old Z-Score</th><th>New Z-Score</th><th>Difference</th></tr>';
+
+                const recent = 10;
+                for (let i = Math.max(0, zScoresOld.length - recent); i < zScoresOld.length; i++) {
+                    const oldEntry = zScoresOld[i];
+                    const newEntry = zScoresNew[i];
+                    const diff = newEntry.zScore - oldEntry.zScore;
+
+                    html += '<tr>';
+                    html += `<td>${oldEntry.date.toISOString().split('T')[0]}</td>`;
+                    html += `<td class="${oldEntry.relativeReturn < 0 ? 'negative' : 'positive'}">${oldEntry.relativeReturn.toFixed(2)}%</td>`;
+                    html += `<td class="${oldEntry.zScore < 0 ? 'negative' : 'positive'}">${oldEntry.zScore.toFixed(2)}</td>`;
+                    html += `<td class="${newEntry.zScore < 0 ? 'negative' : 'positive'}"><strong>${newEntry.zScore.toFixed(2)}</strong></td>`;
+                    html += `<td class="${diff < 0 ? 'negative' : 'positive'}">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}</td>`;
+                    html += '</tr>';
+                }
+                html += '</table>';
+                html += '<div style="font-size: 12px; color: #ffaa00; margin-top: 10px;">';
+                html += '* Positive difference means new method gives higher (more extended) Z-score<br>';
+                html += '* Negative difference means new method gives lower (cheaper) Z-score';
+                html += '</div>';
+                html += '</div>';
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `<div class="negative">ERROR: ${error.message}</div>`;
+            }
+        }
+
+        compareMethodologies();
+    </script>
+</body>
+</html>

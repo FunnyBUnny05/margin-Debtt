@@ -351,13 +351,37 @@ export const SectorZScore = ({ isMobile }) => {
         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
           <div style={{ fontSize: '32px' }}>💡</div>
           <div style={{ flex: 1 }}>
-            <strong style={{ color: 'var(--accent-purple)', fontSize: '15px' }}>About Z-Scores:</strong>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px', lineHeight: '1.6', margin: '8px 0 0 0' }}>
-              The Z-score measures how many standard deviations a sector's relative performance is from its historical mean.
-              Negative Z-scores (below -2) indicate sectors that are historically cheap relative to the benchmark,
-              potentially signaling buying opportunities. Positive Z-scores (above +2) indicate extended
-              sectors that may be due for mean reversion.
+            <strong style={{ color: 'var(--accent-purple)', fontSize: '15px' }}>About Z-Scores (Improved Methodology):</strong>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px', lineHeight: '1.6', margin: '8px 0 12px 0' }}>
+              The Z-score measures how many standard deviations a sector's <strong style={{ color: 'var(--text-primary)' }}>excess performance</strong> is from its historical pattern.
+              This improved calculation accounts for each sector's <strong style={{ color: 'var(--text-primary)' }}>structural relationship</strong> with the benchmark.
             </p>
+            <div style={{
+              background: 'rgba(167, 139, 250, 0.08)',
+              padding: '12px 16px',
+              borderRadius: 'var(--radius-md)',
+              borderLeft: '3px solid var(--accent-purple)',
+              marginTop: '12px',
+              fontSize: '13px',
+              lineHeight: '1.7'
+            }}>
+              <div style={{ color: 'var(--text-primary)', fontWeight: '600', marginBottom: '8px' }}>How it works:</div>
+              <div style={{ color: 'var(--text-secondary)' }}>
+                1. <strong style={{ color: 'var(--text-primary)' }}>Structural Baseline:</strong> Calculate each sector's 10-year average return vs {benchmark}<br/>
+                2. <strong style={{ color: 'var(--text-primary)' }}>Excess Return:</strong> Current return minus the structural baseline<br/>
+                3. <strong style={{ color: 'var(--text-primary)' }}>Z-Score:</strong> How many standard deviations the excess return is from its mean
+              </div>
+              <div style={{
+                marginTop: '12px',
+                paddingTop: '12px',
+                borderTop: '1px solid rgba(167, 139, 250, 0.2)',
+                color: 'var(--text-tertiary)',
+                fontSize: '12px'
+              }}>
+                <strong style={{ color: 'var(--accent-emerald)' }}>Z-Score ≤ -2:</strong> Sector is underperforming MORE than its structural norm (CHEAP)<br/>
+                <strong style={{ color: 'var(--accent-coral)' }}>Z-Score ≥ +2:</strong> Sector is outperforming MORE than its structural norm (EXTENDED)
+              </div>
+            </div>
           </div>
         </div>
       </div>

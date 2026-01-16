@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Z-Score Debugger</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ffff;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #ffff00;
+            margin-top: 30px;
+        }
+        .section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #00ff00;
+        }
+        .explanation {
+            background: #2a1a1a;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff6b6b;
+            color: #ffaa00;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background: #2a2a2a;
+            color: #00ffff;
+        }
+        .positive {
+            color: #00ff00;
+        }
+        .negative {
+            color: #ff6b6b;
+        }
+        .cheap {
+            background: #1a3a1a;
+            font-weight: bold;
+        }
+        .extended {
+            background: #3a1a1a;
+            font-weight: bold;
+        }
+        #loading {
+            text-align: center;
+            font-size: 24px;
+            padding: 40px;
+        }
+        .formula {
+            background: #0a0a2a;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #4a4aff;
+            font-size: 14px;
+            color: #aaaaff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Z-Score Calculation Debugger</h1>
+
+        <div class="explanation">
+            <strong>WHAT IS Z-SCORE?</strong><br>
+            Z-Score measures how many standard deviations a sector's relative performance is from its historical average.<br><br>
+            <strong>Negative Z-Score (< -2):</strong> Sector is UNDERPERFORMING vs benchmark → "CHEAP"<br>
+            <strong>Positive Z-Score (> +2):</strong> Sector is OUTPERFORMING vs benchmark → "EXTENDED/EXPENSIVE"<br><br>
+            This is RELATIVE performance, not absolute valuation!
+        </div>
+
+        <div id="loading">Loading data... ⏳</div>
+        <div id="results" style="display:none;"></div>
+    </div>
+
+    <script type="module">
+        // Z-Score calculation functions
+        const calculateReturns = (prices, periodWeeks) => {
+            if (!prices || prices.length < periodWeeks) return [];
+
+            const returns = [];
+            for (let i = periodWeeks; i < prices.length; i++) {
+                const currentPrice = prices[i].price;
+                const pastPrice = prices[i - periodWeeks].price;
+                if (pastPrice > 0) {
+                    returns.push({
+                        date: prices[i].date,
+                        return: (currentPrice / pastPrice - 1) * 100
+                    });
+                }
+            }
+            return returns;
+        };
+
+        const alignDates = (sectorReturns, benchmarkReturns) => {
+            const benchmarkMap = new Map();
+            for (const br of benchmarkReturns) {
+                const dateKey = br.date.toISOString().split('T')[0];
+                benchmarkMap.set(dateKey, br.return);
+            }
+
+            const aligned = [];
+            for (const sr of sectorReturns) {
+                const dateKey = sr.date.toISOString().split('T')[0];
+                let benchmarkReturn = benchmarkMap.get(dateKey);
+
+                if (benchmarkReturn === undefined) {
+                    const sectorDate = sr.date.getTime();
+                    for (const [key, value] of benchmarkMap) {
+                        const benchDate = new Date(key).getTime();
+                        if (Math.abs(sectorDate - benchDate) <= 7 * 24 * 60 * 60 * 1000) {
+                            benchmarkReturn = value;
+                            break;
+                        }
+                    }
+                }
+
+                if (benchmarkReturn !== undefined) {
+                    aligned.push({
+                        date: sr.date,
+                        sectorReturn: sr.return,
+                        benchmarkReturn,
+                        relativeReturn: sr.return - benchmarkReturn
+                    });
+                }
+            }
+
+            return aligned;
+        };
+
+        const calculateZScores = (alignedData, windowWeeks) => {
+            if (alignedData.length < windowWeeks) return [];
+
+            const zScores = [];
+
+            for (let i = windowWeeks; i < alignedData.length; i++) {
+                const window = alignedData.slice(i - windowWeeks, i);
+                const relativeReturns = window.map(d => d.relativeReturn);
+
+                const mean = relativeReturns.reduce((a, b) => a + b, 0) / relativeReturns.length;
+                const variance = relativeReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / relativeReturns.length;
+                const stdDev = Math.sqrt(variance);
+
+                const currentRelReturn = alignedData[i].relativeReturn;
+                let zScore = stdDev > 0 ? (currentRelReturn - mean) / stdDev : 0;
+                zScore = Math.max(-6, Math.min(6, zScore));
+
+                zScores.push({
+                    date: alignedData[i].date,
+                    zScore,
+                    relativeReturn: currentRelReturn,
+                    sectorReturn: alignedData[i].sectorReturn,
+                    benchmarkReturn: alignedData[i].benchmarkReturn,
+                    mean,
+                    stdDev
+                });
+            }
+
+            return zScores;
+        };
+
+        // Fetch data function
+        const fetchData = async (symbol) => {
+            const endDate = Math.floor(Date.now() / 1000);
+            const startDate = endDate - (10 * 365 * 24 * 60 * 60); // 10 years
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startDate}&period2=${endDate}&interval=1wk`;
+
+            const proxies = [
+                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+                (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const response = await fetch(proxy(url));
+                    const data = await response.json();
+                    const result = data?.chart?.result?.[0];
+
+                    if (!result) continue;
+
+                    const timestamps = result.timestamp;
+                    const adjClose = result.indicators?.adjclose?.[0]?.adjclose || result.indicators?.quote?.[0]?.close;
+
+                    if (!timestamps || !adjClose) continue;
+
+                    const prices = [];
+                    for (let i = 0; i < timestamps.length; i++) {
+                        if (adjClose[i] != null) {
+                            prices.push({
+                                date: new Date(timestamps[i] * 1000),
+                                price: adjClose[i]
+                            });
+                        }
+                    }
+
+                    return prices;
+                } catch (err) {
+                    continue;
+                }
+            }
+            throw new Error(`Failed to fetch ${symbol}`);
+        };
+
+        // Main analysis
+        async function analyzeZScore() {
+            try {
+                document.getElementById('loading').innerHTML = 'Fetching XLK (Technology) data... ⏳';
+                const techData = await fetchData('XLK');
+
+                document.getElementById('loading').innerHTML = 'Fetching SPY (Benchmark) data... ⏳';
+                const spyData = await fetchData('SPY');
+
+                const returnPeriod = 260; // 5 years
+                const zWindow = 156; // 3 years
+
+                // Calculate returns
+                const techReturns = calculateReturns(techData, returnPeriod);
+                const spyReturns = calculateReturns(spyData, returnPeriod);
+
+                // Align and calculate Z-scores
+                const aligned = alignDates(techReturns, spyReturns);
+                const zScores = calculateZScores(aligned, zWindow);
+
+                // Get current Z-score
+                const current = zScores[zScores.length - 1];
+                const recent = zScores.slice(-12); // Last 12 weeks
+
+                let html = '<div class="section">';
+                html += '<h2>📊 CURRENT TECHNOLOGY (XLK) Z-SCORE</h2>';
+                html += `<div style="font-size: 48px; text-align: center; padding: 20px; ${current.zScore < -2 ? 'color: #ff6b6b;' : current.zScore > 2 ? 'color: #00ff00;' : 'color: #ffaa00;'}">`;
+                html += current.zScore.toFixed(2);
+                html += '</div>';
+
+                let signal = 'NEUTRAL';
+                if (current.zScore <= -2) signal = '🔴 CYCLICAL LOW (CHEAP)';
+                else if (current.zScore >= 2) signal = '🟢 EXTENDED (EXPENSIVE)';
+                else if (current.zScore < -1) signal = '🟡 SOMEWHAT CHEAP';
+                else if (current.zScore > 1) signal = '🟡 SOMEWHAT EXTENDED';
+
+                html += `<div style="font-size: 24px; text-align: center; padding: 10px;">${signal}</div>`;
+                html += '</div>';
+
+                // Explanation of the calculation
+                html += '<div class="section">';
+                html += '<h2>🧮 HOW THIS WAS CALCULATED</h2>';
+                html += '<div class="formula">';
+                html += `<strong>Step 1:</strong> Calculate 5-year returns for XLK and SPY<br>`;
+                html += `<strong>Step 2:</strong> Calculate Relative Return = XLK Return - SPY Return<br>`;
+                html += `<strong>Step 3:</strong> For current period, look back 3 years (156 weeks)<br>`;
+                html += `<strong>Step 4:</strong> Calculate mean and standard deviation of relative returns<br>`;
+                html += `<strong>Step 5:</strong> Z-Score = (Current Relative Return - Mean) / Std Dev<br><br>`;
+                html += `<strong>Current Values:</strong><br>`;
+                html += `• XLK Return: ${current.sectorReturn.toFixed(2)}%<br>`;
+                html += `• SPY Return: ${current.benchmarkReturn.toFixed(2)}%<br>`;
+                html += `• Relative Return: ${current.relativeReturn.toFixed(2)}%<br>`;
+                html += `• 3-Year Mean: ${current.mean.toFixed(2)}%<br>`;
+                html += `• 3-Year Std Dev: ${current.stdDev.toFixed(2)}%<br>`;
+                html += `• Z-Score: (${current.relativeReturn.toFixed(2)} - ${current.mean.toFixed(2)}) / ${current.stdDev.toFixed(2)} = ${current.zScore.toFixed(2)}<br>`;
+                html += '</div>';
+                html += '</div>';
+
+                // Recent history
+                html += '<div class="section">';
+                html += '<h2>📈 RECENT Z-SCORE HISTORY (Last 12 Weeks)</h2>';
+                html += '<table><tr><th>Date</th><th>XLK Return</th><th>SPY Return</th><th>Relative Return</th><th>Z-Score</th><th>Signal</th></tr>';
+
+                for (const entry of recent) {
+                    const signalClass = entry.zScore <= -2 ? 'cheap' : entry.zScore >= 2 ? 'extended' : '';
+                    const zScoreClass = entry.zScore < 0 ? 'negative' : 'positive';
+                    let signalText = 'Neutral';
+                    if (entry.zScore <= -2) signalText = 'CHEAP';
+                    else if (entry.zScore >= 2) signalText = 'EXTENDED';
+
+                    html += `<tr class="${signalClass}">`;
+                    html += `<td>${entry.date.toISOString().split('T')[0]}</td>`;
+                    html += `<td>${entry.sectorReturn.toFixed(2)}%</td>`;
+                    html += `<td>${entry.benchmarkReturn.toFixed(2)}%</td>`;
+                    html += `<td class="${entry.relativeReturn < 0 ? 'negative' : 'positive'}">${entry.relativeReturn.toFixed(2)}%</td>`;
+                    html += `<td class="${zScoreClass}">${entry.zScore.toFixed(2)}</td>`;
+                    html += `<td>${signalText}</td>`;
+                    html += '</tr>';
+                }
+
+                html += '</table></div>';
+
+                // All sectors summary
+                html += '<div class="section">';
+                html += '<h2>ℹ️ UNDERSTANDING THE RESULT</h2>';
+                html += '<div class="explanation">';
+                if (current.zScore < -2) {
+                    html += `<strong>Technology is showing as CHEAP because:</strong><br>`;
+                    html += `• XLK has been UNDERPERFORMING SPY recently<br>`;
+                    html += `• The current relative return (${current.relativeReturn.toFixed(2)}%) is significantly BELOW the 3-year average (${current.mean.toFixed(2)}%)<br>`;
+                    html += `• This means technology stocks have been lagging the broader market<br>`;
+                    html += `• From a mean-reversion perspective, this could signal a buying opportunity<br>`;
+                    html += `• However, this doesn't mean technology stocks are fundamentally cheap - just relatively underperforming!`;
+                } else if (current.zScore > 2) {
+                    html += `<strong>Technology is showing as EXTENDED because:</strong><br>`;
+                    html += `• XLK has been OUTPERFORMING SPY recently<br>`;
+                    html += `• The current relative return (${current.relativeReturn.toFixed(2)}%) is significantly ABOVE the 3-year average (${current.mean.toFixed(2)}%)<br>`;
+                    html += `• This means technology stocks have been leading the market<br>`;
+                    html += `• From a mean-reversion perspective, this could signal potential profit-taking opportunity<br>`;
+                    html += `• However, this doesn't mean technology stocks are fundamentally overvalued - just relatively outperforming!`;
+                } else {
+                    html += `<strong>Technology is NEUTRAL because:</strong><br>`;
+                    html += `• XLK's relative performance vs SPY is near its historical average<br>`;
+                    html += `• There's no strong mean-reversion signal at this time`;
+                }
+                html += '</div>';
+                html += '</div>';
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `<div class="negative">ERROR: ${error.message}</div>`;
+            }
+        }
+
+        analyzeZScore();
+    </script>
+</body>
+</html>
