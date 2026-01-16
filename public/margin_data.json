@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-12T07:04:34.472590Z",
+  "last_updated": "2026-01-16T12:43:27.922117Z",
   "source": "FINRA Margin Statistics",
   "source_url": "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics",
   "data": [
@@ -1736,6 +1736,11 @@
     {
       "date": "2025-11",
       "margin_debt": 1214321,
+      "yoy_growth": 36.3
+    },
+    {
+      "date": "2025-12",
+      "margin_debt": 1225597,
       "yoy_growth": 36.3
     }
   ]
