@@ -15,7 +15,18 @@ export const CandlestickChart = ({ isMobile }) => {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    // Cleanup existing chart if any
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+    }
+
+    const containerWidth = chartContainerRef.current.clientWidth;
+    const containerHeight = chartContainerRef.current.clientHeight;
+
     const chart = createChart(chartContainerRef.current, {
+      width: containerWidth,
+      height: containerHeight,
       layout: {
         background: { color: 'transparent' },
         textColor: '#94a3b8',
@@ -80,19 +91,23 @@ export const CandlestickChart = ({ isMobile }) => {
     // Handle resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
-        chart.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
+        const newWidth = chartContainerRef.current.clientWidth;
+        const newHeight = chartContainerRef.current.clientHeight;
+        chartRef.current.applyOptions({
+          width: newWidth,
+          height: newHeight,
         });
       }
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize();
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      chart.remove();
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
     };
   }, []);
 
@@ -237,41 +252,71 @@ export const CandlestickChart = ({ isMobile }) => {
   };
 
   const downloadScreenshot = () => {
-    if (!chartRef.current) return;
+    if (!chartRef.current || !csvData) {
+      setError('Please load data before taking a screenshot');
+      return;
+    }
 
     try {
-      const canvas = chartContainerRef.current.querySelector('canvas');
-      if (!canvas) {
+      // Use lightweight-charts' built-in screenshot function
+      const screenshot = chartRef.current.takeScreenshot();
+
+      if (!screenshot) {
         setError('Failed to capture chart screenshot');
         return;
       }
 
-      // Create a temporary canvas with dark background
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvas.width;
-      tempCanvas.height = canvas.height;
-      const ctx = tempCanvas.getContext('2d');
-
-      // Fill with dark background
-      ctx.fillStyle = '#0a0e27';
-      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-      // Draw the chart on top
-      ctx.drawImage(canvas, 0, 0);
-
-      // Convert to blob and download
-      tempCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `candlestick-chart-${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
+      // Create download link
+      const a = document.createElement('a');
+      a.href = screenshot.toDataURL();
+      a.download = `candlestick-chart-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err) {
-      setError(`Failed to download screenshot: ${err.message}`);
+      // Fallback method
+      try {
+        const canvases = chartContainerRef.current.querySelectorAll('canvas');
+        if (!canvases || canvases.length === 0) {
+          setError('Failed to capture chart screenshot');
+          return;
+        }
+
+        // Get the main canvas (usually the largest one)
+        let mainCanvas = canvases[0];
+        canvases.forEach(canvas => {
+          if (canvas.width * canvas.height > mainCanvas.width * mainCanvas.height) {
+            mainCanvas = canvas;
+          }
+        });
+
+        // Create a temporary canvas with dark background
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = mainCanvas.width;
+        tempCanvas.height = mainCanvas.height;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Fill with dark background
+        ctx.fillStyle = '#0a0e27';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Draw the chart on top
+        ctx.drawImage(mainCanvas, 0, 0);
+
+        // Convert to blob and download
+        tempCanvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `candlestick-chart-${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      } catch (fallbackErr) {
+        setError(`Failed to download screenshot: ${fallbackErr.message}`);
+      }
     }
   };
 
