@@ -6,128 +6,173 @@ export const CandlestickChart = ({ isMobile }) => {
   const [csvData, setCsvData] = useState(null);
   const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [chartReady, setChartReady] = useState(false);
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const candlestickSeriesRef = useRef(null);
   const volumeSeriesRef = useRef(null);
 
-  // Initialize chart
+  // Initialize chart with proper error handling
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    // Cleanup existing chart if any
-    if (chartRef.current) {
-      chartRef.current.remove();
-      chartRef.current = null;
+    // Wait for container to be ready
+    if (!chartContainerRef.current) {
+      console.log('Container not ready');
+      return;
     }
 
-    const containerWidth = chartContainerRef.current.clientWidth;
-    const containerHeight = chartContainerRef.current.clientHeight;
+    // Use setTimeout to ensure DOM is fully rendered
+    const initTimer = setTimeout(() => {
+      try {
+        // Cleanup existing chart if any
+        if (chartRef.current) {
+          chartRef.current.remove();
+          chartRef.current = null;
+          candlestickSeriesRef.current = null;
+          volumeSeriesRef.current = null;
+        }
 
-    const chart = createChart(chartContainerRef.current, {
-      width: containerWidth,
-      height: containerHeight,
-      layout: {
-        background: { color: 'transparent' },
-        textColor: '#94a3b8',
-      },
-      grid: {
-        vertLines: { color: 'rgba(148, 163, 184, 0.1)' },
-        horzLines: { color: 'rgba(148, 163, 184, 0.1)' },
-      },
-      crosshair: {
-        mode: 1,
-        vertLine: {
-          color: '#22d3ee',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: '#22d3ee',
-        },
-        horzLine: {
-          color: '#22d3ee',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: '#22d3ee',
-        },
-      },
-      rightPriceScale: {
-        borderColor: 'rgba(148, 163, 184, 0.2)',
-      },
-      timeScale: {
-        borderColor: 'rgba(148, 163, 184, 0.2)',
-        timeVisible: true,
-        secondsVisible: false,
-      },
-      handleScroll: {
-        vertTouchDrag: true,
-      },
-    });
+        const container = chartContainerRef.current;
+        if (!container) return;
 
-    const candlestickSeries = chart.addCandlestickSeries({
-      upColor: '#51cf66',
-      downColor: '#ff6b6b',
-      borderUpColor: '#51cf66',
-      borderDownColor: '#ff6b6b',
-      wickUpColor: '#51cf66',
-      wickDownColor: '#ff6b6b',
-    });
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
 
-    const volumeSeries = chart.addHistogramSeries({
-      color: '#60a5fa',
-      priceFormat: {
-        type: 'volume',
-      },
-      priceScaleId: 'volume',
-      scaleMargins: {
-        top: 0.8,
-        bottom: 0,
-      },
-    });
+        console.log('Creating chart with dimensions:', containerWidth, 'x', containerHeight);
 
-    chartRef.current = chart;
-    candlestickSeriesRef.current = candlestickSeries;
-    volumeSeriesRef.current = volumeSeries;
+        if (containerWidth === 0 || containerHeight === 0) {
+          console.error('Container has zero dimensions');
+          return;
+        }
 
-    // Handle resize
-    const handleResize = () => {
-      if (chartContainerRef.current && chartRef.current) {
-        const newWidth = chartContainerRef.current.clientWidth;
-        const newHeight = chartContainerRef.current.clientHeight;
-        chartRef.current.applyOptions({
-          width: newWidth,
-          height: newHeight,
+        const chart = createChart(container, {
+          width: containerWidth,
+          height: containerHeight,
+          layout: {
+            background: { type: 'solid', color: '#0a0e27' },
+            textColor: '#94a3b8',
+          },
+          grid: {
+            vertLines: { color: 'rgba(148, 163, 184, 0.1)' },
+            horzLines: { color: 'rgba(148, 163, 184, 0.1)' },
+          },
+          crosshair: {
+            mode: 1,
+            vertLine: {
+              color: '#22d3ee',
+              width: 1,
+              style: 2,
+              labelBackgroundColor: '#22d3ee',
+            },
+            horzLine: {
+              color: '#22d3ee',
+              width: 1,
+              style: 2,
+              labelBackgroundColor: '#22d3ee',
+            },
+          },
+          rightPriceScale: {
+            borderColor: 'rgba(148, 163, 184, 0.2)',
+          },
+          timeScale: {
+            borderColor: 'rgba(148, 163, 184, 0.2)',
+            timeVisible: true,
+            secondsVisible: false,
+          },
+          handleScroll: {
+            vertTouchDrag: true,
+          },
         });
-      }
-    };
 
-    window.addEventListener('resize', handleResize);
+        const candlestickSeries = chart.addCandlestickSeries({
+          upColor: '#51cf66',
+          downColor: '#ff6b6b',
+          borderUpColor: '#51cf66',
+          borderDownColor: '#ff6b6b',
+          wickUpColor: '#51cf66',
+          wickDownColor: '#ff6b6b',
+        });
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
+        const volumeSeries = chart.addHistogramSeries({
+          color: '#60a5fa',
+          priceFormat: {
+            type: 'volume',
+          },
+          priceScaleId: 'volume',
+          scaleMargins: {
+            top: 0.8,
+            bottom: 0,
+          },
+        });
+
+        chartRef.current = chart;
+        candlestickSeriesRef.current = candlestickSeries;
+        volumeSeriesRef.current = volumeSeries;
+        setChartReady(true);
+
+        console.log('Chart created successfully');
+
+        // Handle resize
+        const handleResize = () => {
+          if (container && chartRef.current) {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            if (newWidth > 0 && newHeight > 0) {
+              chartRef.current.applyOptions({
+                width: newWidth,
+                height: newHeight,
+              });
+            }
+          }
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Cleanup function
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          if (chartRef.current) {
+            try {
+              chartRef.current.remove();
+            } catch (e) {
+              console.error('Error removing chart:', e);
+            }
+            chartRef.current = null;
+            candlestickSeriesRef.current = null;
+            volumeSeriesRef.current = null;
+          }
+        };
+      } catch (err) {
+        console.error('Chart initialization error:', err);
+        setError('Failed to initialize chart: ' + err.message);
       }
-    };
+    }, 100);
+
+    return () => clearTimeout(initTimer);
   }, []);
 
   // Update chart data
   useEffect(() => {
-    if (csvData && candlestickSeriesRef.current && volumeSeriesRef.current) {
-      try {
-        candlestickSeriesRef.current.setData(csvData.candlesticks);
-        if (csvData.volumes && csvData.volumes.length > 0) {
-          volumeSeriesRef.current.setData(csvData.volumes);
-        }
-        chartRef.current.timeScale().fitContent();
-      } catch (err) {
-        setError(`Failed to render chart: ${err.message}`);
-      }
+    if (!csvData || !candlestickSeriesRef.current || !volumeSeriesRef.current || !chartReady) {
+      return;
     }
-  }, [csvData]);
+
+    try {
+      console.log('Setting chart data:', csvData.candlesticks.length, 'candles');
+      candlestickSeriesRef.current.setData(csvData.candlesticks);
+      if (csvData.volumes && csvData.volumes.length > 0) {
+        volumeSeriesRef.current.setData(csvData.volumes);
+      }
+      chartRef.current.timeScale().fitContent();
+      console.log('Chart data set successfully');
+    } catch (err) {
+      console.error('Error setting chart data:', err);
+      setError(`Failed to render chart: ${err.message}`);
+    }
+  }, [csvData, chartReady]);
 
   const parseCSV = (file) => {
     setError(null);
+    console.log('Parsing CSV file:', file.name);
 
     Papa.parse(file, {
       header: true,
@@ -136,6 +181,7 @@ export const CandlestickChart = ({ isMobile }) => {
       complete: (results) => {
         try {
           const headers = results.meta.fields;
+          console.log('CSV headers:', headers);
 
           // Auto-map TradingView headers (case-insensitive)
           const timeHeader = headers.find(h => h.toLowerCase().includes('time') || h.toLowerCase() === 'date');
@@ -209,12 +255,15 @@ export const CandlestickChart = ({ isMobile }) => {
           candlesticks.sort((a, b) => a.time - b.time);
           volumes.sort((a, b) => a.time - b.time);
 
+          console.log('Parsed', candlesticks.length, 'candlesticks');
           setCsvData({ candlesticks, volumes });
         } catch (err) {
+          console.error('CSV parsing error:', err);
           setError(`Failed to parse CSV: ${err.message}`);
         }
       },
       error: (error) => {
+        console.error('Papa parse error:', error);
         setError(`CSV parsing error: ${error.message}`);
       },
     });
@@ -258,65 +307,48 @@ export const CandlestickChart = ({ isMobile }) => {
     }
 
     try {
-      // Use lightweight-charts' built-in screenshot function
-      const screenshot = chartRef.current.takeScreenshot();
-
-      if (!screenshot) {
+      // Fallback method using canvas
+      const canvases = chartContainerRef.current.querySelectorAll('canvas');
+      if (!canvases || canvases.length === 0) {
         setError('Failed to capture chart screenshot');
         return;
       }
 
-      // Create download link
-      const a = document.createElement('a');
-      a.href = screenshot.toDataURL();
-      a.download = `candlestick-chart-${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (err) {
-      // Fallback method
-      try {
-        const canvases = chartContainerRef.current.querySelectorAll('canvas');
-        if (!canvases || canvases.length === 0) {
-          setError('Failed to capture chart screenshot');
-          return;
+      // Get the main canvas (usually the largest one)
+      let mainCanvas = canvases[0];
+      canvases.forEach(canvas => {
+        if (canvas.width * canvas.height > mainCanvas.width * mainCanvas.height) {
+          mainCanvas = canvas;
         }
+      });
 
-        // Get the main canvas (usually the largest one)
-        let mainCanvas = canvases[0];
-        canvases.forEach(canvas => {
-          if (canvas.width * canvas.height > mainCanvas.width * mainCanvas.height) {
-            mainCanvas = canvas;
-          }
-        });
+      // Create a temporary canvas with dark background
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = mainCanvas.width;
+      tempCanvas.height = mainCanvas.height;
+      const ctx = tempCanvas.getContext('2d');
 
-        // Create a temporary canvas with dark background
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = mainCanvas.width;
-        tempCanvas.height = mainCanvas.height;
-        const ctx = tempCanvas.getContext('2d');
+      // Fill with dark background
+      ctx.fillStyle = '#0a0e27';
+      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-        // Fill with dark background
-        ctx.fillStyle = '#0a0e27';
-        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      // Draw the chart on top
+      ctx.drawImage(mainCanvas, 0, 0);
 
-        // Draw the chart on top
-        ctx.drawImage(mainCanvas, 0, 0);
-
-        // Convert to blob and download
-        tempCanvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `candlestick-chart-${Date.now()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        });
-      } catch (fallbackErr) {
-        setError(`Failed to download screenshot: ${fallbackErr.message}`);
-      }
+      // Convert to blob and download
+      tempCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `candlestick-chart-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error('Screenshot error:', err);
+      setError(`Failed to download screenshot: ${err.message}`);
     }
   };
 
@@ -419,13 +451,14 @@ export const CandlestickChart = ({ isMobile }) => {
       </div>
 
       {/* Chart Section */}
-      <div className="glass-card" style={{ padding: isMobile ? '16px' : '24px' }}>
+      <div className="glass-card" style={{ padding: isMobile ? '16px' : '24px', marginBottom: '24px' }}>
         <div
           ref={chartContainerRef}
           style={{
             width: '100%',
             height: isMobile ? '400px' : '600px',
             position: 'relative',
+            minHeight: isMobile ? '400px' : '600px',
           }}
         >
           {!csvData && (
@@ -437,6 +470,7 @@ export const CandlestickChart = ({ isMobile }) => {
                 transform: 'translate(-50%, -50%)',
                 textAlign: 'center',
                 color: 'var(--text-tertiary)',
+                zIndex: 10,
               }}
             >
               <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>📊</div>
