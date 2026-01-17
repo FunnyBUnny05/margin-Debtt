@@ -12,8 +12,14 @@ export const CandlestickChart = ({ isMobile }) => {
   const candlestickSeriesRef = useRef(null);
   const volumeSeriesRef = useRef(null);
 
-  // Initialize chart with proper error handling
+  // Initialize chart when data is available
   useEffect(() => {
+    // Only initialize chart if we have data
+    if (!csvData) {
+      console.log('No data yet, waiting...');
+      return;
+    }
+
     // Wait for container to be ready
     if (!chartContainerRef.current) {
       console.log('Container not ready');
@@ -25,6 +31,7 @@ export const CandlestickChart = ({ isMobile }) => {
       try {
         // Cleanup existing chart if any
         if (chartRef.current) {
+          console.log('Removing existing chart');
           chartRef.current.remove();
           chartRef.current = null;
           candlestickSeriesRef.current = null;
@@ -32,7 +39,10 @@ export const CandlestickChart = ({ isMobile }) => {
         }
 
         const container = chartContainerRef.current;
-        if (!container) return;
+        if (!container) {
+          console.error('Container element is null');
+          return;
+        }
 
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
@@ -40,20 +50,22 @@ export const CandlestickChart = ({ isMobile }) => {
         console.log('Creating chart with dimensions:', containerWidth, 'x', containerHeight);
 
         if (containerWidth === 0 || containerHeight === 0) {
-          console.error('Container has zero dimensions');
+          console.error('Container has zero dimensions:', { containerWidth, containerHeight });
+          setError('Chart container has invalid dimensions. Please refresh the page.');
           return;
         }
 
         const chart = createChart(container, {
           width: containerWidth,
           height: containerHeight,
+          autoSize: false,
           layout: {
-            background: { type: 'solid', color: '#0a0e27' },
-            textColor: '#94a3b8',
+            background: { color: '#1a1f3a' },
+            textColor: '#d1d5db',
           },
           grid: {
-            vertLines: { color: 'rgba(148, 163, 184, 0.1)' },
-            horzLines: { color: 'rgba(148, 163, 184, 0.1)' },
+            vertLines: { color: '#2d3748' },
+            horzLines: { color: '#2d3748' },
           },
           crosshair: {
             mode: 1,
@@ -71,15 +83,19 @@ export const CandlestickChart = ({ isMobile }) => {
             },
           },
           rightPriceScale: {
-            borderColor: 'rgba(148, 163, 184, 0.2)',
+            borderColor: '#4a5568',
+            visible: true,
           },
           timeScale: {
-            borderColor: 'rgba(148, 163, 184, 0.2)',
+            borderColor: '#4a5568',
             timeVisible: true,
             secondsVisible: false,
+            visible: true,
           },
           handleScroll: {
             vertTouchDrag: true,
+            mouseWheel: true,
+            pressedMouseMove: true,
           },
         });
 
@@ -107,9 +123,23 @@ export const CandlestickChart = ({ isMobile }) => {
         chartRef.current = chart;
         candlestickSeriesRef.current = candlestickSeries;
         volumeSeriesRef.current = volumeSeries;
-        setChartReady(true);
 
-        console.log('Chart created successfully');
+        console.log('Chart created successfully, now loading data...');
+
+        // Load data immediately
+        if (csvData && csvData.candlesticks && csvData.candlesticks.length > 0) {
+          console.log('Loading', csvData.candlesticks.length, 'candlesticks into chart');
+          candlestickSeries.setData(csvData.candlesticks);
+
+          if (csvData.volumes && csvData.volumes.length > 0) {
+            console.log('Loading', csvData.volumes.length, 'volume bars');
+            volumeSeries.setData(csvData.volumes);
+          }
+
+          chart.timeScale().fitContent();
+          console.log('Chart data loaded and fitted to view');
+          setChartReady(true);
+        }
 
         // Handle resize
         const handleResize = () => {
@@ -148,27 +178,7 @@ export const CandlestickChart = ({ isMobile }) => {
     }, 100);
 
     return () => clearTimeout(initTimer);
-  }, []);
-
-  // Update chart data
-  useEffect(() => {
-    if (!csvData || !candlestickSeriesRef.current || !volumeSeriesRef.current || !chartReady) {
-      return;
-    }
-
-    try {
-      console.log('Setting chart data:', csvData.candlesticks.length, 'candles');
-      candlestickSeriesRef.current.setData(csvData.candlesticks);
-      if (csvData.volumes && csvData.volumes.length > 0) {
-        volumeSeriesRef.current.setData(csvData.volumes);
-      }
-      chartRef.current.timeScale().fitContent();
-      console.log('Chart data set successfully');
-    } catch (err) {
-      console.error('Error setting chart data:', err);
-      setError(`Failed to render chart: ${err.message}`);
-    }
-  }, [csvData, chartReady]);
+  }, [csvData, isMobile]); // Re-initialize when data changes or screen size changes
 
   const parseCSV = (file) => {
     setError(null);
@@ -452,35 +462,39 @@ export const CandlestickChart = ({ isMobile }) => {
 
       {/* Chart Section */}
       <div className="glass-card" style={{ padding: isMobile ? '16px' : '24px', marginBottom: '24px' }}>
-        <div
-          ref={chartContainerRef}
-          style={{
-            width: '100%',
-            height: isMobile ? '400px' : '600px',
-            position: 'relative',
-            minHeight: isMobile ? '400px' : '600px',
-          }}
-        >
-          {!csvData && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                textAlign: 'center',
-                color: 'var(--text-tertiary)',
-                zIndex: 10,
-              }}
-            >
+        {!csvData && (
+          <div
+            style={{
+              width: '100%',
+              height: isMobile ? '400px' : '600px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              color: 'var(--text-tertiary)',
+            }}
+          >
+            <div>
               <div style={{ fontSize: '64px', marginBottom: '16px', opacity: 0.5 }}>📊</div>
               <div style={{ fontSize: '18px', fontWeight: '600' }}>Upload a CSV to view the chart</div>
               <div style={{ fontSize: '14px', marginTop: '8px', opacity: 0.7 }}>
                 Your candlestick chart will appear here
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+        {csvData && (
+          <div
+            ref={chartContainerRef}
+            style={{
+              width: '100%',
+              height: isMobile ? '400px' : '600px',
+              minHeight: isMobile ? '400px' : '600px',
+              position: 'relative',
+              backgroundColor: '#1a1f3a',
+            }}
+          />
+        )}
       </div>
 
       {/* Info Section */}
