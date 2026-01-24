@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { FundamentalAnalysis } from './components/FundamentalAnalysis';
@@ -109,6 +109,7 @@ export default function App() {
   const [timeRange, setTimeRange] = useState('all');
   const [dataSource, setDataSource] = useState(DATA_SOURCES.MARGIN);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT_PX);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT_PX);
@@ -206,6 +207,31 @@ export default function App() {
       cancelled = true;
       marginController?.abort();
     };
+  }, []);
+
+  // Manual refresh handler
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setError(null);
+
+    try {
+      const res = await fetchWithTimeout(FINRA_CSV_URL).promise;
+      if (!res.ok) throw new Error('Failed to reach FINRA margin CSV');
+      const text = await res.text();
+      const parsed = parseFinraMarginCsv(text);
+      if (!parsed.length) throw new Error('No margin data parsed from FINRA');
+
+      setRawData(parsed);
+      setMetadata({
+        lastUpdated: parsed[parsed.length - 1]?.date,
+        source: 'FINRA Margin Statistics (live)',
+        sourceUrl: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics'
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to refresh data');
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   if (loading) {
@@ -401,9 +427,29 @@ export default function App() {
               </p>
             </div>
             {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-              <div className="badge badge-info" style={{ alignSelf: isMobile ? 'flex-start' : 'center' }}>
-                <span>📅</span>
-                <span>Updated: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}</span>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', alignSelf: isMobile ? 'flex-start' : 'center', flexWrap: 'wrap' }}>
+                <div className="badge badge-info">
+                  <span>📅</span>
+                  <span>Updated: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}</span>
+                </div>
+                {dataSource === 'margin' && (
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="btn-primary"
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      background: refreshing ? 'var(--glass-bg)' : 'var(--gradient-blue)',
+                      border: refreshing ? '1px solid var(--glass-border)' : 'none',
+                      opacity: refreshing ? 0.6 : 1,
+                      cursor: refreshing ? 'not-allowed' : 'pointer'
+                    }}
+                    aria-label="Refresh margin data"
+                  >
+                    {refreshing ? '🔄 Refreshing...' : '🔄 Refresh'}
+                  </button>
+                )}
               </div>
             )}
           </div>
