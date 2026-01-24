@@ -28,7 +28,8 @@
 
 /* Search Bar */
 .fa-search-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: 300px auto;
   justify-content: center;
   gap: 10px;
   margin-bottom: 40px;
@@ -54,6 +55,25 @@
 .fa-search-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.fa-search-input[aria-invalid="true"] {
+  border-color: var(--accent-coral);
+}
+
+.fa-error-message {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fa-search-btn {
@@ -283,8 +303,7 @@
   }
 
   .fa-search-container {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 
   .fa-search-input {
