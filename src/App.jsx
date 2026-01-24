@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { FundamentalAnalysis } from './components/FundamentalAnalysis';
-import { CandlestickChart } from './components/CandlestickChart';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -382,10 +381,10 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px' }}>
             <div style={{ flex: 1 }}>
               <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-                {dataSource === 'margin' ? '📈 Margin Debt Tracker' : dataSource === 'aaii' ? '📊 Asset Allocation Survey' : dataSource === 'sectors' ? '🎯 Sector Z-Score Dashboard' : dataSource === 'candlestick' ? '📊 Candlestick Chart Viewer' : '📊 Fundamental Analysis'}
+                {dataSource === 'margin' ? '📈 Margin Debt Tracker' : dataSource === 'aaii' ? '📊 Asset Allocation Survey' : dataSource === 'sectors' ? '🎯 Sector Z-Score Dashboard' : '📊 Fundamental Analysis'}
               </h1>
               <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
-                {dataSource === 'margin' ? 'Real-time securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'candlestick' ? 'Interactive candlestick charts from TradingView CSV exports' : 'Comprehensive stock fundamental analysis powered by Alpha Vantage'}
+                {dataSource === 'margin' ? 'Real-time securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : 'Comprehensive stock fundamental analysis powered by Alpha Vantage'}
               </p>
             </div>
             {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -403,7 +402,6 @@ export default function App() {
             { key: 'margin', label: 'FINRA Margin Debt', icon: '📊', gradient: 'var(--gradient-coral)' },
             { key: 'aaii', label: 'AAII Allocation', icon: '💼', gradient: 'var(--gradient-blue)' },
             { key: 'sectors', label: 'Sector Z-Score', icon: '🎯', gradient: 'var(--gradient-purple)' },
-            { key: 'candlestick', label: 'Candlestick Chart', icon: '📈', gradient: 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)' },
             { key: 'fundamentals', label: 'Fundamental Analysis', icon: '💹', gradient: 'var(--gradient-emerald)' }
           ].map(({ key, label, icon, gradient }) => (
             <button
@@ -425,7 +423,7 @@ export default function App() {
         </div>
 
         {/* Time Range Buttons */}
-        {dataSource !== 'sectors' && dataSource !== 'fundamentals' && dataSource !== 'candlestick' && (
+        {dataSource !== 'sectors' && dataSource !== 'fundamentals' && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
@@ -878,11 +876,6 @@ export default function App() {
         {/* FUNDAMENTALS DATA SOURCE */}
         {dataSource === 'fundamentals' && (
           <FundamentalAnalysis isMobile={isMobile} />
-        )}
-
-        {/* CANDLESTICK CHART DATA SOURCE */}
-        {dataSource === 'candlestick' && (
-          <CandlestickChart isMobile={isMobile} />
         )}
 
         {/* Footer */}
