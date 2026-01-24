@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { FundamentalAnalysis } from './components/FundamentalAnalysis';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const formatDate = (date) => {
   if (!date) return '';
