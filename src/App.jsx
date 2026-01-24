@@ -3,6 +3,7 @@ import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Refere
 import { SectorZScore } from './components/SectorZScore';
 import { FundamentalAnalysis } from './components/FundamentalAnalysis';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingState } from './components/LoadingSkeleton';
 import {
   FETCH_TIMEOUT_MS,
   MOBILE_BREAKPOINT_PX,
@@ -235,20 +236,7 @@ export default function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="app-background" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '48px', maxWidth: '500px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '24px' }} className="pulse-animation">📊</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
-            Loading Market Data
-          </div>
-          <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
-            Fetching live FINRA margin statistics...
-          </div>
-          <div className="shimmer" style={{ height: '4px', borderRadius: '999px', marginTop: '24px', overflow: 'hidden' }}></div>
-        </div>
-      </div>
-    );
+    return <LoadingState type="margin" isMobile={isMobile} />;
   }
 
   if (error) {
