@@ -3,6 +3,17 @@ import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Refere
 import { SectorZScore } from './components/SectorZScore';
 import { FundamentalAnalysis } from './components/FundamentalAnalysis';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import {
+  FETCH_TIMEOUT_MS,
+  MOBILE_BREAKPOINT_PX,
+  FINRA_CSV_URL,
+  MARGIN_DATA_PATH,
+  AAII_DATA_PATH,
+  CHART_DATA_POINTS_DIVISOR,
+  DATA_SOURCES,
+  GROWTH_THRESHOLD,
+  GROWTH_THRESHOLD_NEG
+} from './constants/app';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -52,7 +63,7 @@ const normalizeMonthKey = (dateStr) => {
   return dateStr;
 };
 
-const fetchWithTimeout = (url, timeoutMs = 12000) => {
+const fetchWithTimeout = (url, timeoutMs = FETCH_TIMEOUT_MS) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const promise = fetch(url, { signal: controller.signal })
@@ -96,11 +107,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('all');
-  const [dataSource, setDataSource] = useState('margin');
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
+  const [dataSource, setDataSource] = useState(DATA_SOURCES.MARGIN);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= MOBILE_BREAKPOINT_PX);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 640);
+    const handleResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT_PX);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -114,7 +125,7 @@ export default function App() {
       setError(null);
 
       const loadMarginLive = async () => {
-        const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
+        const { promise, controller } = fetchWithTimeout(FINRA_CSV_URL);
         marginController = controller;
 
         let res;
@@ -140,7 +151,7 @@ export default function App() {
       };
 
       const loadMarginFallback = async () => {
-        const res = await fetch('./margin_data.json');
+        const res = await fetch(MARGIN_DATA_PATH);
         if (!res.ok) throw new Error('Failed to load local margin data');
         const json = await res.json();
         if (!json.data?.length) throw new Error('No margin data in local file');
@@ -155,7 +166,7 @@ export default function App() {
       };
 
       const loadAaiiData = async () => {
-        const res = await fetch('./aaii_allocation_data.json');
+        const res = await fetch(AAII_DATA_PATH);
         if (!res.ok) throw new Error('Failed to load AAII allocation data');
         const json = await res.json();
         if (!json.data?.length) throw new Error('No AAII data in local file');
@@ -258,7 +269,7 @@ export default function App() {
     timeRange === '10y' ? data.slice(-120) :
     timeRange === '5y' ? data.slice(-60) : data.slice(-24);
 
-  const chartInterval = Math.floor((filteredData.length || 1) / 8);
+  const chartInterval = Math.floor((filteredData.length || 1) / CHART_DATA_POINTS_DIVISOR);
 
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
@@ -296,7 +307,7 @@ export default function App() {
       if (point.yoy_growth === null) return;
 
       // Track periods above +30%
-      if (point.yoy_growth >= 30) {
+      if (point.yoy_growth >= GROWTH_THRESHOLD) {
         if (!currentAbovePeriod) {
           currentAbovePeriod = { start: idx, count: 1 };
         } else {
@@ -310,7 +321,7 @@ export default function App() {
       }
 
       // Track periods below -30%
-      if (point.yoy_growth <= -30) {
+      if (point.yoy_growth <= GROWTH_THRESHOLD_NEG) {
         if (!currentBelowPeriod) {
           currentBelowPeriod = { start: idx, count: 1 };
         } else {
@@ -330,10 +341,10 @@ export default function App() {
     let currentDuration = 0;
 
     if (latestPoint && latestPoint.yoy_growth !== null) {
-      if (latestPoint.yoy_growth >= 30 && currentAbovePeriod) {
+      if (latestPoint.yoy_growth >= GROWTH_THRESHOLD && currentAbovePeriod) {
         currentStatus = 'above30';
         currentDuration = currentAbovePeriod.count;
-      } else if (latestPoint.yoy_growth <= -30 && currentBelowPeriod) {
+      } else if (latestPoint.yoy_growth <= GROWTH_THRESHOLD_NEG && currentBelowPeriod) {
         currentStatus = 'belowNeg30';
         currentDuration = currentBelowPeriod.count;
       }
@@ -372,7 +383,8 @@ export default function App() {
     };
   };
 
-  const thresholdStats = calculateThresholdStats(data);
+  // Memoize expensive calculation to prevent unnecessary re-renders
+  const thresholdStats = useMemo(() => calculateThresholdStats(data), [data]);
 
   return (
     <div className="app-background" style={{ padding: isMobile ? '16px' : '24px 32px', minHeight: '100vh' }}>
@@ -706,7 +718,7 @@ export default function App() {
                 timeRange === '5y' ? aaiiData.slice(-60) : aaiiData.slice(-24);
 
               const currentAllocation = aaiiData[aaiiData.length - 1];
-              const aaiiChartInterval = Math.floor((aaiiFilteredData.length || 1) / 8);
+              const aaiiChartInterval = Math.floor((aaiiFilteredData.length || 1) / CHART_DATA_POINTS_DIVISOR);
 
               const avgStocks = aaiiData.reduce((sum, d) => sum + (d.stocks || 0), 0) / aaiiData.length;
               const avgBonds = aaiiData.reduce((sum, d) => sum + (d.bonds || 0), 0) / aaiiData.length;
