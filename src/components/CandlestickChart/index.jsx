@@ -16,13 +16,11 @@ export const CandlestickChart = ({ isMobile }) => {
   useEffect(() => {
     // Only initialize chart if we have data
     if (!csvData) {
-      console.log('No data yet, waiting...');
       return;
     }
 
     // Wait for container to be ready
     if (!chartContainerRef.current) {
-      console.log('Container not ready');
       return;
     }
 
@@ -31,7 +29,6 @@ export const CandlestickChart = ({ isMobile }) => {
       try {
         // Cleanup existing chart if any
         if (chartRef.current) {
-          console.log('Removing existing chart');
           chartRef.current.remove();
           chartRef.current = null;
           candlestickSeriesRef.current = null;
@@ -46,8 +43,6 @@ export const CandlestickChart = ({ isMobile }) => {
 
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
-
-        console.log('Creating chart with dimensions:', containerWidth, 'x', containerHeight);
 
         if (containerWidth === 0 || containerHeight === 0) {
           console.error('Container has zero dimensions:', { containerWidth, containerHeight });
@@ -124,20 +119,15 @@ export const CandlestickChart = ({ isMobile }) => {
         candlestickSeriesRef.current = candlestickSeries;
         volumeSeriesRef.current = volumeSeries;
 
-        console.log('Chart created successfully, now loading data...');
-
         // Load data immediately
         if (csvData && csvData.candlesticks && csvData.candlesticks.length > 0) {
-          console.log('Loading', csvData.candlesticks.length, 'candlesticks into chart');
           candlestickSeries.setData(csvData.candlesticks);
 
           if (csvData.volumes && csvData.volumes.length > 0) {
-            console.log('Loading', csvData.volumes.length, 'volume bars');
             volumeSeries.setData(csvData.volumes);
           }
 
           chart.timeScale().fitContent();
-          console.log('Chart data loaded and fitted to view');
           setChartReady(true);
         }
 
@@ -182,7 +172,6 @@ export const CandlestickChart = ({ isMobile }) => {
 
   const parseCSV = (file) => {
     setError(null);
-    console.log('Parsing CSV file:', file.name);
 
     Papa.parse(file, {
       header: true,
@@ -191,7 +180,6 @@ export const CandlestickChart = ({ isMobile }) => {
       complete: (results) => {
         try {
           const headers = results.meta.fields;
-          console.log('CSV headers:', headers);
 
           // Auto-map TradingView headers (case-insensitive)
           const timeHeader = headers.find(h => h.toLowerCase().includes('time') || h.toLowerCase() === 'date');
@@ -265,7 +253,6 @@ export const CandlestickChart = ({ isMobile }) => {
           candlesticks.sort((a, b) => a.time - b.time);
           volumes.sort((a, b) => a.time - b.time);
 
-          console.log('Parsed', candlesticks.length, 'candlesticks');
           setCsvData({ candlesticks, volumes });
         } catch (err) {
           console.error('CSV parsing error:', err);
