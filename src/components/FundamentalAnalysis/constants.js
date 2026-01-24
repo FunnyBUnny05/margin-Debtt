@@ -1,5 +1,6 @@
 // Alpha Vantage API Configuration
-export const ALPHA_VANTAGE_API_KEY = 'BMXVEAN3LEOUMTU3';
+// API key is loaded from environment variable for security
+export const ALPHA_VANTAGE_API_KEY = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY || '';
 export const ALPHA_VANTAGE_BASE_URL = 'https://www.alphavantage.co/query';
 
 // Scoring Thresholds

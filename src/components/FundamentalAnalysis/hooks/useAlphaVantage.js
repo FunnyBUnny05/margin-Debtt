@@ -67,6 +67,11 @@ export const useAlphaVantage = () => {
       return;
     }
 
+    if (!ALPHA_VANTAGE_API_KEY) {
+      setError('API key not configured. Please add VITE_ALPHA_VANTAGE_API_KEY to your .env file');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setData(null);
@@ -78,6 +83,14 @@ export const useAlphaVantage = () => {
       const apiData = await response.json();
 
       // Check for API errors
+      if (apiData.Note && apiData.Note.includes('API call frequency')) {
+        throw new Error('API rate limit exceeded. Alpha Vantage free tier allows 5 calls per minute. Please wait a moment and try again.');
+      }
+
+      if (apiData.Information) {
+        throw new Error('API rate limit exceeded. Please wait a moment and try again.');
+      }
+
       if (!apiData.Symbol) {
         throw new Error(apiData.Note || apiData['Error Message'] || 'Invalid ticker symbol or API error');
       }
