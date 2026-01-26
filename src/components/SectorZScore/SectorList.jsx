@@ -3,11 +3,28 @@ import { SignalBadge } from './SignalBadge';
 
 export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
   const [expandedSector, setExpandedSector] = useState(null);
+  const [sortBy, setSortBy] = useState('current'); // 'current' or 'average'
 
-  // Filter out sectors without valid z-scores and sort by z-score ascending
+  // Calculate average Z-score for each sector based on time period
+  const calculateAverageZScore = (sector) => {
+    if (!sector.zScores || sector.zScores.length === 0) return null;
+    const validScores = sector.zScores.filter(z => z.zScore !== null && z.zScore !== undefined);
+    if (validScores.length === 0) return null;
+    const sum = validScores.reduce((acc, z) => acc + z.zScore, 0);
+    return sum / validScores.length;
+  };
+
+  // Filter out sectors without valid z-scores and sort
   const sorted = [...sectors]
     .filter(s => s.currentZScore !== null)
-    .sort((a, b) => a.currentZScore - b.currentZScore);
+    .sort((a, b) => {
+      if (sortBy === 'average') {
+        const avgA = calculateAverageZScore(a) || 0;
+        const avgB = calculateAverageZScore(b) || 0;
+        return avgA - avgB;
+      }
+      return a.currentZScore - b.currentZScore;
+    });
 
   const toggleExpand = (symbol, e) => {
     e.stopPropagation();
@@ -24,16 +41,48 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
         flexDirection: 'column'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '20px' }}>🎯</div>
-        <h3 style={{
-          color: 'var(--text-primary)',
-          fontSize: '15px',
-          fontWeight: '600',
-          margin: 0
-        }}>
-          Sectors (Cheapest First)
-        </h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '20px' }}>🎯</div>
+          <h3 style={{
+            color: 'var(--text-primary)',
+            fontSize: '15px',
+            fontWeight: '600',
+            margin: 0
+          }}>
+            Sectors ({sortBy === 'current' ? 'Current' : 'Avg'})
+          </h3>
+        </div>
+        <button
+          onClick={() => setSortBy(sortBy === 'current' ? 'average' : 'current')}
+          style={{
+            background: sortBy === 'average' ? 'var(--gradient-purple)' : 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid ' + (sortBy === 'average' ? 'var(--accent-purple)' : 'var(--glass-border)'),
+            borderRadius: '6px',
+            padding: '4px 10px',
+            fontSize: '10px',
+            fontWeight: '600',
+            color: sortBy === 'average' ? 'white' : 'var(--text-tertiary)',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseEnter={(e) => {
+            if (sortBy !== 'average') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (sortBy !== 'average') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.color = 'var(--text-tertiary)';
+            }
+          }}
+          title={sortBy === 'current' ? 'Sort by period average' : 'Sort by current Z-score'}
+        >
+          {sortBy === 'current' ? '📊 AVG' : '🎯 NOW'}
+        </button>
       </div>
       <div
         style={{
@@ -133,18 +182,46 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                 >
                   {expandedSector === sector.symbol ? '▼' : '▶'}
                 </button>
-                <span
-                  style={{
-                    color: sector.currentZScore < 0 ? 'var(--accent-emerald)' : 'var(--accent-coral)',
-                    fontWeight: '700',
-                    fontSize: '13px',
-                    minWidth: '50px',
-                    textAlign: 'right'
-                  }}
-                >
-                  {sector.currentZScore?.toFixed(2) || 'N/A'}
-                </span>
-                <SignalBadge zScore={sector.currentZScore} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span
+                      style={{
+                        color: sector.currentZScore < 0 ? 'var(--accent-emerald)' : 'var(--accent-coral)',
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        minWidth: '50px',
+                        textAlign: 'right'
+                      }}
+                    >
+                      {sector.currentZScore?.toFixed(2) || 'N/A'}
+                    </span>
+                    <SignalBadge zScore={sector.currentZScore} />
+                  </div>
+                  {(() => {
+                    const avgZScore = calculateAverageZScore(sector);
+                    return avgZScore !== null && (
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          color: 'var(--text-muted)',
+                          fontWeight: '500',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                        title="Average Z-Score over selected period"
+                      >
+                        <span>Avg:</span>
+                        <span style={{
+                          color: avgZScore < 0 ? 'var(--accent-emerald)' : 'var(--accent-coral)',
+                          fontWeight: '600'
+                        }}>
+                          {avgZScore.toFixed(2)}
+                        </span>
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
 
@@ -223,6 +300,34 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                       </>
                     )}
                   </div>
+
+                  {/* Average Z-Score Over Period */}
+                  {(() => {
+                    const avgZScore = calculateAverageZScore(sector);
+                    if (avgZScore === null) return null;
+
+                    return (
+                      <div style={{
+                        marginTop: '12px',
+                        paddingTop: '8px',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
+                          📊 Average Z-Score (Period):
+                        </span>
+                        <span style={{
+                          color: avgZScore < -1 ? 'var(--accent-emerald)' : avgZScore > 1 ? 'var(--accent-coral)' : 'var(--accent-blue)',
+                          fontWeight: '700',
+                          fontSize: '13px'
+                        }}>
+                          {avgZScore >= 0 ? '+' : ''}{avgZScore.toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   {/* Time Spent in Zones */}
                   {sector.zScores && sector.zScores.length > 0 && (() => {
