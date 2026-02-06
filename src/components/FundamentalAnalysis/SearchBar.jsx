@@ -24,7 +24,7 @@ export const SearchBar = ({ onSearch, isLoading }) => {
         className="fa-search-input"
         value={ticker}
         onChange={(e) => setTicker(e.target.value.toUpperCase())}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyPress}
         placeholder="Enter ticker symbol (e.g., AAPL)"
         disabled={isLoading}
       />

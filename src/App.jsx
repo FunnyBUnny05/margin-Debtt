@@ -462,7 +462,7 @@ export default function App() {
                   YoY Growth
                 </div>
                 <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700' }}>
-                  {currentDebt.yoy_growth > 0 ? '+' : ''}{currentDebt.yoy_growth?.toFixed(1) || 'N/A'}%
+                  {currentDebt.yoy_growth != null ? `${currentDebt.yoy_growth > 0 ? '+' : ''}${currentDebt.yoy_growth.toFixed(1)}%` : 'N/A'}
                 </div>
               </div>
               <div className="stat-card animate-in" style={{ color: 'var(--accent-amber)', animationDelay: '0.2s' }}>
@@ -478,7 +478,7 @@ export default function App() {
                   vs 2000 Peak
                 </div>
                 <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--accent-purple)' }}>
-                  +{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
+                  {currentDebt.margin_debt >= peak2000.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
                 </div>
               </div>
             </div>
