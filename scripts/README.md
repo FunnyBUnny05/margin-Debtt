@@ -25,19 +25,27 @@ python scripts/fetch_finra_data.py
 ```
 
 ### 2. fetch_aaii_allocation.py
-**Status**: ⚠️ Partially Automated (requires data access)
+**Status**: ✅ Fully Automated (multi-source)
 
-Attempts to fetch AAII Asset Allocation Survey data.
+Fetches AAII Asset Allocation Survey data using multiple sources with automatic fallback.
 
 - **Data Source**: AAII Asset Allocation Survey
-- **URL**: https://www.aaii.com/assetallocation
+- **Primary URL**: https://www.aaii.com/assetallocationsurvey
+- **Fallback**: MacroMicro.me chart/series APIs
 - **Update Frequency**: Weekly (Monday 6 AM UTC via GitHub Actions)
 - **Output**: `public/aaii_allocation_data.json`
-- **Note**: AAII data typically requires membership access. Script maintains existing data if fetch fails.
+
+**Data sources tried (in order)**:
+1. MacroMicro chart page (embedded data)
+2. MacroMicro chart data API
+3. MacroMicro individual series (stocks/bonds/cash)
+4. AAII website (public survey results page)
+5. Fallback: preserve existing historical data
 
 **What it fetches**:
 - Individual investor asset allocation percentages (stocks/bonds/cash)
 - Monthly survey data from 1987 to present
+- Automatically merges new months into historical dataset
 
 **Run manually**:
 ```bash

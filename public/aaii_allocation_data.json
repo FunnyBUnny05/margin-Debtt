@@ -1,8 +1,9 @@
 {
-  "last_updated": "2025-11-30T00:00:00Z",
-  "last_checked": "2026-02-06T16:12:27.118261Z",
+  "last_updated": "2026-02-07T11:49:54.217203Z",
+  "last_checked": "2026-02-07T11:49:54.217298Z",
   "source": "AAII Asset Allocation Survey",
   "source_url": "https://www.aaii.com/",
+  "fetch_method": "aaii_website",
   "data": [
     {
       "date": "1987-11-30",
@@ -2745,7 +2746,12 @@
       "stocks": 71.2,
       "bonds": 14,
       "cash": 14.8
+    },
+    {
+      "date": "2026-01-01",
+      "stocks": 70.2,
+      "bonds": 15.4,
+      "cash": 14.4
     }
-  ],
-  "note": "AAII Asset Allocation data requires membership access. Manual updates recommended."
+  ]
 }
