@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
+import { MarketCapGDP } from './components/MarketCapGDP';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -878,20 +879,18 @@ export default function App() {
           <BuffettIndicator isMobile={isMobile} />
         )}
 
-        {/* BUFFETT INDICATOR — always visible below other tabs */}
-        {dataSource !== 'buffett' && (
-          <div style={{ marginTop: '40px' }}>
-            <div className="glass-card animate-in" style={{ padding: isMobile ? '24px 20px' : '32px 40px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
-                💰 Buffett Indicator
-              </h2>
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
-                Berkshire Hathaway's annual cash &amp; T-bill holdings — Buffett's war chest over time
-              </p>
-            </div>
-            <BuffettIndicator isMobile={isMobile} />
+        {/* BUFFETT INDICATOR (Market Cap / GDP) — always visible below other tabs */}
+        <div style={{ marginTop: '40px' }}>
+          <div className="glass-card animate-in" style={{ padding: isMobile ? '24px 20px' : '32px 40px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+              📈 Buffett Indicator
+            </h2>
+            <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
+              Total US stock market cap as a % of GDP — Buffett's favourite valuation yardstick
+            </p>
           </div>
-        )}
+          <MarketCapGDP isMobile={isMobile} />
+        </div>
 
         {/* Footer */}
         <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>
