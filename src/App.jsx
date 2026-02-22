@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
+import { BuffettIndicator } from './components/BuffettIndicator';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -380,10 +381,10 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px' }}>
             <div style={{ flex: 1 }}>
               <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-                {dataSource === 'margin' ? '📈 Margin Debt Tracker' : dataSource === 'aaii' ? '📊 Asset Allocation Survey' : '🎯 Sector Z-Score Dashboard'}
+                {dataSource === 'margin' ? '📈 Margin Debt Tracker' : dataSource === 'aaii' ? '📊 Asset Allocation Survey' : dataSource === 'sectors' ? '🎯 Sector Z-Score Dashboard' : '💰 Buffett Indicator'}
               </h1>
               <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
-                {dataSource === 'margin' ? 'Real-time securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : 'Relative sector performance analysis vs benchmark'}
+                {dataSource === 'margin' ? 'Real-time securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : "Berkshire Hathaway's annual cash & T-bill holdings — Buffett's war chest over time"}
               </p>
             </div>
             {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -401,6 +402,7 @@ export default function App() {
             { key: 'margin', label: 'FINRA Margin Debt', icon: '📊', gradient: 'var(--gradient-coral)' },
             { key: 'aaii', label: 'AAII Allocation', icon: '💼', gradient: 'var(--gradient-blue)' },
             { key: 'sectors', label: 'Sector Z-Score', icon: '🎯', gradient: 'var(--gradient-purple)' },
+            { key: 'buffett', label: 'Buffett Indicator', icon: '💰', gradient: 'var(--gradient-amber, linear-gradient(135deg,#f59e0b,#d97706))' },
           ].map(({ key, label, icon, gradient }) => (
             <button
               key={key}
@@ -421,7 +423,7 @@ export default function App() {
         </div>
 
         {/* Time Range Buttons */}
-        {dataSource !== 'sectors' && (
+        {dataSource !== 'sectors' && dataSource !== 'buffett' && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
@@ -869,6 +871,11 @@ export default function App() {
         {/* SECTORS DATA SOURCE */}
         {dataSource === 'sectors' && (
           <SectorZScore isMobile={isMobile} />
+        )}
+
+        {/* BUFFETT INDICATOR */}
+        {dataSource === 'buffett' && (
+          <BuffettIndicator isMobile={isMobile} />
         )}
 
         {/* Footer */}
