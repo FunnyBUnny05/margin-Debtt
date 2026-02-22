@@ -1,12 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell
 } from 'recharts';
 
-// Berkshire Hathaway annual cash holdings (cash + short-term investments / T-bills)
-// Sources: Berkshire annual letters, stockanalysis.com, companiesmarketcap.com
-const RAW_DATA = [
+// Historical baseline: 1995–2020 (hardcoded from official Berkshire annual reports)
+// 1995–1999: cash & cash equivalents (T-bill tracking not separately disclosed pre-2000)
+// 2000–2020: cash + short-term U.S. Treasury bill investments
+const HISTORICAL_DATA = [
+  { year: 1995, cash: 2.7 },
+  { year: 1996, cash: 1.3 },
+  { year: 1997, cash: 1.1 },
+  { year: 1998, cash: 13.6 }, // Spike from Gen Re acquisition (Dec 1998)
+  { year: 1999, cash: 3.8 },
   { year: 2000, cash: 3.4 },
   { year: 2001, cash: 4.5 },
   { year: 2002, cash: 10.3 },
@@ -28,23 +34,65 @@ const RAW_DATA = [
   { year: 2018, cash: 111.9 },
   { year: 2019, cash: 128.0 },
   { year: 2020, cash: 138.3 },
+];
+
+// Fallback for recent years if Yahoo Finance fetch fails
+const RECENT_DATA_FALLBACK = [
   { year: 2021, cash: 146.7 },
   { year: 2022, cash: 128.6 },
   { year: 2023, cash: 167.6 },
   { year: 2024, cash: 334.2 },
 ];
 
-// Enrich with YoY growth
-const ENRICHED = RAW_DATA.map((d, i) => {
-  if (i === 0) return { ...d, yoy: null };
-  const prev = RAW_DATA[i - 1].cash;
-  return { ...d, yoy: parseFloat((((d.cash - prev) / prev) * 100).toFixed(1)) };
-});
+const CORS_PROXIES = [
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+const YF_URL = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/BRK-B?modules=balanceSheetHistory';
+
+const fetchBerkshireBalanceSheet = async () => {
+  for (const proxyFn of CORS_PROXIES) {
+    try {
+      const res = await fetch(proxyFn(YF_URL), { signal: AbortSignal.timeout(12000) });
+      if (!res.ok) continue;
+      const json = await res.json();
+      const statements = json?.quoteSummary?.result?.[0]?.balanceSheetHistory?.balanceSheetStatements;
+      if (!statements?.length) continue;
+
+      const parsed = statements
+        .map(s => {
+          const endDateStr = s.endDate?.fmt;
+          const cashRaw = s.cashAndShortTermInvestments?.raw ?? s.cash?.raw;
+          if (!endDateStr || cashRaw == null) return null;
+          const year = parseInt(endDateStr.slice(0, 4), 10);
+          const cash = parseFloat((cashRaw / 1e9).toFixed(1));
+          return { year, cash };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.year - b.year);
+
+      if (parsed.length > 0) return parsed;
+    } catch {
+      // try next proxy
+    }
+  }
+  return null;
+};
+
+const enrichWithYoY = (data) =>
+  data.map((d, i) => {
+    if (i === 0) return { ...d, yoy: null };
+    const prev = data[i - 1].cash;
+    return { ...d, yoy: parseFloat((((d.cash - prev) / prev) * 100).toFixed(1)) };
+  });
 
 const TIME_RANGE_OPTIONS = [
   { label: '10Y', value: '10y' },
   { label: '15Y', value: '15y' },
   { label: '20Y', value: '20y' },
+  { label: '25Y', value: '25y' },
   { label: 'ALL', value: 'all' },
 ];
 
@@ -90,42 +138,68 @@ const YoyTooltip = ({ active, payload, label }) => {
 
 export const BuffettIndicator = ({ isMobile }) => {
   const [timeRange, setTimeRange] = useState('all');
+  const [liveData, setLiveData] = useState(null);
+  const [fetchStatus, setFetchStatus] = useState('loading'); // 'loading' | 'live' | 'fallback'
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchBerkshireBalanceSheet().then(result => {
+      if (cancelled) return;
+      if (result) {
+        setLiveData(result);
+        setFetchStatus('live');
+      } else {
+        setFetchStatus('fallback');
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const ENRICHED = useMemo(() => {
+    // Merge historical baseline with recent live/fallback data
+    const recentRows = liveData ?? RECENT_DATA_FALLBACK;
+    const cutoffYear = HISTORICAL_DATA[HISTORICAL_DATA.length - 1].year;
+    const newRows = recentRows.filter(d => d.year > cutoffYear);
+    return enrichWithYoY([...HISTORICAL_DATA, ...newRows]);
+  }, [liveData]);
 
   const filtered = useMemo(() => {
-    const now = 2024;
-    const cutoffs = { '10y': 10, '15y': 15, '20y': 20 };
+    const latestYear = ENRICHED[ENRICHED.length - 1]?.year ?? new Date().getFullYear();
+    const cutoffs = { '10y': 10, '15y': 15, '20y': 20, '25y': 25 };
     if (timeRange === 'all') return ENRICHED;
-    return ENRICHED.filter(d => d.year >= now - cutoffs[timeRange]);
-  }, [timeRange]);
+    return ENRICHED.filter(d => d.year >= latestYear - cutoffs[timeRange]);
+  }, [timeRange, ENRICHED]);
 
   const latest = ENRICHED[ENRICHED.length - 1];
   const prev = ENRICHED[ENRICHED.length - 2];
   const allTimeHigh = Math.max(...ENRICHED.map(d => d.cash));
+  const athYear = ENRICHED.find(d => d.cash === allTimeHigh)?.year;
   const avgCash = (ENRICHED.reduce((s, d) => s + d.cash, 0) / ENRICHED.length).toFixed(1);
+  const spanYears = `${ENRICHED[0].year}–${latest?.year}`;
 
   const statCards = [
     {
-      label: '2024 Cash Hoard',
-      value: `$${latest.cash.toFixed(1)}B`,
+      label: `${latest?.year} Cash Hoard`,
+      value: `$${latest?.cash.toFixed(1)}B`,
       sub: 'Cash + T-Bills',
       color: '#fbbf24',
     },
     {
       label: 'YoY Change',
-      value: `${latest.yoy >= 0 ? '+' : ''}${latest.yoy}%`,
-      sub: `vs $${prev.cash.toFixed(1)}B in 2023`,
-      color: latest.yoy >= 0 ? '#51cf66' : '#ff6b6b',
+      value: `${latest?.yoy >= 0 ? '+' : ''}${latest?.yoy}%`,
+      sub: `vs $${prev?.cash.toFixed(1)}B in ${prev?.year}`,
+      color: latest?.yoy >= 0 ? '#51cf66' : '#ff6b6b',
     },
     {
       label: 'All-Time High',
       value: `$${allTimeHigh.toFixed(1)}B`,
-      sub: '2024',
+      sub: String(athYear),
       color: '#a78bfa',
     },
     {
-      label: '25-Year Average',
+      label: `${ENRICHED.length}-Year Average`,
       value: `$${avgCash}B`,
-      sub: '2000–2024',
+      sub: spanYears,
       color: '#60a5fa',
     },
   ];
@@ -155,7 +229,7 @@ export const BuffettIndicator = ({ isMobile }) => {
       </div>
 
       {/* Time Range Selector */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
         {TIME_RANGE_OPTIONS.map(({ label, value }) => (
           <button
             key={value}
@@ -172,6 +246,11 @@ export const BuffettIndicator = ({ isMobile }) => {
             {label}
           </button>
         ))}
+        <div style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>
+          {fetchStatus === 'loading' && '⏳ Fetching latest data…'}
+          {fetchStatus === 'live' && '🟢 Live data (Yahoo Finance)'}
+          {fetchStatus === 'fallback' && '📋 Cached data'}
+        </div>
       </div>
 
       {/* Charts */}
@@ -266,8 +345,10 @@ export const BuffettIndicator = ({ isMobile }) => {
       {/* Note */}
       <div className="glass-card animate-in" style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7' }}>
         <strong style={{ color: 'var(--text-tertiary)' }}>Data notes:</strong> Cash holdings represent Berkshire Hathaway's combined cash &amp; cash equivalents plus short-term U.S. Treasury bill investments as reported in annual filings.
-        The 2024 figure ($334.2B) reflects the historic cash buildup disclosed in Buffett's February 2025 annual letter.
-        Sources: Berkshire Hathaway annual reports, stockanalysis.com, companiesmarketcap.com.
+        1995–1999 figures reflect cash &amp; equivalents only (T-bill holdings were minimal and not separately disclosed).
+        The 1998 spike ($13.6B) reflects the General Re acquisition in December 1998.
+        Recent years auto-fetched from Yahoo Finance (BRK-B balance sheet); falls back to last known figures if unavailable.
+        Sources: Berkshire Hathaway annual reports, Yahoo Finance.
       </div>
     </div>
   );
