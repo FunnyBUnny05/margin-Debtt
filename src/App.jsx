@@ -873,9 +873,24 @@ export default function App() {
           <SectorZScore isMobile={isMobile} />
         )}
 
-        {/* BUFFETT INDICATOR */}
+        {/* BUFFETT INDICATOR (tab view) */}
         {dataSource === 'buffett' && (
           <BuffettIndicator isMobile={isMobile} />
+        )}
+
+        {/* BUFFETT INDICATOR — always visible below other tabs */}
+        {dataSource !== 'buffett' && (
+          <div style={{ marginTop: '40px' }}>
+            <div className="glass-card animate-in" style={{ padding: isMobile ? '24px 20px' : '32px 40px', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+                💰 Buffett Indicator
+              </h2>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
+                Berkshire Hathaway's annual cash &amp; T-bill holdings — Buffett's war chest over time
+              </p>
+            </div>
+            <BuffettIndicator isMobile={isMobile} />
+          </div>
         )}
 
         {/* Footer */}
