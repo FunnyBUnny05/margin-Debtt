@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Fetch FINRA margin statistics and convert to JSON for the dashboard.
-FINRA publishes data at: https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics
+FINRA publishes data at: https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics
+Excel download: https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx
 """
 
 import json
@@ -9,18 +10,20 @@ import sys
 import pandas as pd
 import requests
 from datetime import datetime
-from io import StringIO, BytesIO
+from io import BytesIO
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-FINRA_LANDING_URL = "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
-FINRA_CSV_URL = "https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv"
+# Primary page for investor-facing margin statistics
+FINRA_LANDING_URL = "https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics"
+# Known working Excel URL (contains all historical data through the latest published month)
 FINRA_EXCEL_URL = "https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx"
 OUTPUT_PATH = Path(__file__).parent.parent / "public" / "margin_data.json"
-STALE_THRESHOLD_DAYS = 45
+STALE_THRESHOLD_DAYS = 65  # FINRA publishes monthly data with ~4-8 week lag
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*',
 }
 
 
@@ -48,7 +51,7 @@ def discover_finra_urls():
 
 
 def find_debit_column(df):
-    """Find the margin debt column with flexible matching."""
+    """Find the margin debt (debit balances in margin accounts) column."""
     cols_lower = {c: c.lower() for c in df.columns}
 
     # Try exact patterns first, then broader ones
@@ -80,24 +83,10 @@ def find_date_column(df):
     raise ValueError(f"Could not find date column in: {list(df.columns)}")
 
 
-def try_fetch_csv(url):
-    """Attempt to fetch and parse a CSV URL."""
-    print(f"  Trying CSV: {url}")
-    response = requests.get(url, headers=HEADERS, timeout=30)
-    response.raise_for_status()
-    content_type = response.headers.get('content-type', '')
-    if 'html' in content_type.lower():
-        raise ValueError("Response is HTML, not CSV")
-    df = pd.read_csv(StringIO(response.text))
-    if len(df) < 10:
-        raise ValueError(f"Too few rows ({len(df)}), likely not valid data")
-    return df
-
-
 def try_fetch_excel(url):
     """Attempt to fetch and parse an Excel URL."""
     print(f"  Trying Excel: {url}")
-    response = requests.get(url, headers=HEADERS, timeout=30)
+    response = requests.get(url, headers=HEADERS, timeout=60)
     response.raise_for_status()
     content_type = response.headers.get('content-type', '')
     if 'html' in content_type.lower() and 'spreadsheet' not in content_type.lower():
@@ -110,11 +99,30 @@ def try_fetch_excel(url):
     return df
 
 
+def normalize_date(date_val):
+    """Normalize date values to YYYY-MM format string."""
+    s = str(date_val).strip()
+    # Already in YYYY-MM format
+    if len(s) >= 7 and s[4] == '-':
+        return s[:7]
+    # Try to parse various formats
+    for fmt in ('%Y-%m', '%m/%Y', '%Y/%m', '%b-%Y', '%B-%Y'):
+        try:
+            return datetime.strptime(s, fmt).strftime('%Y-%m')
+        except ValueError:
+            continue
+    return s
+
+
 def fetch_finra_data():
-    """Download and parse FINRA margin statistics file."""
-    # Build candidate URL list: discovered URLs first, then hardcoded fallbacks
+    """Download and parse FINRA margin statistics Excel file."""
+    # Strategy: try discovered URLs first, then the known-working Excel URL
     discovered = discover_finra_urls()
-    candidate_urls = discovered + [FINRA_CSV_URL, FINRA_EXCEL_URL]
+
+    # Build candidate list: discovered first, then known-working Excel URL
+    # Removed dead CSV URL (https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv)
+    candidate_urls = discovered + [FINRA_EXCEL_URL]
+
     # Deduplicate while preserving order
     seen = set()
     unique_urls = []
@@ -129,10 +137,7 @@ def fetch_finra_data():
 
     for url in unique_urls:
         try:
-            if url.lower().endswith(('.xlsx', '.xls')):
-                df = try_fetch_excel(url)
-            else:
-                df = try_fetch_csv(url)
+            df = try_fetch_excel(url)
             print(f"  Success: {url}")
             break
         except Exception as e:
@@ -150,26 +155,32 @@ def fetch_finra_data():
     date_col = find_date_column(df)
     print(f"  Using columns: date='{date_col}', debit='{debit_col}'")
 
-    # Sort by date ascending
-    df = df.sort_values(date_col).reset_index(drop=True)
+    # Normalize dates and filter valid rows
+    df['_date_norm'] = df[date_col].apply(normalize_date)
+    df = df[df['_date_norm'].str.match(r'^\d{4}-\d{2}$')].copy()
+
+    # Sort by date ascending (YYYY-MM string sort is chronologically correct)
+    df = df.sort_values('_date_norm').reset_index(drop=True)
 
     # Calculate YoY growth
-    df['margin_debt'] = df[debit_col]
+    df['margin_debt'] = pd.to_numeric(df[debit_col], errors='coerce')
+    df = df[df['margin_debt'].notna()].reset_index(drop=True)
     df['yoy_growth'] = df['margin_debt'].pct_change(periods=12) * 100
 
-    # Prepare output data
+    # Prepare output records
     records = []
     for _, row in df.iterrows():
-        if pd.notna(row['margin_debt']):
-            record = {
-                'date': str(row[date_col]),
-                'margin_debt': int(row['margin_debt']),
-                'yoy_growth': round(row['yoy_growth'], 1) if pd.notna(row['yoy_growth']) else None
-            }
-            records.append(record)
+        records.append({
+            'date': row['_date_norm'],
+            'margin_debt': int(row['margin_debt']),
+            'yoy_growth': round(float(row['yoy_growth']), 1) if pd.notna(row['yoy_growth']) else None
+        })
 
     if not records:
         raise RuntimeError("Parsed data but got zero valid records")
+
+    latest = records[-1]
+    print(f"  Latest data point: {latest['date']} — ${latest['margin_debt']:,}M (YoY: {latest['yoy_growth']}%)")
 
     output = {
         'last_updated': datetime.utcnow().isoformat() + 'Z',
@@ -188,7 +199,7 @@ def check_staleness(data):
         latest_date = datetime.strptime(latest_date_str[:7], "%Y-%m")
     except ValueError:
         latest_date = datetime.strptime(latest_date_str[:10], "%Y-%m-%d")
-    # Data represents a whole month, so add ~30 days
+    # FINRA releases monthly data with ~4-6 week lag, so data up to 60 days old is fine
     age_days = (datetime.utcnow() - latest_date).days - 30
     return max(age_days, 0)
 
