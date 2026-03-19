@@ -51,13 +51,6 @@ const normalizeMonthKey = (dateStr) => {
   return dateStr;
 };
 
-const fetchWithTimeout = (url, timeoutMs = 12000) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const promise = fetch(url, { signal: controller.signal })
-    .finally(() => clearTimeout(timer));
-  return { promise, controller };
-};
 
 const parseFinraMarginCsv = (text) => {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
@@ -106,39 +99,12 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    let marginController;
 
     const loadData = async () => {
       setLoading(true);
       setError(null);
 
-      const loadMarginLive = async () => {
-        const { promise, controller } = fetchWithTimeout('https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv');
-        marginController = controller;
-
-        let res;
-        try {
-          res = await promise;
-        } catch (err) {
-          if (err.name === 'AbortError') throw new Error('FINRA margin request timed out');
-          throw err;
-        }
-
-        if (!res.ok) throw new Error('Failed to reach FINRA margin CSV');
-        const text = await res.text();
-        const parsed = parseFinraMarginCsv(text);
-        if (!parsed.length) throw new Error('No margin data parsed from FINRA');
-        if (!cancelled) {
-          setRawData(parsed);
-          setMetadata({
-            lastUpdated: parsed[parsed.length - 1]?.date,
-            source: 'FINRA Margin Statistics (live)',
-            sourceUrl: 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics'
-          });
-        }
-      };
-
-      const loadMarginFallback = async () => {
+      const loadMarginData = async () => {
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load local margin data');
         const json = await res.json();
@@ -147,7 +113,7 @@ export default function App() {
           setRawData(json.data);
           setMetadata({
             lastUpdated: json.last_updated,
-            source: json.source + ' (cached)',
+            source: json.source,
             sourceUrl: json.source_url
           });
         }
@@ -170,11 +136,7 @@ export default function App() {
 
       try {
         await Promise.all([
-          loadMarginLive().catch(async (liveErr) => {
-            await loadMarginFallback().catch((fallbackErr) => {
-              throw liveErr;
-            });
-          }),
+          loadMarginData(),
           loadAaiiData().catch(() => {
             // AAII data is optional, don't fail if missing
           })
@@ -192,7 +154,6 @@ export default function App() {
 
     return () => {
       cancelled = true;
-      marginController?.abort();
     };
   }, []);
 
@@ -205,7 +166,7 @@ export default function App() {
             Loading Market Data
           </div>
           <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
-            Fetching live FINRA margin statistics...
+            Loading FINRA margin statistics...
           </div>
           <div className="shimmer" style={{ height: '4px', borderRadius: '999px', marginTop: '24px', overflow: 'hidden' }}></div>
         </div>

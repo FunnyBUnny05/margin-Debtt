@@ -5,91 +5,235 @@ FINRA publishes data at: https://www.finra.org/rules-guidance/key-topics/margin-
 """
 
 import json
+import sys
 import pandas as pd
 import requests
 from datetime import datetime
+from io import StringIO, BytesIO
 from pathlib import Path
+from bs4 import BeautifulSoup
 
+FINRA_LANDING_URL = "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"
 FINRA_CSV_URL = "https://www.finra.org/sites/default/files/Industry_Margin_Statistics.csv"
 FINRA_EXCEL_URL = "https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx"
 OUTPUT_PATH = Path(__file__).parent.parent / "public" / "margin_data.json"
+STALE_THRESHOLD_DAYS = 45
+
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+}
+
+
+def discover_finra_urls():
+    """Scrape the FINRA margin statistics page to find current download links."""
+    print(f"Discovering download URLs from {FINRA_LANDING_URL}")
+    try:
+        response = requests.get(FINRA_LANDING_URL, headers=HEADERS, timeout=30)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        urls = []
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            if any(ext in href.lower() for ext in ['.csv', '.xlsx', '.xls']):
+                if any(kw in href.lower() for kw in ['margin', 'statistic', 'debit', 'industry']):
+                    full_url = href if href.startswith('http') else f"https://www.finra.org{href}"
+                    urls.append(full_url)
+                    print(f"  Discovered: {full_url}")
+
+        return urls
+    except Exception as e:
+        print(f"  URL discovery failed: {e}")
+        return []
+
+
+def find_debit_column(df):
+    """Find the margin debt column with flexible matching."""
+    cols_lower = {c: c.lower() for c in df.columns}
+
+    # Try exact patterns first, then broader ones
+    patterns = [
+        lambda cl: 'debit' in cl and 'margin' in cl,
+        lambda cl: 'debit' in cl and 'balance' in cl,
+        lambda cl: 'margin' in cl and 'debt' in cl,
+        lambda cl: 'debit' in cl,
+    ]
+    for pattern in patterns:
+        matches = [c for c, cl in cols_lower.items() if pattern(cl)]
+        if matches:
+            return matches[0]
+
+    raise ValueError(f"Could not find debit/margin column in: {list(df.columns)}")
+
+
+def find_date_column(df):
+    """Find the date column with flexible matching."""
+    for col in df.columns:
+        cl = col.lower().strip()
+        if cl in ('year-month', 'yearmonth', 'year_month', 'date', 'month'):
+            return col
+    # Fallback: first column that looks like dates
+    for col in df.columns:
+        sample = str(df[col].iloc[0]) if len(df) > 0 else ''
+        if len(sample) >= 6 and '-' in sample:
+            return col
+    raise ValueError(f"Could not find date column in: {list(df.columns)}")
+
+
+def try_fetch_csv(url):
+    """Attempt to fetch and parse a CSV URL."""
+    print(f"  Trying CSV: {url}")
+    response = requests.get(url, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    content_type = response.headers.get('content-type', '')
+    if 'html' in content_type.lower():
+        raise ValueError("Response is HTML, not CSV")
+    df = pd.read_csv(StringIO(response.text))
+    if len(df) < 10:
+        raise ValueError(f"Too few rows ({len(df)}), likely not valid data")
+    return df
+
+
+def try_fetch_excel(url):
+    """Attempt to fetch and parse an Excel URL."""
+    print(f"  Trying Excel: {url}")
+    response = requests.get(url, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    content_type = response.headers.get('content-type', '')
+    if 'html' in content_type.lower() and 'spreadsheet' not in content_type.lower():
+        raise ValueError("Response is HTML, not Excel")
+    if len(response.content) < 1000:
+        raise ValueError("Response too small to be a valid spreadsheet")
+    df = pd.read_excel(BytesIO(response.content), engine='openpyxl')
+    if len(df) < 10:
+        raise ValueError(f"Too few rows ({len(df)}), likely not valid data")
+    return df
+
 
 def fetch_finra_data():
     """Download and parse FINRA margin statistics file."""
-    print(f"Fetching FINRA data from {FINRA_CSV_URL}")
+    # Build candidate URL list: discovered URLs first, then hardcoded fallbacks
+    discovered = discover_finra_urls()
+    candidate_urls = discovered + [FINRA_CSV_URL, FINRA_EXCEL_URL]
+    # Deduplicate while preserving order
+    seen = set()
+    unique_urls = []
+    for url in candidate_urls:
+        if url not in seen:
+            seen.add(url)
+            unique_urls.append(url)
 
-    # Try CSV first (faster and more reliable)
-    try:
-        response = requests.get(FINRA_CSV_URL, timeout=30)
-        response.raise_for_status()
-        from io import StringIO
-        df = pd.read_csv(StringIO(response.text))
-        print("Successfully fetched CSV data")
-    except Exception as e:
-        print(f"CSV fetch failed: {e}, trying Excel...")
-        response = requests.get(FINRA_EXCEL_URL, timeout=30)
-        response.raise_for_status()
-        df = pd.read_excel(response.content, engine='openpyxl')
-        print("Successfully fetched Excel data")
+    print(f"Trying {len(unique_urls)} candidate URL(s)...")
+    last_error = None
+    df = None
+
+    for url in unique_urls:
+        try:
+            if url.lower().endswith(('.xlsx', '.xls')):
+                df = try_fetch_excel(url)
+            else:
+                df = try_fetch_csv(url)
+            print(f"  Success: {url}")
+            break
+        except Exception as e:
+            last_error = e
+            print(f"  Failed: {e}")
+
+    if df is None:
+        raise RuntimeError(f"All {len(unique_urls)} URL(s) failed. Last error: {last_error}")
 
     # Clean column names
     df.columns = df.columns.str.strip()
 
-    # Find the margin debt column (debit balances)
-    debit_col = [c for c in df.columns if 'Debit' in c and 'Margin' in c][0]
-    
+    # Find columns flexibly
+    debit_col = find_debit_column(df)
+    date_col = find_date_column(df)
+    print(f"  Using columns: date='{date_col}', debit='{debit_col}'")
+
     # Sort by date ascending
-    df = df.sort_values('Year-Month').reset_index(drop=True)
-    
+    df = df.sort_values(date_col).reset_index(drop=True)
+
     # Calculate YoY growth
     df['margin_debt'] = df[debit_col]
     df['yoy_growth'] = df['margin_debt'].pct_change(periods=12) * 100
-    
+
     # Prepare output data
     records = []
     for _, row in df.iterrows():
         if pd.notna(row['margin_debt']):
             record = {
-                'date': str(row['Year-Month']),
+                'date': str(row[date_col]),
                 'margin_debt': int(row['margin_debt']),
                 'yoy_growth': round(row['yoy_growth'], 1) if pd.notna(row['yoy_growth']) else None
             }
             records.append(record)
-    
-    # Add metadata
+
+    if not records:
+        raise RuntimeError("Parsed data but got zero valid records")
+
     output = {
         'last_updated': datetime.utcnow().isoformat() + 'Z',
         'source': 'FINRA Margin Statistics',
-        'source_url': 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics',
+        'source_url': FINRA_LANDING_URL,
         'data': records
     }
-    
+
     return output
 
+
+def check_staleness(data):
+    """Return number of days since the latest data point."""
+    latest_date_str = data['data'][-1]['date']  # e.g., "2025-12"
+    try:
+        latest_date = datetime.strptime(latest_date_str[:7], "%Y-%m")
+    except ValueError:
+        latest_date = datetime.strptime(latest_date_str[:10], "%Y-%m-%d")
+    # Data represents a whole month, so add ~30 days
+    age_days = (datetime.utcnow() - latest_date).days - 30
+    return max(age_days, 0)
+
+
 def main():
+    fetch_succeeded = False
+    data = None
+
     try:
         data = fetch_finra_data()
-        
-        # Ensure output directory exists
+        fetch_succeeded = True
+
         OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Write JSON
         with open(OUTPUT_PATH, 'w') as f:
             json.dump(data, f, indent=2)
-        
+
         latest = data['data'][-1]
         print(f"Success! Latest data: {latest['date']} - ${latest['margin_debt']:,}M")
         print(f"YoY Growth: {latest['yoy_growth']}%")
         print(f"Total records: {len(data['data'])}")
         print(f"Output: {OUTPUT_PATH}")
-        
+
     except Exception as e:
-        print(f"Error fetching FINRA data: {e}")
-        # If fetch fails, try to keep existing data
+        print(f"ERROR: Failed to fetch FINRA data: {e}")
         if OUTPUT_PATH.exists():
-            print("Keeping existing data file")
+            print("Loading existing data to check staleness...")
+            with open(OUTPUT_PATH) as f:
+                data = json.load(f)
         else:
-            raise
+            print("No existing data file found. Cannot continue.")
+            sys.exit(1)
+
+    # Staleness check
+    if data and data.get('data'):
+        stale_days = check_staleness(data)
+        print(f"Data staleness: ~{stale_days} days since latest data point")
+
+        if stale_days > STALE_THRESHOLD_DAYS:
+            print(f"WARNING: Data is {stale_days} days stale (threshold: {STALE_THRESHOLD_DAYS})")
+            if not fetch_succeeded:
+                print("ERROR: Fetch failed and data is stale. Exiting with error.")
+                sys.exit(1)
+        elif not fetch_succeeded:
+            print("WARNING: Fetch failed but existing data is still recent. Keeping cached data.")
+
 
 if __name__ == '__main__':
     main()
