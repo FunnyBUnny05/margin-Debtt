@@ -27,13 +27,49 @@ jobs:
         run: pip install pandas openpyxl requests beautifulsoup4
 
       - name: Fetch FINRA margin data
+        id: finra_fetch
         run: python scripts/fetch_finra_data.py
+        continue-on-error: true
 
       - name: Fetch AAII allocation data
+        id: aaii_fetch
         run: python scripts/fetch_aaii_allocation.py
+        continue-on-error: true
 
       - name: Fetch CBOE Put/Call ratio data
+        id: cboe_fetch
         run: python scripts/fetch_cboe_putcall.py
+        continue-on-error: true
+
+      - name: Report data freshness
+        if: always()
+        run: |
+          python -c "
+          import json, os
+          from datetime import datetime
+          for f in ['margin_data.json', 'aaii_allocation_data.json', 'put_call_data.json']:
+              path = f'public/{f}'
+              if os.path.exists(path):
+                  data = json.load(open(path))
+                  latest = data.get('data', [{}])[-1].get('date', 'unknown')
+                  updated = data.get('last_updated', 'unknown')[:10]
+                  print(f'{f}: latest_data={latest}, last_updated={updated}')
+              else:
+                  print(f'{f}: FILE MISSING')
+          "
+
+      - name: Warn on fetch failures
+        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure'
+        run: |
+          if [ "${{ steps.finra_fetch.outcome }}" = "failure" ]; then
+            echo "::warning::FINRA margin data fetch failed - data may be stale"
+          fi
+          if [ "${{ steps.aaii_fetch.outcome }}" = "failure" ]; then
+            echo "::warning::AAII allocation data fetch failed - data may be stale"
+          fi
+          if [ "${{ steps.cboe_fetch.outcome }}" = "failure" ]; then
+            echo "::warning::CBOE put/call data fetch failed - data may be stale"
+          fi
 
       - name: Commit updated data
         run: |
