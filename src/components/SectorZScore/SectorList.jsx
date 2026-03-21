@@ -33,7 +33,7 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
         }}
       >
         {sorted.map((sector) => (
-          <div key={sector.symbol} style={{ borderBottom: '1px solid #1A1A1A' }}>
+          <div key={sector.symbol} style={{ borderBottom: '1px solid #111827' }}>
             <div
               onClick={() => onSelect(sector.symbol)}
               style={{
@@ -42,12 +42,12 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                 alignItems: 'center',
                 padding: '8px 12px',
                 cursor: 'pointer',
-                background: selectedSector === sector.symbol ? '#1A1000' : 'transparent',
-                borderLeft: selectedSector === sector.symbol ? '3px solid #FF6600' : '3px solid transparent',
+                background: selectedSector === sector.symbol ? '#78350F' : 'transparent',
+                borderLeft: selectedSector === sector.symbol ? '3px solid #F59E0B' : '3px solid transparent',
               }}
               onMouseEnter={(e) => {
                 if (selectedSector !== sector.symbol) {
-                  e.currentTarget.style.background = '#111111';
+                  e.currentTarget.style.background = '#111827';
                 }
               }}
               onMouseLeave={(e) => {
@@ -58,13 +58,13 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                 <div style={{ width: '6px', height: '6px', background: sector.color, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'Courier New, monospace', color: '#FFFFFF', fontSize: '12px', fontWeight: '700' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#F9FAFB', fontSize: '12px', fontWeight: '700' }}>
                   {sector.symbol}
                 </span>
                 {!isMobile && (
                   <span style={{
                     fontFamily: 'var(--font-ui)',
-                    color: '#555555',
+                    color: '#6B7280',
                     fontSize: '10px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -82,9 +82,9 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#444444',
+                    color: '#4B5563',
                     cursor: 'pointer',
-                    fontFamily: 'Courier New, monospace',
+                    fontFamily: 'JetBrains Mono, monospace',
                     fontSize: '10px',
                     padding: '2px 4px',
                   }}
@@ -92,8 +92,8 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                   {expandedSector === sector.symbol ? '[-]' : '[+]'}
                 </button>
                 <span style={{
-                  fontFamily: 'Courier New, monospace',
-                  color: sector.currentZScore < 0 ? '#00CC44' : '#FF3333',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: sector.currentZScore < 0 ? '#10B981' : '#EF4444',
                   fontWeight: '700',
                   fontSize: '12px',
                   minWidth: '46px',
@@ -109,35 +109,35 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
             {expandedSector === sector.symbol && sector.structuralBaseline !== null && (
               <div style={{
                 padding: '10px 12px 10px 15px',
-                background: '#060606',
-                borderLeft: '3px solid #2A2A2A',
-                fontFamily: 'Courier New, monospace',
+                background: '#0B0F19',
+                borderLeft: '3px solid #1F2937',
+                fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '11px',
                 lineHeight: '1.6'
               }}>
-                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FFD700', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
                   CURRENT BREAKDOWN
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666666' }}>STRUCT BASELINE:</span>
-                    <span style={{ color: sector.structuralBaseline < 0 ? '#FF3333' : '#00CC44', fontWeight: '700' }}>
+                    <span style={{ color: '#6B7280' }}>STRUCT BASELINE:</span>
+                    <span style={{ color: sector.structuralBaseline < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
                       {sector.structuralBaseline >= 0 ? '+' : ''}{sector.structuralBaseline.toFixed(2)}%
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666666' }}>REL RETURN:</span>
-                    <span style={{ color: sector.relativeReturn < 0 ? '#FF3333' : '#00CC44', fontWeight: '700' }}>
+                    <span style={{ color: '#6B7280' }}>REL RETURN:</span>
+                    <span style={{ color: sector.relativeReturn < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
                       {sector.relativeReturn >= 0 ? '+' : ''}{sector.relativeReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', marginTop: '4px', borderTop: '1px solid #1A1A1A' }}>
-                    <span style={{ color: '#999999', fontWeight: '700' }}>EXCESS RETURN:</span>
-                    <span style={{ color: sector.excessReturn < 0 ? '#FF3333' : '#00CC44', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', marginTop: '4px', borderTop: '1px solid #111827' }}>
+                    <span style={{ color: '#9CA3AF', fontWeight: '700' }}>EXCESS RETURN:</span>
+                    <span style={{ color: sector.excessReturn < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
                       {sector.excessReturn >= 0 ? '+' : ''}{sector.excessReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ marginTop: '4px', padding: '4px 8px', background: '#0A0A0A', fontSize: '10px', color: '#555555', fontFamily: 'var(--font-ui)' }}>
+                  <div style={{ marginTop: '4px', padding: '4px 8px', background: '#0B0F19', fontSize: '10px', color: '#6B7280', fontFamily: 'var(--font-ui)' }}>
                     {sector.excessReturn !== null && sector.excessReturn !== undefined && (
                       <>
                         {sector.excessReturn < -5
@@ -169,30 +169,30 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                     const extendedPct = (extendedCount / totalPoints) * 100;
 
                     return (
-                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #1A1A1A' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FFD700', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #111827' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>
                           HISTORICAL TIME SPENT
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '10px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#555555' }}>CYCLIC LOW (&le;-2):</span>
-                            <span style={{ color: '#00CC44', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
+                            <span style={{ color: '#6B7280' }}>CYCLIC LOW (&le;-2):</span>
+                            <span style={{ color: '#10B981', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#555555' }}>CHEAP (-1 TO -2):</span>
-                            <span style={{ color: '#00CCCC', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
+                            <span style={{ color: '#6B7280' }}>CHEAP (-1 TO -2):</span>
+                            <span style={{ color: '#38BDF8', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#555555' }}>NEUTRAL (-1 TO +1):</span>
-                            <span style={{ color: '#666666', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
+                            <span style={{ color: '#6B7280' }}>NEUTRAL (-1 TO +1):</span>
+                            <span style={{ color: '#6B7280', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#555555' }}>SOMEWHAT EXT (+1 TO +2):</span>
-                            <span style={{ color: '#FFD700', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
+                            <span style={{ color: '#6B7280' }}>SOMEWHAT EXT (+1 TO +2):</span>
+                            <span style={{ color: '#FCD34D', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#555555' }}>EXTENDED (&ge;+2):</span>
-                            <span style={{ color: '#FF3333', fontWeight: '700' }}>{extendedPct.toFixed(1)}%</span>
+                            <span style={{ color: '#6B7280' }}>EXTENDED (&ge;+2):</span>
+                            <span style={{ color: '#EF4444', fontWeight: '700' }}>{extendedPct.toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>
@@ -205,8 +205,8 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
         ))}
         {sorted.length === 0 && (
           <div style={{
-            fontFamily: 'Courier New, monospace',
-            color: '#444444',
+            fontFamily: 'JetBrains Mono, monospace',
+            color: '#4B5563',
             textAlign: 'center',
             padding: '32px 20px',
             fontSize: '12px'

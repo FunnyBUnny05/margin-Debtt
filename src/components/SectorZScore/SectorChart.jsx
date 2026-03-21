@@ -85,15 +85,15 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#0A0A0A',
-            titleColor: '#FF6600',
-            bodyColor: '#CCCCCC',
-            borderColor: '#2A2A2A',
+            backgroundColor: '#0B0F19',
+            titleColor: '#F59E0B',
+            bodyColor: '#D1D5DB',
+            borderColor: '#1F2937',
             borderWidth: 1,
             padding: 10,
             cornerRadius: 0,
-            bodyFont: { size: 11, family: 'Courier New, monospace' },
-            titleFont: { size: 11, weight: '700', family: 'Courier New, monospace' },
+            bodyFont: { size: 11, family: 'JetBrains Mono, monospace' },
+            titleFont: { size: 11, weight: '700', family: 'JetBrains Mono, monospace' },
             bodySpacing: 4,
             displayColors: false,
             callbacks: {
@@ -125,7 +125,7 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
                 return lines;
               },
               labelTextColor: (context) => {
-                return '#CCCCCC';
+                return '#D1D5DB';
               },
               afterLabel: (context) => {
                 const zScore = context.parsed.y;
@@ -148,12 +148,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
               }
             },
             grid: {
-              color: '#1A1A1A',
+              color: '#111827',
               drawBorder: false
             },
             ticks: {
-              color: '#555555',
-              font: { size: 10, family: 'Courier New, monospace' },
+              color: '#6B7280',
+              font: { size: 10, family: 'JetBrains Mono, monospace' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
@@ -161,12 +161,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
             min: -6,
             max: 6,
             grid: {
-              color: '#1A1A1A',
+              color: '#111827',
               drawBorder: false
             },
             ticks: {
-              color: '#555555',
-              font: { size: 10, family: 'Courier New, monospace' },
+              color: '#6B7280',
+              font: { size: 10, family: 'JetBrains Mono, monospace' },
               stepSize: 2
             }
           }
@@ -182,9 +182,9 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
 
             // Draw reference lines at -2, 0, +2
             const lines = [
-              { y: 2, color: '#FF333366', label: 'Extended (+2)' },
-              { y: 0, color: '#333333', label: '' },
-              { y: -2, color: '#00CC4466', label: 'Cyclical Low (-2)' }
+              { y: 2, color: '#EF444466', label: 'Extended (+2)' },
+              { y: 0, color: '#374151', label: '' },
+              { y: -2, color: '#10B98166', label: 'Cyclical Low (-2)' }
             ];
 
             lines.forEach((line) => {

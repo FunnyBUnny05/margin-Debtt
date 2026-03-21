@@ -80,8 +80,8 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
           {
             label: benchmark,
             data: benchData,
-            borderColor: '#555555',
-            backgroundColor: '#55555515',
+            borderColor: '#6B7280',
+            backgroundColor: '#6B728015',
             borderWidth: 1,
             borderDash: [4, 4],
             pointRadius: 0,
@@ -102,8 +102,8 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
             display: true,
             position: 'top',
             labels: {
-              color: '#999999',
-              font: { size: 10, family: 'Courier New, monospace' },
+              color: '#9CA3AF',
+              font: { size: 10, family: 'JetBrains Mono, monospace' },
               usePointStyle: true,
               padding: 12,
               boxWidth: 6,
@@ -112,15 +112,15 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
           },
           tooltip: {
             enabled: true,
-            backgroundColor: '#0A0A0A',
-            titleColor: '#FF6600',
-            bodyColor: '#CCCCCC',
-            borderColor: '#2A2A2A',
+            backgroundColor: '#0B0F19',
+            titleColor: '#F59E0B',
+            bodyColor: '#D1D5DB',
+            borderColor: '#1F2937',
             borderWidth: 1,
             padding: 10,
             cornerRadius: 0,
-            bodyFont: { size: 11, family: 'Courier New, monospace' },
-            titleFont: { size: 11, weight: '700', family: 'Courier New, monospace' },
+            bodyFont: { size: 11, family: 'JetBrains Mono, monospace' },
+            titleFont: { size: 11, weight: '700', family: 'JetBrains Mono, monospace' },
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
@@ -147,23 +147,23 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
               }
             },
             grid: {
-              color: '#1A1A1A',
+              color: '#111827',
               drawBorder: false
             },
             ticks: {
-              color: '#555555',
-              font: { size: 10, family: 'Courier New, monospace' },
+              color: '#6B7280',
+              font: { size: 10, family: 'JetBrains Mono, monospace' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
           y: {
             grid: {
-              color: '#1A1A1A',
+              color: '#111827',
               drawBorder: false
             },
             ticks: {
-              color: '#555555',
-              font: { size: 10, family: 'Courier New, monospace' },
+              color: '#6B7280',
+              font: { size: 10, family: 'JetBrains Mono, monospace' },
               callback: (value) => `${value >= 0 ? '+' : ''}${value}%`
             }
           }
@@ -181,7 +181,7 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
 
             ctx.save();
             ctx.beginPath();
-            ctx.strokeStyle = '#333333';
+            ctx.strokeStyle = '#374151';
             ctx.lineWidth = 1;
             ctx.moveTo(xAxis.left, yPixel);
             ctx.lineTo(xAxis.right, yPixel);
@@ -212,7 +212,7 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
           gap: '8px'
         }}
       >
-        <div style={{ fontFamily: 'Courier New, monospace', fontSize: '12px', color: '#444444' }}>
+        <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: '#4B5563' }}>
           SELECT A SECTOR TO VIEW PRICE PERFORMANCE
         </div>
       </div>
