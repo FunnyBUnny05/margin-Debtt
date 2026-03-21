@@ -41,13 +41,18 @@ jobs:
         run: python scripts/fetch_cboe_putcall.py
         continue-on-error: true
 
+      - name: Fetch Buffett Indicator data
+        id: buffett_fetch
+        run: python scripts/fetch_buffett_indicator.py
+        continue-on-error: true
+
       - name: Report data freshness
         if: always()
         run: |
           python -c "
           import json, os
           from datetime import datetime
-          for f in ['margin_data.json', 'aaii_allocation_data.json', 'put_call_data.json']:
+          for f in ['margin_data.json', 'aaii_allocation_data.json', 'put_call_data.json', 'buffett_indicator_data.json']:
               path = f'public/{f}'
               if os.path.exists(path):
                   data = json.load(open(path))
@@ -59,7 +64,7 @@ jobs:
           "
 
       - name: Warn on fetch failures
-        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure'
+        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure' || steps.buffett_fetch.outcome == 'failure'
         run: |
           if [ "${{ steps.finra_fetch.outcome }}" = "failure" ]; then
             echo "::warning::FINRA margin data fetch failed - data may be stale"
@@ -70,12 +75,15 @@ jobs:
           if [ "${{ steps.cboe_fetch.outcome }}" = "failure" ]; then
             echo "::warning::CBOE put/call data fetch failed - data may be stale"
           fi
+          if [ "${{ steps.buffett_fetch.outcome }}" = "failure" ]; then
+            echo "::warning::Buffett Indicator data fetch failed - data may be stale"
+          fi
 
       - name: Commit updated data
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json
+          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json public/buffett_indicator_data.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
