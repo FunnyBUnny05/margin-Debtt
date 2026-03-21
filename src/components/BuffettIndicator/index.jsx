@@ -100,16 +100,17 @@ const CashTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'rgba(15,17,27,0.95)',
-      border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: '10px',
-      padding: '12px 16px',
-      fontSize: '13px',
-      color: 'var(--text-primary)',
+      background: '#0A0A0A',
+      border: '1px solid #2A2A2A',
+      borderRadius: '0',
+      padding: '8px 12px',
+      fontFamily: 'Courier New, monospace',
+      fontSize: '11px',
+      color: '#CCCCCC',
     }}>
-      <div style={{ fontWeight: '600', marginBottom: '6px' }}>{label}</div>
-      <div style={{ color: '#fbbf24' }}>
-        Cash &amp; T-Bills: <strong>${payload[0].value?.toFixed(1)}B</strong>
+      <div style={{ fontWeight: '700', color: '#FF6600', marginBottom: '4px' }}>{label}</div>
+      <div style={{ color: '#FFD700' }}>
+        CASH &amp; T-BILLS: <strong>${payload[0].value?.toFixed(1)}B</strong>
       </div>
     </div>
   );
@@ -121,16 +122,17 @@ const YoyTooltip = ({ active, payload, label }) => {
   if (val === null || val === undefined) return null;
   return (
     <div style={{
-      background: 'rgba(15,17,27,0.95)',
-      border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: '10px',
-      padding: '12px 16px',
-      fontSize: '13px',
-      color: 'var(--text-primary)',
+      background: '#0A0A0A',
+      border: '1px solid #2A2A2A',
+      borderRadius: '0',
+      padding: '8px 12px',
+      fontFamily: 'Courier New, monospace',
+      fontSize: '11px',
+      color: '#CCCCCC',
     }}>
-      <div style={{ fontWeight: '600', marginBottom: '6px' }}>{label}</div>
-      <div style={{ color: val >= 0 ? '#51cf66' : '#ff6b6b' }}>
-        YoY Growth: <strong>{val >= 0 ? '+' : ''}{val}%</strong>
+      <div style={{ fontWeight: '700', color: '#FF6600', marginBottom: '4px' }}>{label}</div>
+      <div style={{ color: val >= 0 ? '#00CC44' : '#FF3333' }}>
+        YOY GROWTH: <strong>{val >= 0 ? '+' : ''}{val}%</strong>
       </div>
     </div>
   );
@@ -179,28 +181,32 @@ export const BuffettIndicator = ({ isMobile }) => {
 
   const statCards = [
     {
-      label: `${latest?.year} Cash Hoard`,
+      label: `${latest?.year} CASH HOARD`,
       value: `$${latest?.cash.toFixed(1)}B`,
-      sub: 'Cash + T-Bills',
-      color: '#fbbf24',
+      sub: 'CASH + T-BILLS',
+      color: '#FF6600',
+      border: '#FF6600',
     },
     {
-      label: 'YoY Change',
+      label: 'YOY CHANGE',
       value: `${latest?.yoy >= 0 ? '+' : ''}${latest?.yoy}%`,
-      sub: `vs $${prev?.cash.toFixed(1)}B in ${prev?.year}`,
-      color: latest?.yoy >= 0 ? '#51cf66' : '#ff6b6b',
+      sub: `VS $${prev?.cash.toFixed(1)}B IN ${prev?.year}`,
+      color: latest?.yoy >= 0 ? '#00CC44' : '#FF3333',
+      border: latest?.yoy >= 0 ? '#00CC44' : '#FF3333',
     },
     {
-      label: 'All-Time High',
+      label: 'ALL-TIME HIGH',
       value: `$${allTimeHigh.toFixed(1)}B`,
       sub: String(athYear),
-      color: '#a78bfa',
+      color: '#FFD700',
+      border: '#FFD700',
     },
     {
-      label: `${ENRICHED.length}-Year Average`,
+      label: `${ENRICHED.length}-YEAR AVG`,
       value: `$${avgCash}B`,
       sub: spanYears,
-      color: '#60a5fa',
+      color: '#00CCCC',
+      border: '#00CCCC',
     },
   ];
 
@@ -210,18 +216,20 @@ export const BuffettIndicator = ({ isMobile }) => {
       <div style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
-        gap: '16px',
-        marginBottom: '24px',
+        gap: '1px',
+        marginBottom: '1px',
+        marginTop: '1px',
+        background: '#1A1A1A',
       }}>
-        {statCards.map(({ label, value, sub, color }) => (
-          <div key={label} className="stat-card animate-in">
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+        {statCards.map(({ label, value, sub, color, border }) => (
+          <div key={label} className="stat-card" style={{ borderLeft: `3px solid ${border}`, padding: '12px 16px' }}>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', color: '#FFD700', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '6px' }}>
               {label}
             </div>
-            <div style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: '700', color, lineHeight: 1 }}>
+            <div style={{ fontFamily: 'Courier New, monospace', fontSize: isMobile ? '20px' : '24px', fontWeight: '700', color, lineHeight: 1 }}>
               {value}
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
+            <div style={{ fontFamily: 'Courier New, monospace', fontSize: '10px', color: '#555555', marginTop: '4px' }}>
               {sub}
             </div>
           </div>
@@ -229,27 +237,31 @@ export const BuffettIndicator = ({ isMobile }) => {
       </div>
 
       {/* Time Range Selector */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: '0', marginBottom: '0', flexWrap: 'wrap', alignItems: 'stretch', borderBottom: '1px solid #2A2A2A', background: '#050505' }}>
         {TIME_RANGE_OPTIONS.map(({ label, value }) => (
           <button
             key={value}
             onClick={() => setTimeRange(value)}
-            className="btn-primary"
             style={{
-              padding: '8px 20px',
-              background: timeRange === value ? 'var(--gradient-amber, linear-gradient(135deg,#f59e0b,#d97706))' : 'var(--glass-bg)',
-              border: timeRange === value ? 'none' : '1px solid var(--glass-border)',
-              fontSize: '13px',
-              fontWeight: timeRange === value ? '600' : '400',
+              padding: '7px 16px',
+              fontFamily: 'Courier New, monospace',
+              fontSize: '11px',
+              fontWeight: '700',
+              background: timeRange === value ? '#1A1000' : 'transparent',
+              color: timeRange === value ? '#FF6600' : '#555555',
+              border: 'none',
+              borderRight: '1px solid #1A1A1A',
+              borderBottom: timeRange === value ? '2px solid #FF6600' : '2px solid transparent',
+              cursor: 'pointer',
             }}
           >
             {label}
           </button>
         ))}
-        <div style={{ marginLeft: 'auto', fontSize: '12px', color: 'var(--text-muted)' }}>
-          {fetchStatus === 'loading' && '⏳ Fetching latest data…'}
-          {fetchStatus === 'live' && '🟢 Live data (Yahoo Finance)'}
-          {fetchStatus === 'fallback' && '📋 Cached data'}
+        <div style={{ marginLeft: 'auto', padding: '7px 12px', fontFamily: 'Courier New, monospace', fontSize: '10px', color: '#444444', display: 'flex', alignItems: 'center' }}>
+          {fetchStatus === 'loading' && 'FETCHING LIVE DATA...'}
+          {fetchStatus === 'live' && 'LIVE: YAHOO FINANCE'}
+          {fetchStatus === 'fallback' && 'CACHED DATA'}
         </div>
       </div>
 
@@ -257,98 +269,101 @@ export const BuffettIndicator = ({ isMobile }) => {
       <div style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: '20px',
-        marginBottom: '24px',
+        gap: '1px',
+        marginBottom: '1px',
+        marginTop: '1px',
+        background: '#1A1A1A',
       }}>
         {/* Chart 1: Absolute Cash */}
-        <div className="glass-card animate-in" style={{ padding: isMobile ? '20px 16px' : '28px 32px' }}>
-          <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            💰 Cash &amp; T-Bill Holdings
-          </h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+        <div className="glass-card" style={{ padding: '0' }}>
+          <div className="bb-panel-header">CASH &amp; T-BILL HOLDINGS</div>
+          <div style={{ padding: isMobile ? '12px' : '14px' }}>
+          <p style={{ fontFamily: 'Courier New, monospace', fontSize: '10px', color: '#555555', marginBottom: '12px' }}>
             Annual cash + short-term U.S. Treasury holdings (USD billions)
           </p>
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={filtered} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="25%">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid strokeDasharray="1 4" stroke="#1A1A1A" vertical={false} />
               <XAxis
                 dataKey="year"
-                tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                tick={{ fill: '#555555', fontSize: 10, fontFamily: 'Courier New, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 interval={isMobile ? 4 : 2}
               />
               <YAxis
                 tickFormatter={v => `$${v}B`}
-                tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                tick={{ fill: '#555555', fontSize: 10, fontFamily: 'Courier New, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 width={52}
               />
-              <Tooltip content={<CashTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="cash" radius={[3, 3, 0, 0]} name="Cash & T-Bills">
+              <Tooltip content={<CashTooltip />} cursor={{ fill: 'rgba(255,102,0,0.06)' }} />
+              <Bar dataKey="cash" radius={[0, 0, 0, 0]} name="Cash & T-Bills">
                 {filtered.map((entry) => (
                   <Cell
                     key={entry.year}
-                    fill={entry.cash >= 200 ? '#f59e0b' : entry.cash >= 100 ? '#fbbf24' : entry.cash >= 50 ? '#fcd34d' : '#fde68a'}
+                    fill={entry.cash >= 200 ? '#FF6600' : entry.cash >= 100 ? '#CC5200' : entry.cash >= 50 ? '#8A3800' : '#4A2000'}
                   />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Chart 2: YoY Growth */}
-        <div className="glass-card animate-in" style={{ padding: isMobile ? '20px 16px' : '28px 32px' }}>
-          <h2 style={{ fontSize: '17px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-            📈 Year-over-Year Growth
-          </h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+        <div className="glass-card" style={{ padding: '0' }}>
+          <div className="bb-panel-header">YEAR-OVER-YEAR GROWTH</div>
+          <div style={{ padding: isMobile ? '12px' : '14px' }}>
+          <p style={{ fontFamily: 'Courier New, monospace', fontSize: '10px', color: '#555555', marginBottom: '12px' }}>
             Annual change in cash holdings (%)
           </p>
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart
               data={filtered.filter(d => d.yoy !== null)}
               margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
               barCategoryGap="25%"
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <CartesianGrid strokeDasharray="1 4" stroke="#1A1A1A" vertical={false} />
               <XAxis
                 dataKey="year"
-                tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                tick={{ fill: '#555555', fontSize: 10, fontFamily: 'Courier New, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 interval={isMobile ? 4 : 2}
               />
               <YAxis
                 tickFormatter={v => `${v}%`}
-                tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                tick={{ fill: '#555555', fontSize: 10, fontFamily: 'Courier New, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 width={52}
               />
-              <Tooltip content={<YoyTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeWidth={1} />
-              <Bar dataKey="yoy" radius={[3, 3, 0, 0]} name="YoY Growth">
+              <Tooltip content={<YoyTooltip />} cursor={{ fill: 'rgba(255,102,0,0.06)' }} />
+              <ReferenceLine y={0} stroke="#333333" strokeWidth={1} />
+              <Bar dataKey="yoy" radius={[0, 0, 0, 0]} name="YoY Growth">
                 {filtered.filter(d => d.yoy !== null).map((entry) => (
                   <Cell
                     key={entry.year}
-                    fill={entry.yoy >= 0 ? '#51cf66' : '#ff6b6b'}
+                    fill={entry.yoy >= 0 ? '#00CC44' : '#FF3333'}
                   />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* Note */}
-      <div className="glass-card animate-in" style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7' }}>
-        <strong style={{ color: 'var(--text-tertiary)' }}>Data notes:</strong> Cash holdings represent Berkshire Hathaway's combined cash &amp; cash equivalents plus short-term U.S. Treasury bill investments as reported in annual filings.
-        1995–1999 figures reflect cash &amp; equivalents only (T-bill holdings were minimal and not separately disclosed).
-        The 1998 spike ($13.6B) reflects the General Re acquisition in December 1998.
-        Recent years auto-fetched from Yahoo Finance (BRK-B balance sheet); falls back to last known figures if unavailable.
-        Sources: Berkshire Hathaway annual reports, Yahoo Finance.
+      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #2A2A2A', marginTop: '1px' }}>
+        <div style={{ fontFamily: 'Courier New, monospace', fontSize: '10px', color: '#444444', lineHeight: '1.7' }}>
+          <span style={{ color: '#555555', fontWeight: '700' }}>DATA NOTES:</span> Cash holdings represent Berkshire Hathaway's combined cash &amp; cash equivalents plus short-term U.S. Treasury bill investments as reported in annual filings.
+          1995–1999 figures reflect cash &amp; equivalents only. The 1998 spike ($13.6B) reflects the General Re acquisition.
+          Recent years auto-fetched from Yahoo Finance (BRK-B); falls back to last known figures if unavailable.
+          Sources: Berkshire Hathaway annual reports, Yahoo Finance.
+        </div>
       </div>
     </div>
   );

@@ -80,12 +80,12 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
           {
             label: benchmark,
             data: benchData,
-            borderColor: '#888',
-            backgroundColor: '#88888820',
-            borderWidth: 2,
-            borderDash: [5, 5],
+            borderColor: '#555555',
+            backgroundColor: '#55555515',
+            borderWidth: 1,
+            borderDash: [4, 4],
             pointRadius: 0,
-            pointHoverRadius: 5,
+            pointHoverRadius: 4,
             tension: 0.1
           }
         ]
@@ -102,25 +102,25 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
             display: true,
             position: 'top',
             labels: {
-              color: 'var(--text-secondary)',
-              font: { size: 11, weight: '500' },
+              color: '#999999',
+              font: { size: 10, family: 'Courier New, monospace' },
               usePointStyle: true,
-              padding: 15,
+              padding: 12,
               boxWidth: 6,
               boxHeight: 6
             }
           },
           tooltip: {
             enabled: true,
-            backgroundColor: 'rgba(30, 41, 59, 0.95)',
-            titleColor: '#ffffff',
-            bodyColor: '#e0e7ff',
-            borderColor: 'rgba(167, 139, 250, 0.3)',
+            backgroundColor: '#0A0A0A',
+            titleColor: '#FF6600',
+            bodyColor: '#CCCCCC',
+            borderColor: '#2A2A2A',
             borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8,
-            bodyFont: { size: 12 },
-            titleFont: { size: 13, weight: '600' },
+            padding: 10,
+            cornerRadius: 0,
+            bodyFont: { size: 11, family: 'Courier New, monospace' },
+            titleFont: { size: 11, weight: '700', family: 'Courier New, monospace' },
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
@@ -147,23 +147,23 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
               }
             },
             grid: {
-              color: 'rgba(255, 255, 255, 0.08)',
+              color: '#1A1A1A',
               drawBorder: false
             },
             ticks: {
-              color: 'var(--text-tertiary)',
-              font: { size: 11, weight: '500' },
+              color: '#555555',
+              font: { size: 10, family: 'Courier New, monospace' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
           y: {
             grid: {
-              color: 'rgba(255, 255, 255, 0.08)',
+              color: '#1A1A1A',
               drawBorder: false
             },
             ticks: {
-              color: 'var(--text-tertiary)',
-              font: { size: 11, weight: '500' },
+              color: '#555555',
+              font: { size: 10, family: 'Courier New, monospace' },
               callback: (value) => `${value >= 0 ? '+' : ''}${value}%`
             }
           }
@@ -181,8 +181,8 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
 
             ctx.save();
             ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = 1;
             ctx.moveTo(xAxis.left, yPixel);
             ctx.lineTo(xAxis.right, yPixel);
             ctx.stroke();
@@ -209,12 +209,11 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '12px'
+          gap: '8px'
         }}
       >
-        <div style={{ fontSize: '48px', opacity: 0.5 }}>📊</div>
-        <div style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>
-          Select a sector to view price performance
+        <div style={{ fontFamily: 'Courier New, monospace', fontSize: '12px', color: '#444444' }}>
+          SELECT A SECTOR TO VIEW PRICE PERFORMANCE
         </div>
       </div>
     );
