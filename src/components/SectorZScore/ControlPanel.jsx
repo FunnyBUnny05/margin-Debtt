@@ -5,7 +5,7 @@ const SelectDropdown = ({ label, value, options, onChange, isMobile }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: isMobile ? '1 1 100%' : '1 1 auto' }}>
     <label style={{
       fontFamily: 'var(--font-ui)',
-      color: '#FFD700',
+      color: '#FCD34D',
       fontSize: '10px',
       textTransform: 'uppercase',
       fontWeight: '700',
@@ -17,23 +17,23 @@ const SelectDropdown = ({ label, value, options, onChange, isMobile }) => (
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        background: '#0A0A0A',
-        color: '#CCCCCC',
-        border: '1px solid #3A3A3A',
+        background: '#0B0F19',
+        color: '#D1D5DB',
+        border: '1px solid #374151',
         borderRadius: '0',
         padding: isMobile ? '8px 10px' : '6px 10px',
-        fontFamily: 'Courier New, monospace',
+        fontFamily: 'JetBrains Mono, monospace',
         fontSize: '12px',
         fontWeight: '700',
         cursor: 'pointer',
         outline: 'none',
         minWidth: isMobile ? '100%' : '140px',
       }}
-      onFocus={(e) => { e.target.style.borderColor = '#FF6600'; }}
-      onBlur={(e) => { e.target.style.borderColor = '#3A3A3A'; }}
+      onFocus={(e) => { e.target.style.borderColor = '#F59E0B'; }}
+      onBlur={(e) => { e.target.style.borderColor = '#374151'; }}
     >
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value} style={{ background: '#0A0A0A' }}>
+        <option key={opt.value} value={opt.value} style={{ background: '#0B0F19' }}>
           {opt.label}
         </option>
       ))}

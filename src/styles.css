@@ -2,51 +2,51 @@
 
 :root {
   /* Core Bloomberg Palette */
-  --bb-black: #000000;
-  --bb-panel: #0A0A0A;
-  --bb-panel-alt: #111111;
-  --bb-border: #2A2A2A;
-  --bb-border-light: #3A3A3A;
+  --bb-black: #0B0F19;
+  --bb-panel: #0B0F19;
+  --bb-panel-alt: #111827;
+  --bb-border: #1F2937;
+  --bb-border-light: #374151;
 
   /* Accent Colors */
-  --bb-orange: #FF6600;
-  --bb-orange-dim: #CC5200;
-  --bb-green: #00CC44;
-  --bb-red: #FF3333;
-  --bb-yellow: #FFD700;
-  --bb-cyan: #00CCCC;
+  --bb-orange: #F59E0B;
+  --bb-orange-dim: #D97706;
+  --bb-green: #10B981;
+  --bb-red: #EF4444;
+  --bb-yellow: #FCD34D;
+  --bb-cyan: #38BDF8;
 
   /* Text */
-  --bb-white: #FFFFFF;
-  --bb-gray-1: #CCCCCC;
-  --bb-gray-2: #999999;
-  --bb-gray-3: #666666;
-  --bb-gray-4: #444444;
+  --bb-white: #F9FAFB;
+  --bb-gray-1: #D1D5DB;
+  --bb-gray-2: #9CA3AF;
+  --bb-gray-3: #6B7280;
+  --bb-gray-4: #4B5563;
 
   /* Typography */
-  --font-mono: 'Courier New', Courier, monospace;
-  --font-ui: 'Arial Narrow', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-ui: 'Inter', sans-serif;
 
   /* Legacy aliases for compatibility */
-  --text-primary: #FFFFFF;
-  --text-secondary: #CCCCCC;
-  --text-tertiary: #999999;
-  --text-muted: #666666;
-  --background-primary: #000000;
-  --background-secondary: #0A0A0A;
-  --glass-bg: #0A0A0A;
-  --glass-border: #2A2A2A;
-  --glass-hover: #111111;
-  --accent-coral: #FF3333;
-  --accent-emerald: #00CC44;
-  --accent-cyan: #00CCCC;
-  --accent-blue: #00CCCC;
-  --accent-purple: #FF6600;
-  --accent-amber: #FFD700;
-  --gradient-coral: linear-gradient(135deg, #FF3333 0%, #CC2222 100%);
-  --gradient-emerald: linear-gradient(135deg, #00CC44 0%, #009933 100%);
-  --gradient-blue: linear-gradient(135deg, #00CCCC 0%, #009999 100%);
-  --gradient-purple: linear-gradient(135deg, #FF6600 0%, #CC5200 100%);
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --text-muted: #6B7280;
+  --background-primary: #0B0F19;
+  --background-secondary: #0B0F19;
+  --glass-bg: #0B0F19;
+  --glass-border: #1F2937;
+  --glass-hover: #111827;
+  --accent-coral: #EF4444;
+  --accent-emerald: #10B981;
+  --accent-cyan: #38BDF8;
+  --accent-blue: #38BDF8;
+  --accent-purple: #F59E0B;
+  --accent-amber: #FCD34D;
+  --gradient-coral: linear-gradient(135deg, #EF4444 0%, #CC2222 100%);
+  --gradient-emerald: linear-gradient(135deg, #10B981 0%, #009933 100%);
+  --gradient-blue: linear-gradient(135deg, #38BDF8 0%, #009999 100%);
+  --gradient-purple: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
@@ -190,7 +190,7 @@ body {
 }
 
 .bb-row.selected {
-  background: #1A1000;
+  background: #78350F;
   border-left: 3px solid var(--bb-orange);
 }
 
@@ -211,19 +211,19 @@ body {
 }
 
 .badge-success {
-  background: #001A00;
+  background: #064E3B;
   color: var(--bb-green);
   border-color: var(--bb-green);
 }
 
 .badge-warning {
-  background: #1A0000;
+  background: #450A0A;
   color: var(--bb-red);
   border-color: var(--bb-red);
 }
 
 .badge-info {
-  background: #001A1A;
+  background: #082F49;
   color: var(--bb-cyan);
   border-color: var(--bb-cyan);
 }
@@ -264,7 +264,7 @@ body {
 
 /* Tooltip */
 .custom-tooltip {
-  background: #0A0A0A !important;
+  background: #0B0F19 !important;
   border: 1px solid var(--bb-border-light) !important;
   border-radius: 0 !important;
   padding: 8px 12px !important;
