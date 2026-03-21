@@ -85,55 +85,55 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
           },
           tooltip: {
             enabled: true,
-            backgroundColor: 'rgba(15, 23, 42, 0.98)',
-            titleColor: '#ffffff',
-            bodyColor: '#e0e7ff',
-            borderColor: 'rgba(167, 139, 250, 0.5)',
-            borderWidth: 2,
-            padding: 16,
-            cornerRadius: 12,
-            bodyFont: { size: 13 },
-            titleFont: { size: 14, weight: '700' },
-            bodySpacing: 8,
+            backgroundColor: '#0A0A0A',
+            titleColor: '#FF6600',
+            bodyColor: '#CCCCCC',
+            borderColor: '#2A2A2A',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 0,
+            bodyFont: { size: 11, family: 'Courier New, monospace' },
+            titleFont: { size: 11, weight: '700', family: 'Courier New, monospace' },
+            bodySpacing: 4,
             displayColors: false,
             callbacks: {
               title: (items) => {
                 if (items.length > 0) {
                   const date = new Date(items[0].parsed.x);
                   const sector = items[0].dataset.label;
-                  return `${sector} - ${date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}`;
+                  return `${sector} — ${date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
                 }
                 return '';
               },
               label: (context) => {
                 const dataPoint = context.raw;
                 const lines = [];
-                lines.push(`Z-Score: ${context.parsed.y.toFixed(2)}`);
+                lines.push(`Z-SCORE: ${context.parsed.y.toFixed(2)}`);
 
                 if (dataPoint.structuralBaseline !== undefined) {
-                  lines.push(`Baseline: ${dataPoint.structuralBaseline >= 0 ? '+' : ''}${dataPoint.structuralBaseline.toFixed(2)}%`);
+                  lines.push(`BASELINE: ${dataPoint.structuralBaseline >= 0 ? '+' : ''}${dataPoint.structuralBaseline.toFixed(2)}%`);
                 }
 
                 if (dataPoint.relativeReturn !== undefined) {
-                  lines.push(`Relative: ${dataPoint.relativeReturn >= 0 ? '+' : ''}${dataPoint.relativeReturn.toFixed(2)}%`);
+                  lines.push(`RELATIVE: ${dataPoint.relativeReturn >= 0 ? '+' : ''}${dataPoint.relativeReturn.toFixed(2)}%`);
                 }
 
                 if (dataPoint.excessReturn !== undefined) {
-                  lines.push(`Excess: ${dataPoint.excessReturn >= 0 ? '+' : ''}${dataPoint.excessReturn.toFixed(2)}%`);
+                  lines.push(`EXCESS: ${dataPoint.excessReturn >= 0 ? '+' : ''}${dataPoint.excessReturn.toFixed(2)}%`);
                 }
 
                 return lines;
               },
               labelTextColor: (context) => {
-                return '#cbd5e1';
+                return '#CCCCCC';
               },
               afterLabel: (context) => {
                 const zScore = context.parsed.y;
-                if (zScore <= -2) return '\n🔴 Cyclical Low (CHEAP)';
-                if (zScore >= 2) return '\n🟢 Extended (EXPENSIVE)';
-                if (zScore < -1) return '\n🟡 Somewhat Cheap';
-                if (zScore > 1) return '\n🟡 Somewhat Extended';
-                return '\n⚪ Neutral';
+                if (zScore <= -2) return 'SIGNAL: CYCLICAL LOW';
+                if (zScore >= 2) return 'SIGNAL: EXTENDED';
+                if (zScore < -1) return 'SIGNAL: CHEAP';
+                if (zScore > 1) return 'SIGNAL: SOMEWHAT EXTENDED';
+                return 'SIGNAL: NEUTRAL';
               }
             }
           }
@@ -148,12 +148,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
               }
             },
             grid: {
-              color: 'rgba(255, 255, 255, 0.08)',
+              color: '#1A1A1A',
               drawBorder: false
             },
             ticks: {
-              color: 'var(--text-tertiary)',
-              font: { size: 11, weight: '500' },
+              color: '#555555',
+              font: { size: 10, family: 'Courier New, monospace' },
               maxTicksLimit: isMobile ? 5 : 10
             }
           },
@@ -161,12 +161,12 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
             min: -6,
             max: 6,
             grid: {
-              color: 'rgba(255, 255, 255, 0.08)',
+              color: '#1A1A1A',
               drawBorder: false
             },
             ticks: {
-              color: 'var(--text-tertiary)',
-              font: { size: 11, weight: '500' },
+              color: '#555555',
+              font: { size: 10, family: 'Courier New, monospace' },
               stepSize: 2
             }
           }
@@ -182,9 +182,9 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
 
             // Draw reference lines at -2, 0, +2
             const lines = [
-              { y: 2, color: 'rgba(255, 107, 107, 0.6)', label: 'Extended (+2)' },
-              { y: 0, color: 'rgba(255, 255, 255, 0.15)', label: '' },
-              { y: -2, color: 'rgba(81, 207, 102, 0.6)', label: 'Cyclical Low (-2)' }
+              { y: 2, color: '#FF333366', label: 'Extended (+2)' },
+              { y: 0, color: '#333333', label: '' },
+              { y: -2, color: '#00CC4466', label: 'Cyclical Low (-2)' }
             ];
 
             lines.forEach((line) => {

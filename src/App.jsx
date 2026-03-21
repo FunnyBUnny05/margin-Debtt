@@ -160,15 +160,19 @@ export default function App() {
   if (loading) {
     return (
       <div className="app-background" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '48px', maxWidth: '500px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '24px' }} className="pulse-animation">📊</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 40px', maxWidth: '500px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-orange)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">
+            LOADING...
+          </div>
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Loading Market Data
           </div>
-          <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px' }}>
             Loading FINRA margin statistics...
           </div>
-          <div className="shimmer" style={{ height: '4px', borderRadius: '999px', marginTop: '24px', overflow: 'hidden' }}></div>
+          <div style={{ height: '2px', background: 'var(--bb-border)', marginTop: '20px', overflow: 'hidden' }}>
+            <div className="pulse-animation" style={{ height: '100%', width: '60%', background: 'var(--bb-orange)' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -177,15 +181,17 @@ export default function App() {
   if (error) {
     return (
       <div className="app-background" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '48px', maxWidth: '500px', border: '1px solid rgba(255, 107, 107, 0.3)' }}>
-          <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚠️</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 40px', maxWidth: '500px', borderLeft: '3px solid var(--bb-red)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-red)', marginBottom: '16px', letterSpacing: '2px', fontWeight: '700' }}>
+            ERROR
+          </div>
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Couldn't Load Data
           </div>
-          <div style={{ color: 'var(--text-tertiary)', fontSize: '15px', marginBottom: '8px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px', marginBottom: '8px' }}>
             {error}
           </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '16px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '11px', marginTop: '12px' }}>
             Please refresh the page or try again later
           </div>
         </div>
@@ -196,12 +202,14 @@ export default function App() {
   if (!rawData.length) {
     return (
       <div className="app-background" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-        <div className="glass-card" style={{ textAlign: 'center', padding: '48px', maxWidth: '500px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '24px' }}>📭</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '32px 40px', maxWidth: '500px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-yellow)', marginBottom: '16px', letterSpacing: '2px', fontWeight: '700' }}>
+            NO DATA
+          </div>
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             No Data Available
           </div>
-          <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px' }}>
             FINRA margin data is currently unavailable. Please check back later.
           </div>
         </div>
@@ -335,49 +343,62 @@ export default function App() {
   const thresholdStats = calculateThresholdStats(data);
 
   return (
-    <div className="app-background" style={{ padding: isMobile ? '16px' : '24px 32px', minHeight: '100vh' }}>
+    <div className="app-background" style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Header */}
-        <div className="glass-card animate-in" style={{ padding: isMobile ? '24px 20px' : '32px 40px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: '16px' }}>
-            <div style={{ flex: 1 }}>
-              <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-                {dataSource === 'margin' ? '📈 Margin Debt Tracker' : dataSource === 'aaii' ? '📊 Asset Allocation Survey' : dataSource === 'sectors' ? '🎯 Sector Z-Score Dashboard' : '💰 Buffett Indicator'}
-              </h1>
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '15px', lineHeight: '1.5' }}>
-                {dataSource === 'margin' ? 'Real-time securities margin account debit balances ($ billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : "Berkshire Hathaway's annual cash & T-bill holdings — Buffett's war chest over time"}
-              </p>
-            </div>
-            {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-              <div className="badge badge-info" style={{ alignSelf: isMobile ? 'flex-start' : 'center' }}>
-                <span>📅</span>
-                <span>Updated: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}</span>
-              </div>
-            )}
+        {/* Bloomberg Topbar */}
+        <div style={{ background: '#FF6600', padding: '0', marginBottom: '0', display: 'flex', alignItems: 'stretch' }}>
+          <div style={{ padding: '8px 16px', borderRight: '1px solid #CC5200', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '900', fontSize: '16px', color: '#000', letterSpacing: '1px' }}>BLOOMBERG</span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '400', fontSize: '16px', color: '#000', marginLeft: '6px', opacity: 0.7 }}>FINANCIAL</span>
           </div>
+          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px' }}>
+              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : 'BUFFETT INDICATOR'}
+            </span>
+          </div>
+          {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
+            <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', borderLeft: '1px solid #CC5200' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#000', opacity: 0.8 }}>
+                UPD: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Subtitle bar */}
+        <div style={{ background: '#111111', borderBottom: '1px solid #2A2A2A', padding: '6px 16px', marginBottom: '0' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#666666' }}>
+            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : "Berkshire Hathaway annual cash & T-bill holdings"}
+          </span>
         </div>
 
         {/* Data Source Tabs */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0', marginBottom: '0', flexWrap: 'wrap', borderBottom: '1px solid #2A2A2A', background: '#0A0A0A' }}>
           {[
-            { key: 'margin', label: 'FINRA Margin Debt', icon: '📊', gradient: 'var(--gradient-coral)' },
-            { key: 'aaii', label: 'AAII Allocation', icon: '💼', gradient: 'var(--gradient-blue)' },
-            { key: 'sectors', label: 'Sector Z-Score', icon: '🎯', gradient: 'var(--gradient-purple)' },
-            { key: 'buffett', label: 'Buffett Indicator', icon: '💰', gradient: 'var(--gradient-amber, linear-gradient(135deg,#f59e0b,#d97706))' },
-          ].map(({ key, label, icon, gradient }) => (
+            { key: 'margin', label: 'FINRA MARGIN DEBT' },
+            { key: 'aaii', label: 'AAII ALLOCATION' },
+            { key: 'sectors', label: 'SECTOR Z-SCORE' },
+            { key: 'buffett', label: 'BUFFETT INDICATOR' },
+          ].map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setDataSource(key)}
-              className="btn-primary"
               style={{
-                background: dataSource === key ? gradient : 'var(--glass-bg)',
-                backdropFilter: 'blur(8px)',
-                border: dataSource === key ? 'none' : '1px solid var(--glass-border)',
-                position: 'relative',
-                zIndex: 1
+                padding: '10px 18px',
+                fontFamily: 'var(--font-ui)',
+                fontWeight: '700',
+                fontSize: '11px',
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                border: 'none',
+                borderRight: '1px solid #2A2A2A',
+                borderBottom: dataSource === key ? '2px solid #FF6600' : '2px solid transparent',
+                cursor: 'pointer',
+                background: dataSource === key ? '#1A1A1A' : 'transparent',
+                color: dataSource === key ? '#FF6600' : '#666666',
+                transition: 'all 0.1s ease',
               }}
             >
-              <span style={{ marginRight: '6px' }}>{icon}</span>
               {label}
             </button>
           ))}
@@ -385,18 +406,23 @@ export default function App() {
 
         {/* Time Range Buttons */}
         {dataSource !== 'sectors' && dataSource !== 'buffett' && (
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0', marginBottom: '0', flexWrap: 'wrap', borderBottom: '1px solid #2A2A2A', background: '#050505' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className="btn-primary"
                 style={{
-                  padding: '8px 20px',
-                  fontSize: '13px',
-                  background: timeRange === range ? 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)' : 'var(--glass-bg)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid var(--glass-border)'
+                  padding: '7px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                  background: timeRange === range ? '#1A1000' : 'transparent',
+                  color: timeRange === range ? '#FF6600' : '#555555',
+                  border: 'none',
+                  borderRight: '1px solid #1A1A1A',
+                  borderBottom: timeRange === range ? '2px solid #FF6600' : '2px solid transparent',
+                  cursor: 'pointer',
                 }}
               >
                 {range.toUpperCase()}
@@ -409,209 +435,199 @@ export default function App() {
         {dataSource === 'margin' && (
           <>
             {/* Key Metrics */}
-            <div className="responsive-grid" style={{ marginBottom: '24px' }}>
-              <div className="stat-card animate-in" style={{ color: 'var(--accent-coral)' }}>
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Current ({currentDebt.date})
+            <div className="responsive-grid" style={{ marginBottom: '1px', marginTop: '1px', gap: '1px', background: '#1A1A1A' }}>
+              <div className="stat-card" style={{ borderLeft: '3px solid #FF6600', padding: '12px 16px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  CURRENT ({currentDebt.date})
                 </div>
-                <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--accent-coral)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#FF6600' }}>
                   ${currentDebt.margin_debt_bn.toFixed(0)}B
                 </div>
               </div>
-              <div className="stat-card animate-in" style={{ color: currentDebt.yoy_growth > 0 ? 'var(--accent-coral)' : 'var(--accent-emerald)', animationDelay: '0.1s' }}>
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  YoY Growth
+              <div className="stat-card" style={{ borderLeft: `3px solid ${currentDebt.yoy_growth > 0 ? '#FF3333' : '#00CC44'}`, padding: '12px 16px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  YOY GROWTH
                 </div>
-                <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: currentDebt.yoy_growth > 0 ? '#FF3333' : '#00CC44' }}>
                   {currentDebt.yoy_growth != null ? `${currentDebt.yoy_growth > 0 ? '+' : ''}${currentDebt.yoy_growth.toFixed(1)}%` : 'N/A'}
                 </div>
               </div>
-              <div className="stat-card animate-in" style={{ color: 'var(--accent-amber)', animationDelay: '0.2s' }}>
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  vs 2021 Peak
+              <div className="stat-card" style={{ borderLeft: '3px solid #FFD700', padding: '12px 16px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  VS 2021 PEAK
                 </div>
-                <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--accent-amber)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#FFD700' }}>
                   {currentDebt.margin_debt >= peak2021.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2021.margin_debt - 1) * 100).toFixed(0)}%
                 </div>
               </div>
-              <div className="stat-card animate-in" style={{ color: 'var(--accent-purple)', animationDelay: '0.3s' }}>
-                <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  vs 2000 Peak
+              <div className="stat-card" style={{ borderLeft: '3px solid #00CCCC', padding: '12px 16px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  VS 2000 PEAK
                 </div>
-                <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--accent-purple)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#00CCCC' }}>
                   {currentDebt.margin_debt >= peak2000.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
                 </div>
               </div>
             </div>
 
             {/* Margin Debt Chart */}
-            <div className="glass-card" style={{ padding: isMobile ? '20px' : '32px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '24px' }}>
-                📈 Margin Debt Over Time
-              </h2>
-              <ResponsiveContainer width="100%" height={350}>
+            <div className="glass-card" style={{ padding: isMobile ? '0' : '0', marginBottom: '1px', marginTop: '1px' }}>
+              <div className="bb-panel-header">MARGIN DEBT OVER TIME</div>
+              <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              <ResponsiveContainer width="100%" height={320}>
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ff6b6b" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#ff6b6b" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#FF6600" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#FF6600" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
+                  <CartesianGrid strokeDasharray="1 3" stroke="#1A1A1A" />
                   <XAxis
                     dataKey="date"
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    stroke="#333333"
+                    tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                     tickFormatter={formatDate}
                     interval={chartInterval}
                   />
                   <YAxis
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    stroke="#333333"
+                    tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                     tickFormatter={(v) => `$${v}B`}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="margin_debt_bn"
-                    stroke="#ff6b6b"
-                    strokeWidth={3}
+                    stroke="#FF6600"
+                    strokeWidth={2}
                     fill="url(#marginGradient)"
                     name="Margin Debt"
                   />
                 </ComposedChart>
               </ResponsiveContainer>
+              </div>
             </div>
 
             {/* YoY Growth Chart */}
-            <div className="glass-card" style={{ padding: isMobile ? '20px' : '32px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '24px' }}>
-                📊 Year-over-Year Growth Rate
-              </h2>
-              <ResponsiveContainer width="100%" height={280}>
+            <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+              <div className="bb-panel-header">YEAR-OVER-YEAR GROWTH RATE</div>
+              <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              <ResponsiveContainer width="100%" height={260}>
                 <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
+                  <CartesianGrid strokeDasharray="1 3" stroke="#1A1A1A" />
                   <XAxis
                     dataKey="date"
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    stroke="#333333"
+                    tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                     tickFormatter={formatDate}
                     interval={chartInterval}
                   />
                   <YAxis
-                    stroke="var(--text-muted)"
-                    tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                    stroke="#333333"
+                    tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                     tickFormatter={(v) => `${v}%`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine y={0} stroke="var(--text-muted)" strokeWidth={2} />
-                  <ReferenceLine y={30} stroke="var(--accent-coral)" strokeDasharray="5 5" strokeOpacity={0.6} />
-                  <ReferenceLine y={-30} stroke="var(--accent-emerald)" strokeDasharray="5 5" strokeOpacity={0.6} />
+                  <ReferenceLine y={0} stroke="#444444" strokeWidth={1} />
+                  <ReferenceLine y={30} stroke="#FF3333" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '+30%', fill: '#FF3333', fontSize: 9 }} />
+                  <ReferenceLine y={-30} stroke="#00CC44" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '-30%', fill: '#00CC44', fontSize: 9 }} />
                   <Line
                     type="monotone"
                     dataKey="yoy_growth"
-                    stroke="var(--accent-amber)"
-                    strokeWidth={3}
+                    stroke="#FFD700"
+                    strokeWidth={2}
                     dot={false}
                     name="YoY Growth"
                   />
                 </ComposedChart>
               </ResponsiveContainer>
-              <div style={{ display: 'flex', gap: '24px', marginTop: '16px', fontSize: '13px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                <div className="badge badge-warning"><span>🔴</span> +30% Euphoria Zone</div>
-                <div className="badge badge-success"><span>🟢</span> -30% Capitulation Zone</div>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '10px', flexWrap: 'wrap', fontFamily: 'Courier New' }}>
+                <div className="badge badge-warning">+30% EUPHORIA ZONE</div>
+                <div className="badge badge-success">-30% CAPITULATION ZONE</div>
+              </div>
               </div>
             </div>
 
             {/* Historical Pattern Insight */}
-            <div className="glass-card" style={{ padding: isMobile ? '20px' : '24px', marginBottom: '24px', borderLeft: '4px solid var(--accent-amber)' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '32px' }}>💡</div>
-                <div style={{ flex: 1 }}>
-                  <strong style={{ color: 'var(--accent-amber)', fontSize: '15px' }}>Historical Pattern:</strong>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px', lineHeight: '1.6' }}>
-                    Sustained 30%+ YoY margin debt growth has preceded every major market correction.
-                    2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis.
-                    2021 peak (+71% YoY) → 2022 bear market.
-                  </p>
-                </div>
+            <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px', borderLeft: '3px solid #FFD700' }}>
+              <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FFD700', fontSize: '10px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '6px' }}>HISTORICAL PATTERN</div>
+                <p style={{ fontFamily: 'var(--font-mono)', color: '#CCCCCC', fontSize: '12px', lineHeight: '1.6' }}>
+                  Sustained 30%+ YoY margin debt growth has preceded every major market correction.
+                  2000 peak (+80% YoY) &rarr; dot-com crash. 2007 peak (+62% YoY) &rarr; financial crisis.
+                  2021 peak (+71% YoY) &rarr; 2022 bear market.
+                </p>
               </div>
             </div>
 
             {/* Threshold Statistics */}
-            <div className="glass-card" style={{ padding: isMobile ? '20px' : '32px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '24px' }}>
-                📉 Threshold Duration Statistics
-              </h2>
+            <div className="glass-card" style={{ padding: '0', marginTop: '1px' }}>
+              <div className="bb-panel-header">THRESHOLD DURATION STATISTICS</div>
+              <div style={{ padding: isMobile ? '12px' : '16px' }}>
 
               {/* Current Status */}
-              <div className={thresholdStats.current.status !== 'neutral' ? 'glass-card' : ''} style={{
-                marginBottom: '24px',
-                padding: '20px',
-                background: thresholdStats.current.status === 'above30' ? 'rgba(255, 107, 107, 0.08)' :
-                            thresholdStats.current.status === 'belowNeg30' ? 'rgba(81, 207, 102, 0.08)' :
-                            'var(--background-secondary)',
-                border: thresholdStats.current.status === 'above30' ? '2px solid rgba(255, 107, 107, 0.3)' :
-                        thresholdStats.current.status === 'belowNeg30' ? '2px solid rgba(81, 207, 102, 0.3)' :
-                        '1px solid var(--glass-border)'
+              <div style={{
+                marginBottom: '12px',
+                padding: '10px 14px',
+                background: thresholdStats.current.status === 'above30' ? '#1A0000' :
+                            thresholdStats.current.status === 'belowNeg30' ? '#001A00' :
+                            '#0A0A0A',
+                border: thresholdStats.current.status === 'above30' ? '1px solid #FF3333' :
+                        thresholdStats.current.status === 'belowNeg30' ? '1px solid #00CC44' :
+                        '1px solid #2A2A2A'
               }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Current Status
+                <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '700', marginBottom: '8px', color: '#FFD700', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  CURRENT STATUS
                 </div>
                 {thresholdStats.current.status === 'above30' ? (
-                  <div className="badge badge-warning" style={{ fontSize: '16px', padding: '12px 20px' }}>
-                    <span>🔴</span>
-                    <div>
-                      <div style={{ fontWeight: '700' }}>Above +30% Threshold</div>
-                      <div style={{ fontSize: '13px', marginTop: '4px', opacity: 0.9 }}>
-                        Duration: {formatDuration(thresholdStats.current.duration)} | YoY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
-                      </div>
-                    </div>
+                  <div className="badge badge-warning">
+                    <span>ABOVE +30% THRESHOLD</span>
+                    <span style={{ marginLeft: '8px', color: '#999999' }}>
+                      DUR: {formatDuration(thresholdStats.current.duration)} | YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
+                    </span>
                   </div>
                 ) : thresholdStats.current.status === 'belowNeg30' ? (
-                  <div className="badge badge-success" style={{ fontSize: '16px', padding: '12px 20px' }}>
-                    <span>🟢</span>
-                    <div>
-                      <div style={{ fontWeight: '700' }}>Below -30% Threshold</div>
-                      <div style={{ fontSize: '13px', marginTop: '4px', opacity: 0.9 }}>
-                        Duration: {formatDuration(thresholdStats.current.duration)} | YoY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
-                      </div>
-                    </div>
+                  <div className="badge badge-success">
+                    <span>BELOW -30% THRESHOLD</span>
+                    <span style={{ marginLeft: '8px', color: '#999999' }}>
+                      DUR: {formatDuration(thresholdStats.current.duration)} | YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
+                    </span>
                   </div>
                 ) : (
-                  <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>Neutral Zone</span>
-                    <div style={{ fontSize: '13px', marginTop: '4px' }}>
-                      Current YoY Growth: {thresholdStats.current.yoyGrowth?.toFixed(1)}% (between -30% and +30%)
-                    </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', color: '#999999', fontSize: '12px' }}>
+                    <span style={{ color: '#CCCCCC', fontWeight: '700' }}>NEUTRAL ZONE</span>
+                    <span style={{ marginLeft: '12px' }}>
+                      YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}% (between -30% and +30%)
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Historical Stats Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1px', background: '#1A1A1A' }}>
                 {/* Above Threshold */}
-                <div className="glass-card" style={{ padding: '20px', borderLeft: '3px solid var(--accent-coral)' }}>
-                  <div className="badge badge-warning" style={{ marginBottom: '16px' }}>
-                    <span>🔴</span> Above +30% (Euphoria)
+                <div className="glass-card" style={{ padding: '12px 14px', borderLeft: '3px solid #FF3333' }}>
+                  <div className="badge badge-warning" style={{ marginBottom: '10px' }}>
+                    ABOVE +30% (EUPHORIA)
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Average Duration</div>
-                      <div style={{ color: 'var(--text-primary)', fontSize: '24px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG DURATION</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: '#FFFFFF', fontSize: '18px', fontWeight: '700' }}>
                         {formatDuration(thresholdStats.above30.avgMonths)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Occurrences</div>
-                      <div style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: '600' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>OCCURRENCES</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: '#FFFFFF', fontSize: '16px', fontWeight: '600' }}>
                         {thresholdStats.above30.occurrences}
                       </div>
                     </div>
                     {thresholdStats.above30.periods.length > 0 && (
-                      <div style={{ paddingTop: '12px', borderTop: '1px solid var(--glass-border)' }}>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '6px' }}>Period durations (months):</div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                      <div style={{ paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: '#666666', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>PERIOD DURATIONS (MO):</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', color: '#999999', fontSize: '11px' }}>
                           {thresholdStats.above30.periods.join(', ')}
                         </div>
                       </div>
@@ -620,27 +636,27 @@ export default function App() {
                 </div>
 
                 {/* Below Threshold */}
-                <div className="glass-card" style={{ padding: '20px', borderLeft: '3px solid var(--accent-emerald)' }}>
-                  <div className="badge badge-success" style={{ marginBottom: '16px' }}>
-                    <span>🟢</span> Below -30% (Capitulation)
+                <div className="glass-card" style={{ padding: '12px 14px', borderLeft: '3px solid #00CC44' }}>
+                  <div className="badge badge-success" style={{ marginBottom: '10px' }}>
+                    BELOW -30% (CAPITULATION)
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Average Duration</div>
-                      <div style={{ color: 'var(--text-primary)', fontSize: '24px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG DURATION</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: '#FFFFFF', fontSize: '18px', fontWeight: '700' }}>
                         {formatDuration(thresholdStats.belowNeg30.avgMonths)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Occurrences</div>
-                      <div style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: '600' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>OCCURRENCES</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: '#FFFFFF', fontSize: '16px', fontWeight: '600' }}>
                         {thresholdStats.belowNeg30.occurrences}
                       </div>
                     </div>
                     {thresholdStats.belowNeg30.periods.length > 0 && (
-                      <div style={{ paddingTop: '12px', borderTop: '1px solid var(--glass-border)' }}>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '6px' }}>Period durations (months):</div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                      <div style={{ paddingTop: '8px', borderTop: '1px solid #2A2A2A' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: '#666666', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>PERIOD DURATIONS (MO):</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', color: '#999999', fontSize: '11px' }}>
                           {thresholdStats.belowNeg30.periods.join(', ')}
                         </div>
                       </div>
@@ -649,8 +665,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center' }}>
-                Statistics calculated from all available historical data. Each period represents consecutive months where YoY growth remained above/below the threshold.
+              <div style={{ marginTop: '8px', fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#444444', textAlign: 'center' }}>
+                Statistics calculated from all available historical data. Each period = consecutive months where YoY growth remained above/below threshold.
+              </div>
               </div>
             </div>
           </>
@@ -675,140 +692,110 @@ export default function App() {
               return (
                 <>
                   {/* Current Allocation */}
-                  <div className="responsive-grid" style={{ marginBottom: '24px' }}>
-                    <div className="stat-card animate-in" style={{ color: 'var(--accent-blue)' }}>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Stocks ({currentAllocation?.date})
+                  <div className="responsive-grid" style={{ marginBottom: '1px', marginTop: '1px', gap: '1px', background: '#1A1A1A' }}>
+                    <div className="stat-card" style={{ borderLeft: '3px solid #00CCCC', padding: '12px 16px' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        STOCKS ({currentAllocation?.date})
                       </div>
-                      <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#00CCCC' }}>
                         {currentAllocation?.stocks?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
-                    <div className="stat-card animate-in" style={{ color: 'var(--accent-amber)', animationDelay: '0.1s' }}>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Bonds
+                    <div className="stat-card" style={{ borderLeft: '3px solid #FFD700', padding: '12px 16px' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        BONDS
                       </div>
-                      <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#FFD700' }}>
                         {currentAllocation?.bonds?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
-                    <div className="stat-card animate-in" style={{ color: 'var(--accent-emerald)', animationDelay: '0.2s' }}>
-                      <div style={{ color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Cash
+                    <div className="stat-card" style={{ borderLeft: '3px solid #00CC44', padding: '12px 16px' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        CASH
                       </div>
-                      <div style={{ fontSize: isMobile ? '28px' : '32px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#00CC44' }}>
                         {currentAllocation?.cash?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
                   </div>
 
                   {/* Historical Averages */}
-                  <div className="glass-card" style={{ padding: isMobile ? '20px' : '32px', marginBottom: '24px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '16px' }}>
-                      📊 Historical Average (Since 1987)
-                    </h3>
-                    <div className="responsive-grid">
-                      <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-blue)' }}>
-                        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Avg Stocks</div>
-                        <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent-blue)' }}>{avgStocks.toFixed(1)}%</div>
+                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                    <div className="bb-panel-header">HISTORICAL AVERAGE (SINCE 1987)</div>
+                    <div style={{ padding: '12px 16px' }}>
+                    <div className="responsive-grid" style={{ gap: '1px', background: '#1A1A1A' }}>
+                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #00CCCC' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG STOCKS</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#00CCCC' }}>{avgStocks.toFixed(1)}%</div>
                       </div>
-                      <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-amber)' }}>
-                        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Avg Bonds</div>
-                        <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent-amber)' }}>{avgBonds.toFixed(1)}%</div>
+                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #FFD700' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG BONDS</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#FFD700' }}>{avgBonds.toFixed(1)}%</div>
                       </div>
-                      <div className="glass-card" style={{ padding: '16px', borderLeft: '3px solid var(--accent-emerald)' }}>
-                        <div style={{ color: 'var(--text-tertiary)', fontSize: '12px', marginBottom: '4px' }}>Avg Cash</div>
-                        <div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent-emerald)' }}>{avgCash.toFixed(1)}%</div>
+                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #00CC44' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FFD700', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG CASH</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#00CC44' }}>{avgCash.toFixed(1)}%</div>
                       </div>
+                    </div>
                     </div>
                   </div>
 
                   {/* Allocation Chart */}
-                  <div className="glass-card" style={{ padding: isMobile ? '20px' : '32px', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '24px' }}>
-                      📈 Asset Allocation Over Time
-                    </h2>
-                    <ResponsiveContainer width="100%" height={380}>
+                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                    <div className="bb-panel-header">ASSET ALLOCATION OVER TIME</div>
+                    <div style={{ padding: isMobile ? '12px' : '16px' }}>
+                    <ResponsiveContainer width="100%" height={340}>
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#60a5fa" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#00CCCC" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#00CCCC" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="bondsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#ffd43b" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#ffd43b" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#FFD700" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#FFD700" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#51cf66" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#51cf66" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="#00CC44" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#00CC44" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
+                        <CartesianGrid strokeDasharray="1 3" stroke="#1A1A1A" />
                         <XAxis
                           dataKey="date"
-                          stroke="var(--text-muted)"
-                          tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                          stroke="#333333"
+                          tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                           tickFormatter={formatDate}
                           interval={aaiiChartInterval}
                         />
                         <YAxis
-                          stroke="var(--text-muted)"
-                          tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                          stroke="#333333"
+                          tick={{ fill: '#666666', fontSize: 10, fontFamily: 'Courier New' }}
                           tickFormatter={(v) => `${v}%`}
                           domain={[0, 100]}
                         />
                         <Tooltip content={<CustomTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="stocks"
-                          stroke="#60a5fa"
-                          strokeWidth={2}
-                          fill="url(#stocksGradient)"
-                          name="Stocks"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="bonds"
-                          stroke="#ffd43b"
-                          strokeWidth={2}
-                          fill="url(#bondsGradient)"
-                          name="Bonds"
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="cash"
-                          stroke="#51cf66"
-                          strokeWidth={2}
-                          fill="url(#cashGradient)"
-                          name="Cash"
-                        />
+                        <Area type="monotone" dataKey="stocks" stroke="#00CCCC" strokeWidth={2} fill="url(#stocksGradient)" name="Stocks" />
+                        <Area type="monotone" dataKey="bonds" stroke="#FFD700" strokeWidth={2} fill="url(#bondsGradient)" name="Bonds" />
+                        <Area type="monotone" dataKey="cash" stroke="#00CC44" strokeWidth={2} fill="url(#cashGradient)" name="Cash" />
                       </ComposedChart>
                     </ResponsiveContainer>
-                    <div style={{ display: 'flex', gap: '24px', marginTop: '16px', fontSize: '13px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                      <div className="badge" style={{ background: 'rgba(96, 165, 250, 0.15)', color: 'var(--accent-blue)', border: '1px solid rgba(96, 165, 250, 0.3)' }}>
-                        <span>●</span> Stocks
-                      </div>
-                      <div className="badge" style={{ background: 'rgba(255, 212, 59, 0.15)', color: 'var(--accent-amber)', border: '1px solid rgba(255, 212, 59, 0.3)' }}>
-                        <span>●</span> Bonds
-                      </div>
-                      <div className="badge badge-success">
-                        <span>●</span> Cash
-                      </div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'Courier New', fontSize: '10px' }}>
+                      <div className="badge" style={{ background: '#001A1A', color: '#00CCCC', border: '1px solid #00CCCC' }}>STOCKS</div>
+                      <div className="badge" style={{ background: '#1A1A00', color: '#FFD700', border: '1px solid #FFD700' }}>BONDS</div>
+                      <div className="badge badge-success">CASH</div>
+                    </div>
                     </div>
                   </div>
 
                   {/* About AAII */}
-                  <div className="glass-card" style={{ padding: isMobile ? '20px' : '24px', borderLeft: '4px solid var(--accent-blue)' }}>
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                      <div style={{ fontSize: '32px' }}>💡</div>
-                      <div style={{ flex: 1 }}>
-                        <strong style={{ color: 'var(--accent-blue)', fontSize: '15px' }}>About AAII Asset Allocation:</strong>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px', lineHeight: '1.6' }}>
-                          The AAII Asset Allocation Survey tracks how individual investors allocate their portfolios among stocks, bonds, and cash.
-                          Extreme allocations to stocks often signal euphoria, while high cash levels may indicate fear or caution in the markets.
-                        </p>
-                      </div>
+                  <div className="glass-card" style={{ padding: '0', marginTop: '1px', borderLeft: '3px solid #00CCCC' }}>
+                    <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#00CCCC', fontSize: '10px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '6px' }}>ABOUT AAII ASSET ALLOCATION</div>
+                      <p style={{ fontFamily: 'var(--font-mono)', color: '#CCCCCC', fontSize: '12px', lineHeight: '1.6' }}>
+                        The AAII Asset Allocation Survey tracks how individual investors allocate their portfolios among stocks, bonds, and cash.
+                        Extreme allocations to stocks often signal euphoria, while high cash levels may indicate fear or caution in the markets.
+                      </p>
                     </div>
                   </div>
                 </>
@@ -818,12 +805,12 @@ export default function App() {
         )}
 
         {dataSource === 'aaii' && aaiiRawData.length === 0 && (
-          <div className="glass-card" style={{ padding: '48px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-            <div style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>
+          <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#FFD700', marginBottom: '12px', letterSpacing: '2px' }}>NO DATA</div>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '700', color: '#FFFFFF', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               No AAII Data Available
             </div>
-            <div style={{ color: 'var(--text-tertiary)', fontSize: '15px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', color: '#666666', fontSize: '12px' }}>
               Please provide the AAII allocation data to display charts.
             </div>
           </div>
@@ -840,22 +827,22 @@ export default function App() {
         )}
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>
-          <p>Built with ❤️ for financial data enthusiasts</p>
-          <p style={{ marginTop: '8px' }}>
-            {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-              <a
-                href={dataSource === 'margin' ? metadata?.sourceUrl : aaiiMetadata?.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'var(--accent-cyan)', textDecoration: 'none', transition: 'color var(--transition-fast)' }}
-                onMouseEnter={(e) => e.target.style.color = 'var(--accent-blue)'}
-                onMouseLeave={(e) => e.target.style.color = 'var(--accent-cyan)'}
-              >
-                Data Source: {dataSource === 'margin' ? metadata?.source : aaiiMetadata?.source}
-              </a>
-            )}
-          </p>
+        <div style={{ borderTop: '1px solid #1A1A1A', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', color: '#333333', fontSize: '10px', letterSpacing: '0.5px' }}>
+            MARKET INTELLIGENCE TERMINAL
+          </span>
+          {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
+            <a
+              href={dataSource === 'margin' ? metadata?.sourceUrl : aaiiMetadata?.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontFamily: 'var(--font-mono)', color: '#444444', fontSize: '10px', textDecoration: 'none' }}
+              onMouseEnter={(e) => e.target.style.color = '#FF6600'}
+              onMouseLeave={(e) => e.target.style.color = '#444444'}
+            >
+              SRC: {dataSource === 'margin' ? metadata?.source : aaiiMetadata?.source}
+            </a>
+          )}
         </div>
       </div>
     </div>
