@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getCached, setCache } from '../utils/cache';
-
-const CORS_PROXIES = [
-  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-];
+import { CORS_PROXIES } from '../utils/corsProxies';
 
 const fetchWithTimeout = async (url, timeoutMs = 15000) => {
   const controller = new AbortController();
