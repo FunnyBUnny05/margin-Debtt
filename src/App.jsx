@@ -3,6 +3,9 @@ import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Refere
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
+
+const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -106,8 +109,40 @@ export default function App() {
       setError(null);
 
       const loadMarginData = async () => {
+        // Try fetching live data from FINRA first (direct, then via proxies)
+        const urlsToTry = [
+          FINRA_CSV_URL,
+          ...CORS_PROXIES.map(fn => fn(FINRA_CSV_URL))
+        ];
+
+        for (const url of urlsToTry) {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
+            if (!res.ok) continue;
+            const text = await res.text();
+            const parsed = parseFinraMarginCsv(text);
+            if (parsed.length > 10) {
+              if (!cancelled) {
+                setRawData(parsed);
+                setMetadata({
+                  lastUpdated: new Date().toISOString(),
+                  source: 'FINRA Margin Statistics (Live)',
+                  sourceUrl: 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics',
+                });
+              }
+              return;
+            }
+          } catch {
+            // try next URL
+          }
+        }
+
+        // Fall back to bundled JSON
         const res = await fetch('./margin_data.json');
-        if (!res.ok) throw new Error('Failed to load local margin data');
+        if (!res.ok) throw new Error('Failed to load margin data');
         const json = await res.json();
         if (!json.data?.length) throw new Error('No margin data in local file');
         if (!cancelled) {
