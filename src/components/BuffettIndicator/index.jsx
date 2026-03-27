@@ -5,6 +5,7 @@ import {
   ComposedChart, Line, Area,
 } from 'recharts';
 import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
+import { useFredBuffettData } from './useFredBuffettData';
 
 // Historical baseline: 1995–2020 (hardcoded from official Berkshire annual reports)
 // 1995–1999: cash & cash equivalents (T-bill tracking not separately disclosed pre-2000)
@@ -161,18 +162,11 @@ export const BuffettIndicator = ({ isMobile }) => {
   const [liveData, setLiveData] = useState(null);
   const [fetchStatus, setFetchStatus] = useState('loading'); // 'loading' | 'live' | 'fallback'
 
-  // Buffett Indicator (Market Cap / GDP) state
-  const [biData, setBiData] = useState(null);
-  const [biStatus, setBiStatus] = useState('loading'); // 'loading' | 'loaded' | 'error'
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('./buffett_indicator_data.json')
-      .then(r => r.json())
-      .then(json => { if (!cancelled) { setBiData(json); setBiStatus('loaded'); } })
-      .catch(() => { if (!cancelled) setBiStatus('error'); });
-    return () => { cancelled = true; };
-  }, []);
+  // Buffett Indicator (Market Cap / GDP) — live from FRED, fallback to JSON
+  const { biData, biStatus: rawBiStatus } = useFredBuffettData();
+  // Normalise status: hook returns 'live'|'fallback'|'error'|'loading'
+  // The rest of the component expects 'loaded' | 'loading' | 'error'
+  const biStatus = rawBiStatus === 'live' || rawBiStatus === 'fallback' ? 'loaded' : rawBiStatus;
 
   useEffect(() => {
     let cancelled = false;
@@ -277,12 +271,20 @@ export const BuffettIndicator = ({ isMobile }) => {
     <div>
       {/* ── BUFFETT INDICATOR (Market Cap / GDP) ── */}
       <div className="glass-card" style={{ padding: '0', marginBottom: '1px' }}>
-        <div className="bb-panel-header">BUFFETT INDICATOR — MARKET CAP / GDP</div>
+        <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>BUFFETT INDICATOR — MARKET CAP / GDP</span>
+          {rawBiStatus === 'live' && (
+            <span style={{ fontSize: '9px', color: '#10B981', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px' }}>● LIVE / FRED</span>
+          )}
+          {rawBiStatus === 'fallback' && (
+            <span style={{ fontSize: '9px', color: '#F59E0B', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px' }}>● STATIC / CACHED</span>
+          )}
+        </div>
         <div style={{ padding: isMobile ? '12px' : '14px' }}>
 
           {biStatus === 'error' && (
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px', color: '#6B7280', padding: '24px 0', textAlign: 'center' }}>
-              DATA UNAVAILABLE — FETCH SCRIPT NOT YET RUN
+              DATA UNAVAILABLE — FRED AND LOCAL FALLBACK BOTH FAILED
             </div>
           )}
 
@@ -343,7 +345,7 @@ export const BuffettIndicator = ({ isMobile }) => {
                     {biCurrent.valuation}
                   </div>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginTop: '4px' }}>
-                    ${biCurrent.market_cap_billions.toLocaleString()}B / ${biCurrent.gdp_billions.toLocaleString()}B GDP
+                    {biCurrent.gdp_billions > 0 ? `GDP $${biCurrent.gdp_billions.toLocaleString()}B` : 'WILSHIRE IDX / GDP'}
                   </div>
                 </div>
               </div>
