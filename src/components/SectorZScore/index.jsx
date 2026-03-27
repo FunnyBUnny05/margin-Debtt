@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { SECTOR_ETFS, RETURN_PERIODS, Z_WINDOWS } from './constants';
 import { useYahooFinance } from './hooks/useYahooFinance';
 import { useZScoreCalculation } from './hooks/useZScoreCalculation';
@@ -72,7 +72,7 @@ const ErrorState = ({ error, onRetry }) => (
   </div>
 );
 
-const StatCards = ({ sectors, isMobile }) => {
+const StatCards = memo(function StatCards({ sectors, isMobile }) {
   const validSectors = sectors.filter((s) => s.currentZScore !== null);
   if (validSectors.length === 0) return null;
 
@@ -162,7 +162,7 @@ const StatCards = ({ sectors, isMobile }) => {
       </div>
     </div>
   );
-};
+});
 
 export const SectorZScore = ({ isMobile }) => {
   const [benchmark, setBenchmark] = useState('SPY');

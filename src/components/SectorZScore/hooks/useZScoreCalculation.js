@@ -17,31 +17,51 @@ const calculateReturns = (prices, periodWeeks) => {
   return returns;
 };
 
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 const alignDates = (sectorReturns, benchmarkReturns) => {
-  // Create a map of benchmark returns by date string
+  // Primary lookup: date-string → return value
   const benchmarkMap = new Map();
+  // Secondary lookup: timestamp (ms) → return value, for the ±7-day window search
+  const benchmarkTsList = [];
+
   for (const br of benchmarkReturns) {
     const dateKey = br.date.toISOString().split('T')[0];
     benchmarkMap.set(dateKey, br.return);
+    benchmarkTsList.push({ ts: br.date.getTime(), ret: br.return });
   }
+  // Keep sorted so we can binary-search for nearby dates
+  benchmarkTsList.sort((a, b) => a.ts - b.ts);
+
+  // Binary search: find index of the entry closest to targetTs
+  const findNearby = (targetTs) => {
+    let lo = 0, hi = benchmarkTsList.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (benchmarkTsList[mid].ts < targetTs) lo = mid + 1;
+      else hi = mid;
+    }
+    // Check lo and its neighbour
+    for (const idx of [lo - 1, lo, lo + 1]) {
+      if (idx >= 0 && idx < benchmarkTsList.length) {
+        if (Math.abs(benchmarkTsList[idx].ts - targetTs) <= ONE_WEEK_MS) {
+          return benchmarkTsList[idx].ret;
+        }
+      }
+    }
+    return undefined;
+  };
 
   const aligned = [];
   for (const sr of sectorReturns) {
     const dateKey = sr.date.toISOString().split('T')[0];
 
-    // Try to find matching benchmark date (allow 7 day window)
+    // Try exact date match first (O(1))
     let benchmarkReturn = benchmarkMap.get(dateKey);
 
     if (benchmarkReturn === undefined) {
-      // Look for nearby dates
-      const sectorDate = sr.date.getTime();
-      for (const [key, value] of benchmarkMap) {
-        const benchDate = new Date(key).getTime();
-        if (Math.abs(sectorDate - benchDate) <= 7 * 24 * 60 * 60 * 1000) {
-          benchmarkReturn = value;
-          break;
-        }
-      }
+      // Fall back to binary-search for nearby date (O(log n) instead of O(n))
+      benchmarkReturn = findNearby(sr.date.getTime());
     }
 
     if (benchmarkReturn !== undefined) {

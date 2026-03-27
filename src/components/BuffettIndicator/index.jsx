@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, ReferenceLine, Cell,
   ComposedChart, Line, Area,
 } from 'recharts';
+import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 
 // Historical baseline: 1995–2020 (hardcoded from official Berkshire annual reports)
 // 1995–1999: cash & cash equivalents (T-bill tracking not separately disclosed pre-2000)
@@ -43,12 +44,6 @@ const RECENT_DATA_FALLBACK = [
   { year: 2022, cash: 128.6 },
   { year: 2023, cash: 167.6 },
   { year: 2024, cash: 334.2 },
-];
-
-const CORS_PROXIES = [
-  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ];
 
 const YF_URL = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/BRK-B?modules=balanceSheetHistory';
@@ -210,10 +205,23 @@ export const BuffettIndicator = ({ isMobile }) => {
 
   const latest = ENRICHED[ENRICHED.length - 1];
   const prev = ENRICHED[ENRICHED.length - 2];
-  const allTimeHigh = Math.max(...ENRICHED.map(d => d.cash));
-  const athYear = ENRICHED.find(d => d.cash === allTimeHigh)?.year;
-  const avgCash = (ENRICHED.reduce((s, d) => s + d.cash, 0) / ENRICHED.length).toFixed(1);
-  const spanYears = `${ENRICHED[0].year}–${latest?.year}`;
+
+  // Memoize derived stats so they don't recompute every render
+  const { allTimeHigh, athYear, avgCash, spanYears } = useMemo(() => {
+    let high = -Infinity;
+    let highYear = null;
+    let sum = 0;
+    for (const d of ENRICHED) {
+      sum += d.cash;
+      if (d.cash > high) { high = d.cash; highYear = d.year; }
+    }
+    return {
+      allTimeHigh: high,
+      athYear: highYear,
+      avgCash: (sum / ENRICHED.length).toFixed(1),
+      spanYears: `${ENRICHED[0].year}–${ENRICHED[ENRICHED.length - 1]?.year}`,
+    };
+  }, [ENRICHED]);
 
   const statCards = [
     {

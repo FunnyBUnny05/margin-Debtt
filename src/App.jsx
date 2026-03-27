@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const formatDate = (date) => {
   if (!date) return '';
@@ -818,12 +819,16 @@ export default function App() {
 
         {/* SECTORS DATA SOURCE */}
         {dataSource === 'sectors' && (
-          <SectorZScore isMobile={isMobile} />
+          <ErrorBoundary>
+            <SectorZScore isMobile={isMobile} />
+          </ErrorBoundary>
         )}
 
         {/* BUFFETT INDICATOR */}
         {dataSource === 'buffett' && (
-          <BuffettIndicator isMobile={isMobile} />
+          <ErrorBoundary>
+            <BuffettIndicator isMobile={isMobile} />
+          </ErrorBoundary>
         )}
 
         {/* Footer */}

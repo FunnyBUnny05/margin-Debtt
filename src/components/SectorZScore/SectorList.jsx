@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { SignalBadge } from './SignalBadge';
 
-export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
+export const SectorList = memo(function SectorList({ sectors, selectedSector, onSelect, isMobile }) {
   const [expandedSector, setExpandedSector] = useState(null);
 
   // Filter out sectors without valid z-scores and sort by z-score ascending
@@ -156,11 +156,16 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
                   {/* Time Spent in Zones */}
                   {sector.zScores && sector.zScores.length > 0 && (() => {
                     const totalPoints = sector.zScores.length;
-                    const cyclicalLowCount = sector.zScores.filter(z => z.zScore <= -2).length;
-                    const cheapCount = sector.zScores.filter(z => z.zScore > -2 && z.zScore <= -1).length;
-                    const neutralCount = sector.zScores.filter(z => z.zScore > -1 && z.zScore < 1).length;
-                    const extendedLightCount = sector.zScores.filter(z => z.zScore >= 1 && z.zScore < 2).length;
-                    const extendedCount = sector.zScores.filter(z => z.zScore >= 2).length;
+                    // Single-pass aggregation instead of 5 separate filter calls
+                    let cyclicalLowCount = 0, cheapCount = 0, neutralCount = 0, extendedLightCount = 0, extendedCount = 0;
+                    for (const z of sector.zScores) {
+                      const s = z.zScore;
+                      if (s <= -2) cyclicalLowCount++;
+                      else if (s <= -1) cheapCount++;
+                      else if (s < 1) neutralCount++;
+                      else if (s < 2) extendedLightCount++;
+                      else extendedCount++;
+                    }
 
                     const cyclicalLowPct = (cyclicalLowCount / totalPoints) * 100;
                     const cheapPct = (cheapCount / totalPoints) * 100;
@@ -218,5 +223,7 @@ export const SectorList = ({ sectors, selectedSector, onSelect, isMobile }) => {
     </div>
   );
 };
+
+});
 
 export default SectorList;
