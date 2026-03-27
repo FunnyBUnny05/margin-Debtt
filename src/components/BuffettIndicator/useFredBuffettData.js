@@ -1,12 +1,23 @@
 /**
  * useFredBuffettData
  *
- * Fetches the Buffett Indicator (Total Market Cap / GDP) live from FRED:
+ * Fetches a Buffett-Indicator proxy live from FRED:
  *   - WILL5000INDFC  →  Wilshire 5000 Full Cap Index (quarterly, end-of-period)
- *   - GDP            →  US GDP in billions of chained dollars (quarterly)
+ *                       NOTE: This is an *index value* (e.g. ~57 000 in 2024),
+ *                       not market cap in dollars. FRED does not expose a
+ *                       total-market-cap series with open CORS access.
+ *   - GDP            →  US GDP in billions of chained 2017 dollars (quarterly)
  *
- * Computes ratio = (WILL5000INDFC / GDP) * 100, then fits a log-linear
- * OLS trend and derives ±1σ / ±2σ bands from the residual standard deviation.
+ * ratio = (WILL5000INDFC / GDP) × 100
+ *   — The absolute percentage is NOT the standard "market cap / GDP" ratio
+ *     (which typically peaks near 200 %). Historically (1971) the index value
+ *     is ~1 091 while GDP is ~$1 086 B, so our ratio starts near 100 %
+ *     rather than the actual ~55 %.  The shape of the series is correct;
+ *     only the absolute level is offset.
+ *   — Because the OLS trend AND the σ bands are fitted to THIS same series,
+ *     the std_devs deviation metric is internally consistent and the
+ *     overvaluation / undervaluation SIGNAL is meaningful even if the
+ *     absolute ratio_pct number differs from other sources.
  *
  * Falls back to the bundled buffett_indicator_data.json if FRED is unreachable.
  */

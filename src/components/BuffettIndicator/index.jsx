@@ -272,7 +272,10 @@ export const BuffettIndicator = ({ isMobile }) => {
       {/* ── BUFFETT INDICATOR (Market Cap / GDP) ── */}
       <div className="glass-card" style={{ padding: '0', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>BUFFETT INDICATOR — MARKET CAP / GDP</span>
+          <span>
+            BUFFETT INDICATOR —{' '}
+            {rawBiStatus === 'live' ? 'WILSHIRE IDX / GDP' : 'MARKET CAP / GDP'}
+          </span>
           {rawBiStatus === 'live' && (
             <span style={{ fontSize: '9px', color: '#10B981', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px' }}>● LIVE / FRED</span>
           )}
@@ -312,7 +315,7 @@ export const BuffettIndicator = ({ isMobile }) => {
                     {biCurrent.ratio_pct.toFixed(1)}%
                   </div>
                   <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginTop: '4px' }}>
-                    MKT CAP / GDP
+                    {rawBiStatus === 'live' ? 'WILSHIRE IDX / GDP' : 'MKT CAP / GDP'}
                   </div>
                 </div>
                 <div className="stat-card" style={{ borderLeft: `3px solid ${valuationColor}`, padding: '12px 16px' }}>

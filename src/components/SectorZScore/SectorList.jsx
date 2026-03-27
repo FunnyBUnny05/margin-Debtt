@@ -162,7 +162,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                       const s = z.zScore;
                       if (s <= -2) cyclicalLowCount++;
                       else if (s <= -1) cheapCount++;
-                      else if (s < 1) neutralCount++;
+                      else if (s <= 1) neutralCount++;  // z=1.0 is neutral (matches SignalBadge + chart tooltip)
                       else if (s < 2) extendedLightCount++;
                       else extendedCount++;
                     }
@@ -184,15 +184,15 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                             <span style={{ color: '#10B981', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>CHEAP (-1 TO -2):</span>
+                            <span style={{ color: '#6B7280' }}>CHEAP (-2 TO -1):</span>
                             <span style={{ color: '#38BDF8', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>NEUTRAL (-1 TO +1):</span>
+                            <span style={{ color: '#6B7280' }}>NEUTRAL (-1 TO +1]:</span>
                             <span style={{ color: '#6B7280', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>SOMEWHAT EXT (+1 TO +2):</span>
+                            <span style={{ color: '#6B7280' }}>SOMEWHAT EXT (+1 TO +2):</span>{/* range: 1 < z < 2, exclusive on both ends */}
                             <span style={{ color: '#FCD34D', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
