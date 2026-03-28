@@ -2,7 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { getCached, setCache } from '../utils/cache';
 import { CORS_PROXIES } from '../utils/corsProxies';
 
-// ─── Alpha Vantage (primary — direct CORS, no proxy needed) ──────────────────
+// ─── Static pre-fetched ETF data (served from /etf_data.json via GitHub Actions) ─
+// The GitHub Actions workflow fetches all ETF prices weekly and commits the file.
+// Loading from this static file avoids CORS proxies, rate limits, and API failures.
+const STATIC_ETF_URL = '/etf_data.json';
+// Accept static data up to 8 days old (workflow runs weekly with a 1-day buffer)
+const STATIC_MAX_AGE_DAYS = 8;
+
+// ─── Alpha Vantage (primary live source — direct CORS, no proxy needed) ──────
 const AV_KEY = import.meta.env.VITE_ALPHA_VANTAGE_KEY;
 const AV_BASE = 'https://www.alphavantage.co/query';
 // Free tier: 5 req/min, 25 req/day
@@ -29,6 +36,37 @@ const hydratePrices = (prices) => {
 };
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ─── Static JSON loader ───────────────────────────────────────────────────────
+/**
+ * Attempt to load pre-fetched ETF data from /etf_data.json.
+ * Returns a map of { symbol -> [{date: Date, price: number}] } when successful
+ * and the data is fresh enough, otherwise returns null.
+ */
+const loadStaticEtfData = async () => {
+  try {
+    const res = await fetchWithTimeout(STATIC_ETF_URL, 5000);
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    if (!json.last_updated || !json.data) return null;
+
+    const ageDays = (Date.now() - new Date(json.last_updated).getTime()) / (1000 * 60 * 60 * 24);
+    if (ageDays > STATIC_MAX_AGE_DAYS) return null;
+
+    // Hydrate date strings → Date objects
+    const hydrated = {};
+    for (const [symbol, prices] of Object.entries(json.data)) {
+      const rows = hydratePrices(prices);
+      if (rows && rows.length > 50) {
+        hydrated[symbol] = rows;
+      }
+    }
+    return Object.keys(hydrated).length > 0 ? hydrated : null;
+  } catch {
+    return null;
+  }
+};
 
 // ─── Alpha Vantage ────────────────────────────────────────────────────────────
 const parseAlphaVantageData = (data) => {
@@ -177,14 +215,41 @@ export const useYahooFinance = (symbols, benchmark) => {
     const allSymbols = [benchmark, ...symbols.map(s => s.symbol)];
     setProgress({ current: 0, total: allSymbols.length });
 
-    // Split into: those already cached (skip delay) vs those needing a live AV call
-    // We still try AV for both, but cache hits return instantly.
-    // For uncached symbols we must respect AV's 5 req/min limit.
+    // ── Step 1: try the pre-fetched static JSON (fast, no API calls) ──────────
+    const staticData = await loadStaticEtfData();
+
+    if (staticData) {
+      const benchmarkPrices = staticData[benchmark];
+      const allSectorsPresent = symbols.every(s => staticData[s.symbol]);
+
+      if (benchmarkPrices && allSectorsPresent) {
+        // All symbols available in the static file — use it directly
+        const sectorResults = {};
+        for (const sector of symbols) {
+          sectorResults[sector.symbol] = staticData[sector.symbol];
+        }
+        setProgress({ current: allSymbols.length, total: allSymbols.length });
+        setData(sectorResults);
+        setBenchmarkData(benchmarkPrices);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // ── Step 2: static file missing/stale — fall back to live API chain ───────
+    // Pre-seed results from static data for any symbols that were present
+    const staticFallback = staticData || {};
 
     let fetchedCount = 0;
 
     // Helper: fetch one symbol and update progress
     const fetchOne = async (symbol) => {
+      // Use static data as seed if available (avoids an API call for that symbol)
+      if (staticFallback[symbol]) {
+        fetchedCount++;
+        setProgress({ current: fetchedCount, total: allSymbols.length });
+        return staticFallback[symbol];
+      }
       const prices = await fetchSymbol(symbol);
       fetchedCount++;
       setProgress({ current: fetchedCount, total: allSymbols.length });
@@ -201,18 +266,16 @@ export const useYahooFinance = (symbols, benchmark) => {
       return;
     }
 
-    // Sectors: check which are already cached in AV/yahoo/stooq
-    // Fetch in batches of AV_BATCH_SIZE; insert delay only when we have uncached
-    // symbols (cache hits don't consume an AV call so no delay is needed).
+    // Sectors: check which are already cached in AV/yahoo/stooq or static data
     const results = {};
 
-    // First pass: resolve all cache hits instantly
+    // First pass: resolve all cache hits and static-seeded symbols instantly
     const uncached = [];
     for (const sector of symbols) {
       const avCached  = getCached(`av_${sector.symbol}`);
       const yahCached = getCached(`yahoo_${sector.symbol}`);
       const stqCached = getCached(`stooq_${sector.symbol}`);
-      if (avCached || yahCached || stqCached) {
+      if (avCached || yahCached || stqCached || staticFallback[sector.symbol]) {
         try {
           results[sector.symbol] = await fetchOne(sector.symbol);
         } catch { /* skip */ }
@@ -221,7 +284,7 @@ export const useYahooFinance = (symbols, benchmark) => {
       }
     }
 
-    // Second pass: fetch uncached in batches of 5 (AV rate limit)
+    // Second pass: fetch truly uncached in batches of 5 (AV rate limit)
     for (let i = 0; i < uncached.length; i += AV_BATCH_SIZE) {
       if (i > 0) {
         // Wait between batches to respect 5 req/min AV limit
