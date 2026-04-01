@@ -222,8 +222,6 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
       </div>
     </div>
   );
-};
-
 });
 
 export default SectorList;
