@@ -1,13 +1,15 @@
 export const SECTOR_ETFS = [
-  { symbol: 'XLE',  name: 'Energy',              color: '#3b82f6' },
-  { symbol: 'XLU',  name: 'Utilities',            color: '#fbbf24' },
-  { symbol: 'IGV',  name: 'Software',             color: '#ec4899' },
-  { symbol: 'XLK',  name: 'Technology',           color: '#6366f1' },
-  { symbol: 'XLV',  name: 'Healthcare',           color: '#06b6d4' },
-  { symbol: 'CIBR', name: 'Cybersecurity',        color: '#14b8a6' },
-  { symbol: 'XLF',  name: 'Financials',           color: '#a855f7' },
-  { symbol: 'TAN',  name: 'Solar Energy',         color: '#f97316' },
-  { symbol: 'XLP',  name: 'Consumer Staples',     color: '#84cc16' },
+  { symbol: 'XLC',  name: 'Communication Services', color: '#ef4444' },
+  { symbol: 'XLY',  name: 'Consumer Discretionary', color: '#f97316' },
+  { symbol: 'XLP',  name: 'Consumer Staples',        color: '#84cc16' },
+  { symbol: 'XLE',  name: 'Energy',                  color: '#3b82f6' },
+  { symbol: 'XLF',  name: 'Financials',              color: '#a855f7' },
+  { symbol: 'XLV',  name: 'Healthcare',              color: '#06b6d4' },
+  { symbol: 'XLI',  name: 'Industrials',             color: '#22c55e' },
+  { symbol: 'XLB',  name: 'Materials',               color: '#8b5cf6' },
+  { symbol: 'XLRE', name: 'Real Estate',             color: '#ec4899' },
+  { symbol: 'XLK',  name: 'Technology',              color: '#6366f1' },
+  { symbol: 'XLU',  name: 'Utilities',               color: '#fbbf24' },
 ];
 
 export const BENCHMARKS = [
