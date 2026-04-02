@@ -153,6 +153,13 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                     )}
                   </div>
 
+                  {/* Limited history warning for young ETFs */}
+                  {sector.dataPoints != null && sector.dataPoints < 700 && (
+                    <div style={{ marginTop: '6px', padding: '4px 8px', background: '#1C1400', border: '1px solid #78350F', fontSize: '10px', color: '#FCD34D', fontFamily: 'var(--font-ui)' }}>
+                      Limited history ({sector.dataPoints} wks) — signals may be less reliable
+                    </div>
+                  )}
+
                   {/* Time Spent in Zones */}
                   {sector.zScores && sector.zScores.length > 0 && (() => {
                     const totalPoints = sector.zScores.length;
