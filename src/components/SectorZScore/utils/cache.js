@@ -36,9 +36,14 @@ export const setCache = (key, data) => {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
   } catch (e) {
-    // LocalStorage full, clear old entries
+    // LocalStorage full, clear old entries and retry with just this one entry
     console.warn('Cache storage full, clearing old entries');
     localStorage.removeItem(CACHE_KEY);
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ [key]: { data, timestamp: Date.now() } }));
+    } catch (e2) {
+      // localStorage truly unavailable, give up silently
+    }
   }
 };
 

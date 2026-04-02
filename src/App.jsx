@@ -297,7 +297,7 @@ export default function App() {
     let currentBelowPeriod = null;
 
     data.forEach((point, idx) => {
-      if (point.yoy_growth === null) return;
+      if (point.yoy_growth == null || !isFinite(point.yoy_growth)) return;
 
       // Track periods above +30%
       if (point.yoy_growth >= 30) {
