@@ -383,17 +383,17 @@ export default function App() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Bloomberg Topbar */}
         <div style={{ background: '#F59E0B', padding: '0', marginBottom: '0', display: 'flex', alignItems: 'stretch' }}>
-          <div style={{ padding: '8px 16px', borderRight: '1px solid #D97706', display: 'flex', alignItems: 'center' }}>
+          <div className="bb-topbar-brand" style={{ padding: '8px 16px', borderRight: '1px solid #D97706', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '900', fontSize: '16px', color: '#000', letterSpacing: '1px' }}>BLOOMBERG</span>
             <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '400', fontSize: '16px', color: '#000', marginLeft: '6px', opacity: 0.7 }}>FINANCIAL</span>
           </div>
-          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1 }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px' }}>
+          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : 'BUFFETT INDICATOR'}
             </span>
           </div>
           {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-            <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', borderLeft: '1px solid #D97706' }}>
+            <div className="bb-topbar-date" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', borderLeft: '1px solid #D97706', flexShrink: 0 }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#000', opacity: 0.8 }}>
                 UPD: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
               </span>
@@ -409,12 +409,12 @@ export default function App() {
         </div>
 
         {/* Data Source Tabs */}
-        <div style={{ display: 'flex', gap: '0', marginBottom: '0', flexWrap: 'wrap', borderBottom: '1px solid #1F2937', background: '#0B0F19' }}>
+        <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
-            { key: 'margin', label: 'FINRA MARGIN DEBT' },
-            { key: 'aaii', label: 'AAII ALLOCATION' },
-            { key: 'sectors', label: 'SECTOR Z-SCORE' },
-            { key: 'buffett', label: 'BUFFETT INDICATOR' },
+            { key: 'margin', label: isMobile ? 'MARGIN' : 'FINRA MARGIN DEBT' },
+            { key: 'aaii', label: isMobile ? 'AAII' : 'AAII ALLOCATION' },
+            { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
+            { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -433,6 +433,8 @@ export default function App() {
                 background: dataSource === key ? '#111827' : 'transparent',
                 color: dataSource === key ? '#F59E0B' : '#6B7280',
                 transition: 'all 0.1s ease',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
               {label}
@@ -442,13 +444,13 @@ export default function App() {
 
         {/* Time Range Buttons */}
         {dataSource !== 'sectors' && dataSource !== 'buffett' && (
-          <div style={{ display: 'flex', gap: '0', marginBottom: '0', flexWrap: 'wrap', borderBottom: '1px solid #1F2937', background: '#0B0F19' }}>
+          <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
                 style={{
-                  padding: '7px 16px',
+                  padding: isMobile ? '10px 20px' : '7px 16px',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
                   fontWeight: '700',
@@ -459,6 +461,9 @@ export default function App() {
                   borderRight: '1px solid #111827',
                   borderBottom: timeRange === range ? '2px solid #F59E0B' : '2px solid transparent',
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  minHeight: isMobile ? '44px' : 'auto',
                 }}
               >
                 {range.toUpperCase()}
@@ -510,7 +515,7 @@ export default function App() {
             <div className="glass-card" style={{ padding: isMobile ? '0' : '0', marginBottom: '1px', marginTop: '1px' }}>
               <div className="bb-panel-header">MARGIN DEBT OVER TIME</div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={isMobile ? 220 : 320}>
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
@@ -549,7 +554,7 @@ export default function App() {
             <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
               <div className="bb-panel-header">YEAR-OVER-YEAR GROWTH RATE</div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                 <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
                   <XAxis
@@ -780,7 +785,7 @@ export default function App() {
                   <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
                     <div className="bb-panel-header">ASSET ALLOCATION OVER TIME</div>
                     <div style={{ padding: isMobile ? '12px' : '16px' }}>
-                    <ResponsiveContainer width="100%" height={340}>
+                    <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
@@ -867,7 +872,7 @@ export default function App() {
         )}
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid #111827', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <div className="app-footer" style={{ borderTop: '1px solid #111827', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', color: '#374151', fontSize: '10px', letterSpacing: '0.5px' }}>
             MARKET INTELLIGENCE TERMINAL
           </span>

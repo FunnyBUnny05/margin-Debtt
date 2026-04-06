@@ -333,3 +333,58 @@ html {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Utility: hide scrollbars while preserving touch scroll */
+.mobile-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.mobile-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* iPhone-specific adjustments (covers all iPhone models up to Pro Max) */
+@media (max-width: 480px) {
+  /* Safe area: bottom padding for home indicator bar */
+  .app-background {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Hide update date in topbar — frees up space for content */
+  .bb-topbar-date {
+    display: none;
+  }
+
+  /* Smaller brand text so the middle section has room */
+  .bb-topbar-brand {
+    padding: 6px 10px !important;
+  }
+  .bb-topbar-brand span {
+    font-size: 13px !important;
+  }
+
+  /* Apple minimum touch target is 44px */
+  .bb-tab {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px !important;
+    font-size: 10px !important;
+  }
+
+  /* Tighter stat card padding — prevents content clipping on 375px screens */
+  .stat-card {
+    padding: 10px 10px !important;
+  }
+
+  /* Ensure 2-column grid on all narrow phones */
+  .responsive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Footer safe area padding */
+  .app-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+}
