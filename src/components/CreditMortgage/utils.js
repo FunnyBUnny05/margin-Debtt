@@ -31,10 +31,13 @@ export function normalize(value, min, max) {
  * @returns {object} { score, components, label, color }
  */
 export function calcSentinelScore(inputs, ranges = NORM_RANGES) {
-  const nRej   = normalize(inputs.rejectionRate, ranges.rejectionRate.min, ranges.rejectionRate.max);
-  const nDelinq = normalize(inputs.delinquency90, ranges.delinquency90.min, ranges.delinquency90.max);
-  const nFrag  = normalize(inputs.fragility,     ranges.fragility.min,     ranges.fragility.max);
-  const nUtil  = normalize(inputs.utilization,   ranges.utilization.min,   ranges.utilization.max);
+  const nRej    = normalize(inputs.rejectionRate,   ranges.rejectionRate.min,   ranges.rejectionRate.max);
+  const nDelinq = normalize(inputs.delinquency90,   ranges.delinquency90.min,   ranges.delinquency90.max);
+  const nFrag   = normalize(inputs.fragility,       ranges.fragility.min,       ranges.fragility.max);
+  // support both 'utilization' (legacy) and 'utilizationProxy' (SCE appRateAny)
+  const utilVal = inputs.utilizationProxy ?? inputs.utilization ?? 0;
+  const utilRange = ranges.utilization || { min: 0, max: 50 };
+  const nUtil   = normalize(utilVal, utilRange.min, utilRange.max);
 
   const score = (nRej * 0.40) + (nDelinq * 0.30) + (nFrag * 0.20) + (nUtil * 0.10);
   const rounded = Math.round(score * 10) / 10;
