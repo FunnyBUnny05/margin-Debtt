@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
+import { CreditMortgage } from './components/CreditMortgage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 
@@ -389,7 +390,7 @@ export default function App() {
           </div>
           <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : 'BUFFETT INDICATOR'}
+              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : dataSource === 'buffett' ? 'BUFFETT INDICATOR' : 'CREDIT & MORTGAGE SENTINEL'}
             </span>
           </div>
           {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -404,17 +405,18 @@ export default function App() {
         {/* Subtitle bar */}
         <div style={{ background: '#111827', borderBottom: '1px solid #1F2937', padding: '6px 16px', marginBottom: '0' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7280' }}>
-            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : "Berkshire Hathaway annual cash & T-bill holdings"}
+            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'buffett' ? "Berkshire Hathaway annual cash & T-bill holdings" : 'Household debt stress · SCE rejection rates · Sentinel risk score'}
           </span>
         </div>
 
         {/* Data Source Tabs */}
         <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
-            { key: 'margin', label: isMobile ? 'MARGIN' : 'FINRA MARGIN DEBT' },
-            { key: 'aaii', label: isMobile ? 'AAII' : 'AAII ALLOCATION' },
+            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'FINRA MARGIN DEBT' },
+            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII ALLOCATION' },
             { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
             { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
+            { key: 'credit',  label: isMobile ? 'CREDIT'  : 'CREDIT & MORTGAGE' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -428,10 +430,14 @@ export default function App() {
                 textTransform: 'uppercase',
                 border: 'none',
                 borderRight: '1px solid #1F2937',
-                borderBottom: dataSource === key ? '2px solid #F59E0B' : '2px solid transparent',
+                borderBottom: dataSource === key
+                  ? (key === 'credit' ? '2px solid #58A6FF' : '2px solid #F59E0B')
+                  : '2px solid transparent',
                 cursor: 'pointer',
                 background: dataSource === key ? '#111827' : 'transparent',
-                color: dataSource === key ? '#F59E0B' : '#6B7280',
+                color: dataSource === key
+                  ? (key === 'credit' ? '#58A6FF' : '#F59E0B')
+                  : '#6B7280',
                 transition: 'all 0.1s ease',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
@@ -443,7 +449,7 @@ export default function App() {
         </div>
 
         {/* Time Range Buttons */}
-        {dataSource !== 'sectors' && dataSource !== 'buffett' && (
+        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'credit' && (
           <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
@@ -861,6 +867,13 @@ export default function App() {
         {dataSource === 'sectors' && (
           <ErrorBoundary>
             <SectorZScore isMobile={isMobile} />
+          </ErrorBoundary>
+        )}
+
+        {/* CREDIT & MORTGAGE SENTINEL */}
+        {dataSource === 'credit' && (
+          <ErrorBoundary>
+            <CreditMortgage isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
