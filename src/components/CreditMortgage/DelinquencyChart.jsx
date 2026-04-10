@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div style={{
       background: '#0D1117', border: '1px solid #30363D',
-      padding: '10px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '10px',
+      padding: '10px 14px', fontFamily: 'var(--font-ui)', fontSize: '10px',
       maxWidth: '240px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
     }}>
       <div style={{ color: '#8B949E', marginBottom: '6px', fontWeight: '700' }}>{label}</div>
@@ -69,7 +69,7 @@ export function DelinquencyChart({ data, isMobile }) {
     });
 
   return (
-    <div style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+    <div style={{ fontFamily: 'var(--font-ui)' }}>
       {/* Controls row */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         {/* Range selector */}
@@ -78,7 +78,7 @@ export function DelinquencyChart({ data, isMobile }) {
             <button key={r} onClick={() => setRange(r)} style={{
               padding: '3px 10px', background: range === r ? '#161B22' : 'transparent',
               border: 'none', color: range === r ? BLUE : '#6E7681', cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', fontWeight: '700',
+              fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: '700',
               borderRight: '1px solid #21262D', letterSpacing: '0.5px',
             }}>{r.toUpperCase()}</button>
           ))}
@@ -88,7 +88,7 @@ export function DelinquencyChart({ data, isMobile }) {
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {Object.entries(COLORS).map(([key, color]) => (
             <button key={key} onClick={() => toggle(key)} style={{
-              padding: '2px 8px', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: '9px',
+              padding: '2px 8px', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: '9px',
               background: visible[key] ? `${color}20` : 'transparent',
               border: `1px solid ${visible[key] ? color : '#30363D'}`,
               color: visible[key] ? color : '#6E7681',
@@ -105,12 +105,12 @@ export function DelinquencyChart({ data, isMobile }) {
           <CartesianGrid strokeDasharray="1 4" stroke="#161B22" vertical={false} />
           <XAxis
             dataKey="quarter"
-            tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'JetBrains Mono, monospace' }}
+            tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'var(--font-ui)' }}
             axisLine={false} tickLine={false}
             interval={range === '5y' ? 3 : range === '10y' ? 7 : 11}
           />
           <YAxis
-            tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }}
+            tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'var(--font-ui)' }}
             tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} width={36}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#30363D', strokeWidth: 1 }} />

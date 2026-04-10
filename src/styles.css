@@ -1,60 +1,60 @@
 /* Bloomberg Professional Terminal Design System */
 
 :root {
-  /* Core Bloomberg Palette */
-  --bb-black: #0B0F19;
-  --bb-panel: #0B0F19;
-  --bb-panel-alt: #111827;
-  --bb-border: #1F2937;
-  --bb-border-light: #374151;
+  /* Core Bloomberg / Modern Dashboard Palette */
+  --bb-black: #0F172A; /* Slate 900 instead of pure black */
+  --bb-panel: #1E293B; /* Slate 800 */
+  --bb-panel-alt: #334155; /* Slate 700 */
+  --bb-border: #334155;
+  --bb-border-light: #475569;
 
-  /* Accent Colors */
-  --bb-orange: #F59E0B;
+  /* Accent Colors (Softer) */
+  --bb-orange: #F59E0B; /* Kept but rely on opacity classes to soften */
   --bb-orange-dim: #D97706;
   --bb-green: #10B981;
-  --bb-red: #EF4444;
+  --bb-red: #F43F5E; /* Rose instead of pure red */
   --bb-yellow: #FCD34D;
   --bb-cyan: #38BDF8;
 
   /* Text */
-  --bb-white: #F9FAFB;
-  --bb-gray-1: #D1D5DB;
-  --bb-gray-2: #9CA3AF;
-  --bb-gray-3: #6B7280;
-  --bb-gray-4: #4B5563;
+  --bb-white: #F8FAFC;
+  --bb-gray-1: #E2E8F0;
+  --bb-gray-2: #94A3B8;
+  --bb-gray-3: #64748B;
+  --bb-gray-4: #475569;
 
   /* Typography */
   --font-mono: 'JetBrains Mono', monospace;
   --font-ui: 'Inter', sans-serif;
 
   /* Legacy aliases for compatibility */
-  --text-primary: #F9FAFB;
-  --text-secondary: #D1D5DB;
-  --text-tertiary: #9CA3AF;
-  --text-muted: #6B7280;
-  --background-primary: #0B0F19;
-  --background-secondary: #0B0F19;
-  --glass-bg: #0B0F19;
-  --glass-border: #1F2937;
-  --glass-hover: #111827;
-  --accent-coral: #EF4444;
+  --text-primary: #F8FAFC;
+  --text-secondary: #E2E8F0;
+  --text-tertiary: #94A3B8;
+  --text-muted: #64748B;
+  --background-primary: #0F172A;
+  --background-secondary: #1E293B;
+  --glass-bg: #1E293B;
+  --glass-border: #334155;
+  --glass-hover: #334155;
+  --accent-coral: #F43F5E;
   --accent-emerald: #10B981;
   --accent-cyan: #38BDF8;
   --accent-blue: #38BDF8;
   --accent-purple: #F59E0B;
   --accent-amber: #FCD34D;
-  --gradient-coral: linear-gradient(135deg, #EF4444 0%, #CC2222 100%);
-  --gradient-emerald: linear-gradient(135deg, #10B981 0%, #009933 100%);
-  --gradient-blue: linear-gradient(135deg, #38BDF8 0%, #009999 100%);
+  --gradient-coral: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+  --gradient-emerald: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-blue: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
   --gradient-purple: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
   --shadow-sm: none;
   --shadow-md: none;
   --shadow-lg: none;
   --shadow-glow: none;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+  --radius-sm: 4px; /* Give panels slightly rounded corners to soften the feel */
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --transition-fast: 0.1s ease;
   --transition-smooth: 0.15s ease;
   --transition-slow: 0.2s ease;
@@ -85,7 +85,7 @@ body {
 .glass-card {
   background: var(--bb-panel);
   border: 1px solid var(--bb-border);
-  border-radius: 0;
+  border-radius: var(--radius-md);
 }
 
 .bb-panel:hover,
@@ -99,25 +99,25 @@ body {
   background: var(--bb-orange);
   color: var(--bb-white);
   font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
   margin: -1px -1px 0 -1px;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
 }
 
 /* Bloomberg Buttons */
 .bb-btn,
 .btn-primary {
-  padding: 6px 16px;
+  padding: 8px 16px;
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 13px;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   border: 1px solid var(--bb-border-light);
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   background: var(--bb-panel-alt);
   color: var(--bb-gray-2);
@@ -141,14 +141,13 @@ body {
 
 /* Navigation Tabs */
 .bb-tab {
-  padding: 6px 16px;
+  padding: 8px 18px;
   font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 14px;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   border: 1px solid var(--bb-border);
-  border-radius: 0;
+  border-radius: var(--radius-md);
   cursor: pointer;
   background: var(--bb-panel-alt);
   color: var(--bb-gray-2);
@@ -164,15 +163,14 @@ body {
 /* Data Typography */
 .bb-data {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .bb-label {
   font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   color: var(--bb-yellow);
 }
 
@@ -200,13 +198,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   border: 1px solid;
 }
 
@@ -232,8 +229,8 @@ body {
 .stat-card {
   background: var(--bb-panel);
   border: 1px solid var(--bb-border);
-  border-radius: 0;
-  padding: 14px;
+  border-radius: var(--radius-md);
+  padding: 20px;
   overflow: hidden;
   position: relative;
 }
@@ -264,12 +261,13 @@ body {
 
 /* Tooltip */
 .custom-tooltip {
-  background: #0B0F19 !important;
+  background: var(--bb-panel) !important;
   border: 1px solid var(--bb-border-light) !important;
-  border-radius: 0 !important;
-  padding: 8px 12px !important;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 16px !important;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5) !important;
 }
 
 /* Chart container */

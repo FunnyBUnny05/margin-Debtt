@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div style={{
       background: '#0D1117', border: '1px solid #30363D',
-      padding: '10px 14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '10px',
+      padding: '10px 14px', fontFamily: 'var(--font-ui)', fontSize: '10px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
     }}>
       <div style={{ color: '#8B949E', marginBottom: '6px', fontWeight: '700' }}>{label}</div>
@@ -50,7 +50,7 @@ export function TransitionRatesChart({ mortgageData, consumerData, isMobile }) {
   const consFiltered = consumerData.filter(filterData);
 
   return (
-    <div style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+    <div style={{ fontFamily: 'var(--font-ui)' }}>
       {/* Mode + Range */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '0', border: '1px solid #21262D' }}>
@@ -59,7 +59,7 @@ export function TransitionRatesChart({ mortgageData, consumerData, isMobile }) {
               padding: '3px 12px', background: mode === m.key ? '#161B22' : 'transparent',
               border: 'none', borderRight: '1px solid #21262D',
               color: mode === m.key ? BLUE : '#6E7681', cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', fontWeight: '700',
+              fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: '700',
             }}>{m.label}</button>
           ))}
         </div>
@@ -68,7 +68,7 @@ export function TransitionRatesChart({ mortgageData, consumerData, isMobile }) {
             <button key={r} onClick={() => setRange(r)} style={{
               padding: '3px 10px', background: range === r ? '#161B22' : 'transparent',
               border: 'none', color: range === r ? BLUE : '#6E7681', cursor: 'pointer',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: '9px', fontWeight: '700',
+              fontFamily: 'var(--font-ui)', fontSize: '9px', fontWeight: '700',
               borderRight: '1px solid #21262D',
             }}>{r.toUpperCase()}</button>
           ))}
@@ -94,10 +94,10 @@ export function TransitionRatesChart({ mortgageData, consumerData, isMobile }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="1 4" stroke="#161B22" vertical={false} />
-              <XAxis dataKey="quarter" tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'JetBrains Mono, monospace' }}
+              <XAxis dataKey="quarter" tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'var(--font-ui)' }}
                 axisLine={false} tickLine={false}
                 interval={range === '5y' ? 3 : range === '10y' ? 7 : 11} />
-              <YAxis tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }}
+              <YAxis tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'var(--font-ui)' }}
                 tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} width={36} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#30363D', strokeWidth: 1 }} />
               <Area type="monotone" dataKey="toCurrent" stroke={BLUE} strokeWidth={1.5}
@@ -131,10 +131,10 @@ export function TransitionRatesChart({ mortgageData, consumerData, isMobile }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="1 4" stroke="#161B22" vertical={false} />
-              <XAxis dataKey="quarter" tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'JetBrains Mono, monospace' }}
+              <XAxis dataKey="quarter" tick={{ fill: '#6E7681', fontSize: 8, fontFamily: 'var(--font-ui)' }}
                 axisLine={false} tickLine={false}
                 interval={range === '5y' ? 3 : range === '10y' ? 7 : 11} />
-              <YAxis tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }}
+              <YAxis tick={{ fill: '#6E7681', fontSize: 9, fontFamily: 'var(--font-ui)' }}
                 tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} width={36} />
               <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#30363D', strokeWidth: 1 }} />
               <ReferenceLine x="Q3 2010" stroke={AMBER} strokeDasharray="3 4" strokeOpacity={0.5}
