@@ -411,8 +411,8 @@ export default function App() {
         {/* Data Source Tabs */}
         <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
-            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'FINRA MARGIN DEBT' },
-            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII ALLOCATION' },
+            { key: 'margin', label: isMobile ? 'MARGIN' : 'FINRA MARGIN DEBT' },
+            { key: 'aaii', label: isMobile ? 'AAII' : 'AAII ALLOCATION' },
             { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
             { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
           ].map(({ key, label }) => (
@@ -863,8 +863,6 @@ export default function App() {
             <SectorZScore isMobile={isMobile} />
           </ErrorBoundary>
         )}
-
-
 
         {/* BUFFETT INDICATOR */}
         {dataSource === 'buffett' && (
