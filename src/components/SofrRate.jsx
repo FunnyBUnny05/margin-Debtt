@@ -1,0 +1,375 @@
+import React, { useState, useEffect } from 'react';
+import {
+  ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, ReferenceLine, Bar
+} from 'recharts';
+
+const ChartToggle = ({ type, setType }) => (
+  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
+    <button
+      onClick={() => setType('line')}
+      style={{
+        background: type === 'line' ? '#4B5563' : 'transparent',
+        color: type === 'line' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      LINE
+    </button>
+    <button
+      onClick={() => setType('bar')}
+      style={{
+        background: type === 'bar' ? '#4B5563' : 'transparent',
+        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      BAR
+    </button>
+  </div>
+);
+
+const formatDate = (d) => {
+  if (!d) return '';
+  const [y, m] = d.split('-');
+  return `${m}/${y.slice(2)}`;
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
+      <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, marginBottom: 8, fontSize: 14 }}>{label}</p>
+      {payload.map((p, i) => (
+        <p key={i} style={{ color: p.color, margin: '4px 0 0', fontSize: 13, fontWeight: 500 }}>
+          {p.name}: {typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+export function SofrRate({ isMobile }) {
+  const [rawData, setRawData] = useState([]);
+  const [metadata, setMetadata] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [timeRange, setTimeRange] = useState('2y');
+
+  const [sofrMainType, setSofrMainType] = useState('line');
+  const [sofrBandType, setSofrBandType] = useState('line');
+  const [sofrVolType, setSofrVolType] = useState('line');
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // 1) Try the NY Fed API directly (no CORS proxy needed—it allows cross-origin reads)
+        const apiUrl = 'https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2018-04-02&endDate=2099-12-31';
+        let records = [];
+        try {
+          const r = await fetch(apiUrl, { signal: AbortSignal.timeout(10000) });
+          if (r.ok) {
+            const json = await r.json();
+            records = (json.refRates || [])
+              .map(x => ({
+                date: x.effectiveDate,
+                rate: x.percentRate,
+                p1: x.percentPercentile1,
+                p25: x.percentPercentile25,
+                p75: x.percentPercentile75,
+                p99: x.percentPercentile99,
+                volume: x.volumeInBillions,
+              }))
+              .sort((a, b) => a.date.localeCompare(b.date));
+          }
+        } catch { /* fall through to static file */ }
+
+        // 2) Fall back to bundled JSON
+        if (!records.length) {
+          const r = await fetch('./sofr_data.json');
+          if (!r.ok) throw new Error('Failed to load SOFR data');
+          const json = await r.json();
+          records = json.data || [];
+          if (!cancelled) setMetadata({ lastUpdated: json.last_updated, source: json.source, sourceUrl: json.source_url });
+        } else {
+          if (!cancelled) setMetadata({
+            lastUpdated: new Date().toISOString(),
+            source: 'Federal Reserve Bank of New York — SOFR (Live)',
+            sourceUrl: 'https://www.newyorkfed.org/markets/reference-rates/sofr',
+          });
+        }
+
+        if (!records.length) throw new Error('No SOFR records found');
+        if (!cancelled) setRawData(records);
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) return (
+    <div className="glass-card" style={{ padding: '40px', textAlign: 'center', marginTop: '1px' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: '#38BDF8', letterSpacing: 2 }} className="pulse-animation">LOADING SOFR...</div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px', borderLeft: '3px solid #EF4444' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', color: '#EF4444', fontSize: 13 }}>ERROR: {error}</div>
+    </div>
+  );
+
+  // Filter by time range
+  const filtered = timeRange === 'all' ? rawData
+    : timeRange === '5y' ? rawData.slice(-1260)
+    : timeRange === '2y' ? rawData.slice(-504)
+    : rawData.slice(-126); // 6m
+
+  const latest = rawData[rawData.length - 1];
+  const prev = rawData[rawData.length - 2];
+  const dayChange = latest && prev ? (latest.rate - prev.rate).toFixed(2) : null;
+
+  // YoY change
+  const yearAgo = rawData[rawData.length - 252];
+  const yoyChange = latest && yearAgo ? (latest.rate - yearAgo.rate).toFixed(2) : null;
+
+  // Historical stats
+  const allRates = rawData.map(d => d.rate);
+  const maxRate = Math.max(...allRates);
+  const minRate = Math.min(...allRates);
+  const avgRate = (allRates.reduce((a, b) => a + b, 0) / allRates.length).toFixed(2);
+
+  const chartInterval = Math.floor((filtered.length || 1) / 8);
+
+  const rateColor = '#38BDF8'; // sky blue for SOFR
+
+  return (
+    <>
+      {/* Key Metrics */}
+      <div className="responsive-grid" style={{ marginTop: '1px', marginBottom: '1px', gap: '1px', background: '#111827' }}>
+        <div className="stat-card" style={{ borderLeft: `3px solid ${rateColor}`, padding: '12px 16px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            SOFR RATE ({latest?.date})
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: rateColor }}>
+            {latest?.rate?.toFixed(2)}%
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ borderLeft: `3px solid ${Number(dayChange) >= 0 ? '#EF4444' : '#10B981'}`, padding: '12px 16px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            1-DAY CHANGE
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: Number(dayChange) >= 0 ? '#EF4444' : '#10B981' }}>
+            {dayChange !== null ? `${Number(dayChange) > 0 ? '+' : ''}${dayChange}%` : 'N/A'}
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ borderLeft: `3px solid ${Number(yoyChange) >= 0 ? '#EF4444' : '#10B981'}`, padding: '12px 16px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            YOY CHANGE
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: Number(yoyChange) >= 0 ? '#EF4444' : '#10B981' }}>
+            {yoyChange !== null ? `${Number(yoyChange) > 0 ? '+' : ''}${yoyChange}%` : 'N/A'}
+          </div>
+        </div>
+
+        <div className="stat-card" style={{ borderLeft: '3px solid #FCD34D', padding: '12px 16px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            HIST. RANGE (ALL-TIME)
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 16 : 20, fontWeight: 700, color: '#FCD34D' }}>
+            {minRate.toFixed(2)}% – {maxRate.toFixed(2)}%
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#6B7280', marginTop: 4 }}>
+            AVG: {avgRate}%
+          </div>
+        </div>
+      </div>
+
+      {/* Time Range Selector */}
+      <div className="mobile-scroll" style={{ display: 'flex', gap: 0, borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto' }}>
+        {['6m', '2y', '5y', 'all'].map(r => (
+          <button key={r} onClick={() => setTimeRange(r)} style={{
+            padding: isMobile ? '10px 20px' : '7px 16px',
+            fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px',
+            background: timeRange === r ? '#082F49' : 'transparent',
+            color: timeRange === r ? '#38BDF8' : '#6B7280',
+            border: 'none', borderRight: '1px solid #111827',
+            borderBottom: timeRange === r ? '2px solid #38BDF8' : '2px solid transparent',
+            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+            minHeight: isMobile ? 44 : 'auto',
+          }}>
+            {r.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* Main SOFR Line Chart */}
+      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+        <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>SOFR RATE OVER TIME</span>
+          <ChartToggle type={sofrMainType} setType={setSofrMainType} />
+        </div>
+        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+          <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
+            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="sofrGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#38BDF8" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <XAxis
+                dataKey="date"
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={formatDate}
+                interval={chartInterval}
+              />
+              <YAxis
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={v => `${v.toFixed(1)}%`}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              {/* Fed funds target zone reference lines */}
+              <ReferenceLine y={0.07} stroke="#4B5563" strokeDasharray="4 4" strokeOpacity={0.5}
+                label={{ value: 'ZIRP era', fill: '#4B5563', fontSize: 9 }} />
+              {sofrMainType === 'line' ? (
+                <Area
+                  type="monotone" dataKey="rate" stroke={rateColor} strokeWidth={2}
+                  fill="url(#sofrGradient)" name="SOFR Rate"
+                />
+              ) : (
+                <Bar dataKey="rate" fill={rateColor} name="SOFR Rate" />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Percentile Band Chart */}
+      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+        <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>SOFR PERCENTILE BANDS (P1 / P25 / P75 / P99)</span>
+          <ChartToggle type={sofrBandType} setType={setSofrBandType} />
+        </div>
+        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+          <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
+            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <XAxis
+                dataKey="date"
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={formatDate}
+                interval={chartInterval}
+              />
+              <YAxis
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={v => `${v.toFixed(1)}%`}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              {sofrBandType === 'line' ? (
+                <>
+                  <Line type="monotone" dataKey="p1"  stroke="#6B7280" strokeWidth={1} dot={false} name="P1"  strokeDasharray="3 3" />
+                  <Line type="monotone" dataKey="p25" stroke="#FCD34D" strokeWidth={1} dot={false} name="P25" />
+                  <Line type="monotone" dataKey="rate" stroke="#38BDF8" strokeWidth={2.5} dot={false} name="SOFR (Median)" />
+                  <Line type="monotone" dataKey="p75" stroke="#F59E0B" strokeWidth={1} dot={false} name="P75" />
+                  <Line type="monotone" dataKey="p99" stroke="#EF4444" strokeWidth={1} dot={false} name="P99" strokeDasharray="3 3" />
+                </>
+              ) : (
+                <>
+                  <Bar dataKey="p1" fill="#6B7280" name="P1" stackId="a" />
+                  <Bar dataKey="p25" fill="#FCD34D" name="P25" stackId="a" />
+                  <Bar dataKey="rate" fill="#38BDF8" name="SOFR (Median)" stackId="a" />
+                  <Bar dataKey="p75" fill="#F59E0B" name="P75" stackId="a" />
+                  <Bar dataKey="p99" fill="#EF4444" name="P99" stackId="a" />
+                </>
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: 10 }}>
+            {[
+              { label: 'P99', color: '#EF4444' }, { label: 'P75', color: '#F59E0B' },
+              { label: 'SOFR', color: '#38BDF8' }, { label: 'P25', color: '#FCD34D' },
+              { label: 'P1',  color: '#6B7280' },
+            ].map(({ label, color }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 20, height: 2, background: color }} />
+                <span style={{ color: '#9CA3AF' }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Transaction Volume Chart */}
+      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+        <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>DAILY TRANSACTION VOLUME (USD BILLIONS)</span>
+          <ChartToggle type={sofrVolType} setType={setSofrVolType} />
+        </div>
+        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+          <ResponsiveContainer width="100%" height={isMobile ? 160 : 220}>
+            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="volGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <XAxis
+                dataKey="date"
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={formatDate}
+                interval={chartInterval}
+              />
+              <YAxis
+                stroke="#374151"
+                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                tickFormatter={v => `$${v}B`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              {sofrVolType === 'line' ? (
+                <Area type="monotone" dataKey="volume" stroke="#10B981" strokeWidth={1.5}
+                  fill="url(#volGradient)" name="Volume ($B)" />
+              ) : (
+                <Bar dataKey="volume" fill="#10B981" name="Volume ($B)" />
+              )}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* About Card */}
+      <div className="glass-card" style={{ padding: 0, marginTop: '1px', borderLeft: '3px solid #38BDF8' }}>
+        <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, color: '#38BDF8', fontSize: 10, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6 }}>
+            ABOUT SOFR
+          </div>
+          <p style={{ fontFamily: 'var(--font-mono)', color: '#D1D5DB', fontSize: 12, lineHeight: '1.6', margin: 0 }}>
+            The Secured Overnight Financing Rate (SOFR) is a broad measure of the cost of borrowing cash
+            overnight collateralized by U.S. Treasury securities. Published by the NY Fed each business day,
+            SOFR replaced LIBOR as the primary USD benchmark rate in June 2023. Rising SOFR signals
+            tightening financial conditions; falling SOFR reflects easing or excess liquidity.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}

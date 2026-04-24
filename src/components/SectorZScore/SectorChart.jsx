@@ -4,6 +4,8 @@ import {
   LineController,
   LineElement,
   PointElement,
+  BarController,
+  BarElement,
   LinearScale,
   TimeScale,
   Tooltip,
@@ -16,6 +18,8 @@ Chart.register(
   LineController,
   LineElement,
   PointElement,
+  BarController,
+  BarElement,
   LinearScale,
   TimeScale,
   Tooltip,
@@ -134,15 +138,18 @@ const REFERENCE_LINE_PLUGIN = {
   }
 };
 
-export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
+export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'line' }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const prevIsMobile = useRef(isMobile);
+  const prevChartType = useRef(chartType);
 
   // Rebuild chart when isMobile changes (axis tick count changes)
   useEffect(() => {
     const mobileChanged = prevIsMobile.current !== isMobile;
+    const typeChanged = prevChartType.current !== chartType;
     prevIsMobile.current = isMobile;
+    prevChartType.current = chartType;
 
     const validSectors = sectors.filter(s => s.zScores && s.zScores.length > 0);
     const sectorsToShow = selectedSector
@@ -151,7 +158,7 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
 
     if (!chartRef.current) return;
 
-    if (chartInstance.current && !mobileChanged) {
+    if (chartInstance.current && !mobileChanged && !typeChanged) {
       // Update data in place — avoids destroying and recreating the canvas
       const chart = chartInstance.current;
       const newDatasets = sectorsToShow.map((sector) => ({
@@ -206,7 +213,7 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
     }));
 
     chartInstance.current = new Chart(ctx, {
-      type: 'line',
+      type: chartType,
       data: { datasets },
       options: buildOptions(isMobile),
       plugins: [REFERENCE_LINE_PLUGIN]
@@ -218,7 +225,7 @@ export const SectorChart = ({ sectors, selectedSector, isMobile }) => {
         chartInstance.current = null;
       }
     };
-  }, [sectors, selectedSector, isMobile]);
+  }, [sectors, selectedSector, isMobile, chartType]);
 
   return (
     <div style={{ height: '100%', position: 'relative' }}>

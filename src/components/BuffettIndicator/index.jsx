@@ -4,6 +4,31 @@ import {
   ResponsiveContainer, ReferenceLine, Cell,
   ComposedChart, Line, Area,
 } from 'recharts';
+
+const ChartToggle = ({ type, setType }) => (
+  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
+    <button
+      onClick={() => setType('line')}
+      style={{
+        background: type === 'line' ? '#4B5563' : 'transparent',
+        color: type === 'line' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      LINE
+    </button>
+    <button
+      onClick={() => setType('bar')}
+      style={{
+        background: type === 'bar' ? '#4B5563' : 'transparent',
+        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      BAR
+    </button>
+  </div>
+);
 import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 import { useFredBuffettData } from './useFredBuffettData';
 
@@ -162,6 +187,10 @@ export const BuffettIndicator = ({ isMobile }) => {
   const [liveData, setLiveData] = useState(null);
   const [fetchStatus, setFetchStatus] = useState('loading'); // 'loading' | 'live' | 'fallback'
 
+  const [buffettMainType, setBuffettMainType] = useState('line');
+  const [cashMainType, setCashMainType] = useState('bar');
+  const [cashYoyType, setCashYoyType] = useState('bar');
+
   // Buffett Indicator (Market Cap / GDP) — live from FRED, fallback to JSON
   const { biData, biStatus: rawBiStatus } = useFredBuffettData();
   // Normalise status: hook returns 'live'|'fallback'|'error'|'loading'
@@ -272,16 +301,19 @@ export const BuffettIndicator = ({ isMobile }) => {
       {/* ── BUFFETT INDICATOR (Market Cap / GDP) ── */}
       <div className="glass-card" style={{ padding: '0', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>
-            BUFFETT INDICATOR —{' '}
-            {rawBiStatus === 'live' ? 'WILSHIRE IDX / GDP' : 'MARKET CAP / GDP'}
-          </span>
-          {rawBiStatus === 'live' && (
-            <span style={{ fontSize: '9px', color: '#10B981', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px' }}>● LIVE / FRED</span>
-          )}
-          {rawBiStatus === 'fallback' && (
-            <span style={{ fontSize: '9px', color: '#F59E0B', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px' }}>● STATIC / CACHED</span>
-          )}
+          <div>
+            <span>
+              BUFFETT INDICATOR —{' '}
+              {rawBiStatus === 'live' ? 'WILSHIRE IDX / GDP' : 'MARKET CAP / GDP'}
+            </span>
+            {rawBiStatus === 'live' && (
+              <span style={{ fontSize: '9px', color: '#10B981', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px', marginLeft: '8px' }}>● LIVE / FRED</span>
+            )}
+            {rawBiStatus === 'fallback' && (
+              <span style={{ fontSize: '9px', color: '#F59E0B', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px', marginLeft: '8px' }}>● STATIC / CACHED</span>
+            )}
+          </div>
+          <ChartToggle type={buffettMainType} setType={setBuffettMainType} />
         </div>
         <div style={{ padding: isMobile ? '12px' : '14px' }}>
 
@@ -403,7 +435,11 @@ export const BuffettIndicator = ({ isMobile }) => {
                     {/* Trend */}
                     <Line dataKey="trend_pct" stroke="#4B5563" strokeWidth={1} strokeDasharray="6 3" dot={false} legendType="none" />
                     {/* Actual ratio — drawn last so it sits on top */}
-                    <Line dataKey="ratio_pct" stroke="#F59E0B" strokeWidth={2} dot={false} legendType="none" />
+                    {buffettMainType === 'line' ? (
+                      <Line dataKey="ratio_pct" stroke="#F59E0B" strokeWidth={2} dot={false} legendType="none" />
+                    ) : (
+                      <Bar dataKey="ratio_pct" fill="#F59E0B" name="Ratio" />
+                    )}
                     <ReferenceLine y={100} stroke="#374151" strokeWidth={1} strokeDasharray="2 4" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -487,7 +523,10 @@ export const BuffettIndicator = ({ isMobile }) => {
       }}>
         {/* Chart 1: Absolute Cash */}
         <div className="glass-card" style={{ padding: '0' }}>
-          <div className="bb-panel-header">CASH &amp; T-BILL HOLDINGS</div>
+          <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>CASH &amp; T-BILL HOLDINGS</span>
+            <ChartToggle type={cashMainType} setType={setCashMainType} />
+          </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginBottom: '12px' }}>
             Annual cash + short-term U.S. Treasury holdings (USD billions)
@@ -510,22 +549,29 @@ export const BuffettIndicator = ({ isMobile }) => {
                 width={52}
               />
               <Tooltip content={<CashTooltip />} cursor={{ fill: 'rgba(255,102,0,0.06)' }} />
-              <Bar dataKey="cash" radius={[0, 0, 0, 0]} name="Cash & T-Bills">
-                {filtered.map((entry) => (
-                  <Cell
-                    key={entry.year}
-                    fill={entry.cash >= 200 ? '#F59E0B' : entry.cash >= 100 ? '#D97706' : entry.cash >= 50 ? '#8A3800' : '#4A2000'}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+              {cashMainType === 'line' ? (
+                <Line type="monotone" dataKey="cash" stroke="#F59E0B" strokeWidth={2} dot={false} />
+              ) : (
+                <Bar dataKey="cash" radius={[0, 0, 0, 0]} name="Cash & T-Bills">
+                  {filtered.map((entry) => (
+                    <Cell
+                      key={entry.year}
+                      fill={entry.cash >= 200 ? '#F59E0B' : entry.cash >= 100 ? '#D97706' : entry.cash >= 50 ? '#8A3800' : '#4A2000'}
+                    />
+                  ))}
+                </Bar>
+              )}
+            </ComposedChart>
           </ResponsiveContainer>
           </div>
         </div>
 
         {/* Chart 2: YoY Growth */}
         <div className="glass-card" style={{ padding: '0' }}>
-          <div className="bb-panel-header">YEAR-OVER-YEAR GROWTH</div>
+          <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>YEAR-OVER-YEAR GROWTH</span>
+            <ChartToggle type={cashYoyType} setType={setCashYoyType} />
+          </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginBottom: '12px' }}>
             Annual change in cash holdings (%)
@@ -553,15 +599,19 @@ export const BuffettIndicator = ({ isMobile }) => {
               />
               <Tooltip content={<YoyTooltip />} cursor={{ fill: 'rgba(255,102,0,0.06)' }} />
               <ReferenceLine y={0} stroke="#374151" strokeWidth={1} />
-              <Bar dataKey="yoy" radius={[0, 0, 0, 0]} name="YoY Growth">
-                {filtered.filter(d => d.yoy !== null).map((entry) => (
-                  <Cell
-                    key={entry.year}
-                    fill={entry.yoy >= 0 ? '#10B981' : '#EF4444'}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
+              {cashYoyType === 'line' ? (
+                <Line type="monotone" dataKey="yoy" stroke="#F59E0B" strokeWidth={2} dot={false} />
+              ) : (
+                <Bar dataKey="yoy" radius={[0, 0, 0, 0]} name="YoY Growth">
+                  {filtered.filter(d => d.yoy !== null).map((entry) => (
+                    <Cell
+                      key={entry.year}
+                      fill={entry.yoy >= 0 ? '#10B981' : '#EF4444'}
+                    />
+                  ))}
+                </Bar>
+              )}
+            </ComposedChart>
           </ResponsiveContainer>
           </div>
         </div>

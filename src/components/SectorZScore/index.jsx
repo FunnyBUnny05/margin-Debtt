@@ -8,6 +8,31 @@ import { SectorChart } from './SectorChart';
 import { PriceChart } from './PriceChart';
 import { SignalBadge } from './SignalBadge';
 
+const ChartToggle = ({ type, setType }) => (
+  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
+    <button
+      onClick={() => setType('line')}
+      style={{
+        background: type === 'line' ? '#4B5563' : 'transparent',
+        color: type === 'line' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      LINE
+    </button>
+    <button
+      onClick={() => setType('bar')}
+      style={{
+        background: type === 'bar' ? '#4B5563' : 'transparent',
+        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      BAR
+    </button>
+  </div>
+);
+
 const LoadingState = ({ progress }) => (
   <div className="glass-card" style={{
     display: 'flex',
@@ -170,6 +195,9 @@ export const SectorZScore = ({ isMobile }) => {
   const [zWindow, setZWindow] = useState(Z_WINDOWS[2].value); // 3Y default
   const [selectedSector, setSelectedSector] = useState(null);
 
+  const [zScoreType, setZScoreType] = useState('line');
+  const [priceType, setPriceType] = useState('line');
+
   const { data: sectorData, benchmarkData, loading, error, progress, refetch } = useYahooFinance(
     SECTOR_ETFS,
     benchmark
@@ -230,10 +258,13 @@ export const SectorZScore = ({ isMobile }) => {
       >
         {/* Z-Score Chart */}
         <div className="glass-card" style={{ padding: '0' }}>
-          <div className="bb-panel-header">Z-SCORE OVER TIME</div>
+          <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Z-SCORE OVER TIME</span>
+            <ChartToggle type={zScoreType} setType={setZScoreType} />
+          </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <div style={{ height: isMobile ? '280px' : '360px' }}>
-            <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} />
+            <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} />
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
             <div className="badge badge-warning" style={{ fontSize: '10px' }}>CYCLICAL LOW (-2)</div>
@@ -253,13 +284,16 @@ export const SectorZScore = ({ isMobile }) => {
 
       {/* Price Performance Chart */}
       <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
-        <div className="bb-panel-header">
-          PRICE PERFORMANCE VS {benchmark}
-          {selectedSectorData && (
-            <span style={{ marginLeft: '12px', fontWeight: '400', opacity: 0.8 }}>
-              — {selectedSectorData.symbol} ({selectedSectorData.name})
-            </span>
-          )}
+        <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <span>PRICE PERFORMANCE VS {benchmark}</span>
+            {selectedSectorData && (
+              <span style={{ marginLeft: '12px', fontWeight: '400', opacity: 0.8 }}>
+                — {selectedSectorData.symbol} ({selectedSectorData.name})
+              </span>
+            )}
+          </div>
+          <ChartToggle type={priceType} setType={setPriceType} />
         </div>
         <div style={{ padding: isMobile ? '12px' : '14px' }}>
         {selectedSectorData && (
@@ -278,6 +312,7 @@ export const SectorZScore = ({ isMobile }) => {
             benchmarkData={benchmarkData}
             benchmark={benchmark}
             isMobile={isMobile}
+            chartType={priceType}
           />
         </div>
         </div>

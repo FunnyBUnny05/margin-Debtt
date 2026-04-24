@@ -4,6 +4,8 @@ import {
   LineController,
   LineElement,
   PointElement,
+  BarController,
+  BarElement,
   LinearScale,
   TimeScale,
   Tooltip,
@@ -15,6 +17,8 @@ Chart.register(
   LineController,
   LineElement,
   PointElement,
+  BarController,
+  BarElement,
   LinearScale,
   TimeScale,
   Tooltip,
@@ -110,14 +114,17 @@ const normalizeData = (prices) => {
   return prices.map((p) => ({ x: p.date, y: ((p.price / startPrice) - 1) * 100 }));
 };
 
-export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, isMobile }) => {
+export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, isMobile, chartType = 'line' }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const prevIsMobile = useRef(isMobile);
+  const prevChartType = useRef(chartType);
 
   useEffect(() => {
     const mobileChanged = prevIsMobile.current !== isMobile;
+    const typeChanged = prevChartType.current !== chartType;
     prevIsMobile.current = isMobile;
+    prevChartType.current = chartType;
 
     if (!chartRef.current || !selectedSector || !benchmarkData) {
       if (chartInstance.current) {
@@ -139,7 +146,7 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
     const sectorDataset = normalizeData(filteredSector);
     const benchDataset = normalizeData(filteredBench);
 
-    if (chartInstance.current && !mobileChanged) {
+    if (chartInstance.current && !mobileChanged && !typeChanged) {
       // Update data in place
       const chart = chartInstance.current;
       chart.data.datasets[0].label = sector.symbol;
@@ -160,7 +167,7 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
 
     const ctx = chartRef.current.getContext('2d');
     chartInstance.current = new Chart(ctx, {
-      type: 'line',
+      type: chartType,
       data: {
         datasets: [
           {
@@ -196,7 +203,7 @@ export const PriceChart = ({ sectors, selectedSector, benchmarkData, benchmark, 
         chartInstance.current = null;
       }
     };
-  }, [sectors, selectedSector, benchmarkData, benchmark, isMobile]);
+  }, [sectors, selectedSector, benchmarkData, benchmark, isMobile, chartType]);
 
   if (!selectedSector) {
     return (

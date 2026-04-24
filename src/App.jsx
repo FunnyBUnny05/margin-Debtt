@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart, Bar } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
+import { SofrRate } from './components/SofrRate';
+import { PpiIndex } from './components/PpiIndex';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
@@ -84,6 +86,31 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
+const ChartToggle = ({ type, setType }) => (
+  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
+    <button
+      onClick={() => setType('line')}
+      style={{
+        background: type === 'line' ? '#4B5563' : 'transparent',
+        color: type === 'line' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      LINE
+    </button>
+    <button
+      onClick={() => setType('bar')}
+      style={{
+        background: type === 'bar' ? '#4B5563' : 'transparent',
+        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
+        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+      }}
+    >
+      BAR
+    </button>
+  </div>
+);
+
 export default function App() {
   const [rawData, setRawData] = useState([]);
   const [metadata, setMetadata] = useState(null);
@@ -94,6 +121,12 @@ export default function App() {
   const [timeRange, setTimeRange] = useState('all');
   const [dataSource, setDataSource] = useState('margin');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
+
+  // Chart type toggles
+  const [marginMainType, setMarginMainType] = useState('line');
+  const [marginYoyType, setMarginYoyType] = useState('line');
+  const [aaiiAllocType, setAaiiAllocType] = useState('line');
+  const [aaiiSpreadType, setAaiiSpreadType] = useState('bar');
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 640);
@@ -389,7 +422,7 @@ export default function App() {
           </div>
           <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : 'BUFFETT INDICATOR'}
+              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : dataSource === 'sofr' ? 'SECURED OVERNIGHT FINANCING RATE (SOFR)' : dataSource === 'ppi' ? 'PRODUCER PRICE INDEX — FINAL DEMAND' : 'BUFFETT INDICATOR'}
             </span>
           </div>
           {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -404,7 +437,7 @@ export default function App() {
         {/* Subtitle bar */}
         <div style={{ background: '#111827', borderBottom: '1px solid #1F2937', padding: '6px 16px', marginBottom: '0' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7280' }}>
-            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : "Berkshire Hathaway annual cash & T-bill holdings"}
+            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'sofr' ? 'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed' : dataSource === 'ppi' ? 'Monthly price changes received by domestic producers — BLS' : "Berkshire Hathaway annual cash & T-bill holdings"}
           </span>
         </div>
 
@@ -415,6 +448,8 @@ export default function App() {
             { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII ALLOCATION' },
             { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
             { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
+            { key: 'sofr',    label: isMobile ? 'SOFR'    : 'SOFR RATE' },
+            { key: 'ppi',     label: isMobile ? 'PPI'     : 'PPI INDEX' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -443,7 +478,7 @@ export default function App() {
         </div>
 
         {/* Time Range Buttons */}
-        {dataSource !== 'sectors' && dataSource !== 'buffett' && (
+        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && (
           <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
@@ -513,7 +548,10 @@ export default function App() {
 
             {/* Margin Debt Chart */}
             <div className="glass-card" style={{ padding: isMobile ? '0' : '0', marginBottom: '1px', marginTop: '1px' }}>
-              <div className="bb-panel-header">MARGIN DEBT OVER TIME</div>
+              <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>MARGIN DEBT OVER TIME</span>
+                <ChartToggle type={marginMainType} setType={setMarginMainType} />
+              </div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 220 : 320}>
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -537,14 +575,18 @@ export default function App() {
                     tickFormatter={(v) => `$${v}B`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="margin_debt_bn"
-                    stroke="#F59E0B"
-                    strokeWidth={2}
-                    fill="url(#marginGradient)"
-                    name="Margin Debt"
-                  />
+                  {marginMainType === 'line' ? (
+                    <Area
+                      type="monotone"
+                      dataKey="margin_debt_bn"
+                      stroke="#F59E0B"
+                      strokeWidth={2}
+                      fill="url(#marginGradient)"
+                      name="Margin Debt"
+                    />
+                  ) : (
+                    <Bar dataKey="margin_debt_bn" fill="#F59E0B" name="Margin Debt" />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
@@ -552,7 +594,10 @@ export default function App() {
 
             {/* YoY Growth Chart */}
             <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
-              <div className="bb-panel-header">YEAR-OVER-YEAR GROWTH RATE</div>
+              <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>YEAR-OVER-YEAR GROWTH RATE</span>
+                <ChartToggle type={marginYoyType} setType={setMarginYoyType} />
+              </div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                 <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -573,14 +618,18 @@ export default function App() {
                   <ReferenceLine y={0} stroke="#4B5563" strokeWidth={1} />
                   <ReferenceLine y={30} stroke="#EF4444" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '+30%', fill: '#EF4444', fontSize: 9 }} />
                   <ReferenceLine y={-30} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '-30%', fill: '#10B981', fontSize: 9 }} />
-                  <Line
-                    type="monotone"
-                    dataKey="yoy_growth"
-                    stroke="#FCD34D"
-                    strokeWidth={2}
-                    dot={false}
-                    name="YoY Growth"
-                  />
+                  {marginYoyType === 'line' ? (
+                    <Line
+                      type="monotone"
+                      dataKey="yoy_growth"
+                      stroke="#FCD34D"
+                      strokeWidth={2}
+                      dot={false}
+                      name="YoY Growth"
+                    />
+                  ) : (
+                    <Bar dataKey="yoy_growth" fill="#FCD34D" name="YoY Growth" />
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '10px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono' }}>
@@ -873,23 +922,69 @@ export default function App() {
           </ErrorBoundary>
         )}
 
+        {/* SOFR RATE */}
+        {dataSource === 'sofr' && (
+          <ErrorBoundary>
+            <SofrRate isMobile={isMobile} />
+          </ErrorBoundary>
+        )}
+
+        {/* PPI INDEX */}
+        {dataSource === 'ppi' && (
+          <ErrorBoundary>
+            <PpiIndex isMobile={isMobile} />
+          </ErrorBoundary>
+        )}
+
         {/* Footer */}
         <div className="app-footer" style={{ borderTop: '1px solid #111827', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', color: '#374151', fontSize: '10px', letterSpacing: '0.5px' }}>
             MARKET INTELLIGENCE TERMINAL
           </span>
-          {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-            <a
-              href={dataSource === 'margin' ? metadata?.sourceUrl : aaiiMetadata?.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontFamily: 'var(--font-mono)', color: '#4B5563', fontSize: '10px', textDecoration: 'none' }}
-              onMouseEnter={(e) => e.target.style.color = '#F59E0B'}
-              onMouseLeave={(e) => e.target.style.color = '#4B5563'}
-            >
-              SRC: {dataSource === 'margin' ? metadata?.source : aaiiMetadata?.source}
-            </a>
-          )}
+          {(() => {
+            let sourceUrl = '';
+            let sourceName = '';
+            switch(dataSource) {
+              case 'margin':
+                sourceUrl = metadata?.sourceUrl || 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics';
+                sourceName = metadata?.source || 'FINRA';
+                break;
+              case 'aaii':
+                sourceUrl = aaiiMetadata?.sourceUrl || 'https://www.aaii.com/investor-surveys';
+                sourceName = aaiiMetadata?.source || 'AAII Asset Allocation Survey';
+                break;
+              case 'sectors':
+                sourceUrl = 'https://finance.yahoo.com';
+                sourceName = 'Yahoo Finance';
+                break;
+              case 'buffett':
+                sourceUrl = 'https://fred.stlouisfed.org';
+                sourceName = 'FRED / Berkshire Hathaway';
+                break;
+              case 'sofr':
+                sourceUrl = 'https://www.newyorkfed.org/markets/reference-rates/sofr';
+                sourceName = 'Federal Reserve Bank of New York';
+                break;
+              case 'ppi':
+                sourceUrl = 'https://www.bls.gov/ppi/';
+                sourceName = 'U.S. Bureau of Labor Statistics';
+                break;
+              default:
+                return null;
+            }
+            return (
+              <a
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: 'var(--font-mono)', color: '#4B5563', fontSize: '10px', textDecoration: 'none' }}
+                onMouseEnter={(e) => e.target.style.color = '#F59E0B'}
+                onMouseLeave={(e) => e.target.style.color = '#4B5563'}
+              >
+                SRC: {sourceName}
+              </a>
+            );
+          })()}
         </div>
       </div>
     </div>
