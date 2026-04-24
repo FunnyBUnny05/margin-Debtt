@@ -532,7 +532,7 @@ export const BuffettIndicator = ({ isMobile }) => {
             Annual cash + short-term U.S. Treasury holdings (USD billions)
           </p>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={filtered} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="25%">
+            <ComposedChart data={filtered} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="1 4" stroke="#111827" vertical={false} />
               <XAxis
                 dataKey="year"
@@ -577,10 +577,9 @@ export const BuffettIndicator = ({ isMobile }) => {
             Annual change in cash holdings (%)
           </p>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart
+            <ComposedChart
               data={filtered.filter(d => d.yoy !== null)}
               margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-              barCategoryGap="25%"
             >
               <CartesianGrid strokeDasharray="1 4" stroke="#111827" vertical={false} />
               <XAxis
