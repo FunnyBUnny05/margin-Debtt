@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart, Bar } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, ComposedChart, Bar, Cell } from 'recharts';
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -832,7 +832,10 @@ export default function App() {
 
                   {/* Allocation Chart */}
                   <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
-                    <div className="bb-panel-header">ASSET ALLOCATION OVER TIME</div>
+                    <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>ASSET ALLOCATION OVER TIME</span>
+                      <ChartToggle type={aaiiAllocType} setType={setAaiiAllocType} />
+                    </div>
                     <div style={{ padding: isMobile ? '12px' : '16px' }}>
                     <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -865,15 +868,76 @@ export default function App() {
                           domain={[0, 100]}
                         />
                         <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="stocks" stroke="#38BDF8" strokeWidth={2} fill="url(#stocksGradient)" name="Stocks" />
-                        <Area type="monotone" dataKey="bonds" stroke="#FCD34D" strokeWidth={2} fill="url(#bondsGradient)" name="Bonds" />
-                        <Area type="monotone" dataKey="cash" stroke="#10B981" strokeWidth={2} fill="url(#cashGradient)" name="Cash" />
+                        {aaiiAllocType === 'line' ? (
+                          <>
+                            <Area type="monotone" dataKey="stocks" stroke="#38BDF8" strokeWidth={2} fill="url(#stocksGradient)" name="Stocks" />
+                            <Area type="monotone" dataKey="bonds" stroke="#FCD34D" strokeWidth={2} fill="url(#bondsGradient)" name="Bonds" />
+                            <Area type="monotone" dataKey="cash" stroke="#10B981" strokeWidth={2} fill="url(#cashGradient)" name="Cash" />
+                          </>
+                        ) : (
+                          <>
+                            <Bar dataKey="stocks" fill="#38BDF8" name="Stocks" stackId="alloc" />
+                            <Bar dataKey="bonds" fill="#FCD34D" name="Bonds" stackId="alloc" />
+                            <Bar dataKey="cash" fill="#10B981" name="Cash" stackId="alloc" />
+                          </>
+                        )}
                       </ComposedChart>
                     </ResponsiveContainer>
                     <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: '10px' }}>
                       <div className="badge" style={{ background: '#082F49', color: '#38BDF8', border: '1px solid #38BDF8' }}>STOCKS</div>
                       <div className="badge" style={{ background: '#422006', color: '#FCD34D', border: '1px solid #FCD34D' }}>BONDS</div>
                       <div className="badge badge-success">CASH</div>
+                    </div>
+                    </div>
+                  </div>
+
+                  {/* Bear vs Bull Spread Chart */}
+                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                    <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>STOCK ALLOCATION SPREAD (% STOCKS − % CASH)</span>
+                      <ChartToggle type={aaiiSpreadType} setType={setAaiiSpreadType} />
+                    </div>
+                    <div style={{ padding: isMobile ? '12px' : '16px' }}>
+                    <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
+                      <ComposedChart
+                        data={aaiiFilteredData.map(d => ({ ...d, spread: (d.stocks || 0) - (d.cash || 0) }))}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#374151"
+                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          tickFormatter={formatDate}
+                          interval={aaiiChartInterval}
+                        />
+                        <YAxis
+                          stroke="#374151"
+                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <ReferenceLine y={0} stroke="#4B5563" />
+                        <ReferenceLine y={40} stroke="#EF4444" strokeDasharray="3 3" label={{ value: '+40% Extreme Bull', fill: '#EF4444', fontSize: 9 }} />
+                        <ReferenceLine y={10} stroke="#10B981" strokeDasharray="3 3" label={{ value: '+10% Bear Signal', fill: '#10B981', fontSize: 9 }} />
+                        {aaiiSpreadType === 'line' ? (
+                          <Line type="monotone" dataKey="spread" stroke="#A855F7" strokeWidth={2} dot={false} name="Spread (Stock − Cash)" />
+                        ) : (
+                          <Bar dataKey="spread" name="Spread (Stock − Cash)">
+                            {aaiiFilteredData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={((entry.stocks || 0) - (entry.cash || 0)) > 40 ? '#EF4444' : ((entry.stocks || 0) - (entry.cash || 0)) < 10 ? '#10B981' : '#A855F7'}
+                              />
+                            ))}
+                          </Bar>
+                        )}
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: '10px' }}>
+                      <div className="badge" style={{ background: '#450A0A', color: '#EF4444', border: '1px solid #EF4444' }}>EXTREME BULL (&gt;+40%)</div>
+                      <div className="badge" style={{ background: '#2D1E00', color: '#A855F7', border: '1px solid #A855F7' }}>NEUTRAL</div>
+                      <div className="badge badge-success">BEAR SIGNAL (&lt;+10%)</div>
                     </div>
                     </div>
                   </div>

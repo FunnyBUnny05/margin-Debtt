@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell,
   ComposedChart, Line, Area,
 } from 'recharts';
+
 
 const ChartToggle = ({ type, setType }) => (
   <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
