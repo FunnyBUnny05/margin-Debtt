@@ -38,10 +38,10 @@ export function ExportCsvButton({ data, filename, columns }) {
       onClick={handleExport}
       title={`Export ${filename}.csv`}
       style={{
-        background: 'transparent',
-        color: '#4B5563',
+        background: '#0B0F19',
+        color: '#F9FAFB',
         border: '1px solid #1F2937',
-        padding: '2px 7px',
+        padding: '2px 8px',
         fontSize: '9px',
         fontFamily: 'var(--font-mono)',
         cursor: 'pointer',
@@ -50,14 +50,14 @@ export function ExportCsvButton({ data, filename, columns }) {
         display: 'flex',
         alignItems: 'center',
         gap: '4px',
-        transition: 'color 0.1s, border-color 0.1s',
+        transition: 'background 0.1s, border-color 0.1s',
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.color = '#10B981';
-        e.currentTarget.style.borderColor = '#10B981';
+        e.currentTarget.style.background = '#1E293B';
+        e.currentTarget.style.borderColor = '#38BDF8';
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.color = '#4B5563';
+        e.currentTarget.style.background = '#0B0F19';
         e.currentTarget.style.borderColor = '#1F2937';
       }}
     >
