@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Area
 } from 'recharts';
+import { ExportCsvButton } from './ExportCsvButton';
 
 const ChartToggle = ({ type, setType }) => (
   <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
@@ -224,7 +225,18 @@ export function PpiIndex({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — MONTH-OVER-MONTH % CHANGE</span>
-          <ChartToggle type={ppiMomType} setType={setPpiMomType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered}
+              filename={`ppi_mom_${series}`}
+              columns={[
+                { key: 'date',  label: 'Date' },
+                { key: 'mom',   label: 'MoM Change (%)' },
+                { key: 'index', label: 'Index Level' },
+              ]}
+            />
+            <ChartToggle type={ppiMomType} setType={setPpiMomType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
@@ -283,7 +295,18 @@ export function PpiIndex({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — YEAR-OVER-YEAR % CHANGE</span>
-          <ChartToggle type={ppiYoyType} setType={setPpiYoyType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered.filter(d => d.yoy !== null)}
+              filename={`ppi_yoy_${series}`}
+              columns={[
+                { key: 'date', label: 'Date' },
+                { key: 'yoy',  label: 'YoY Change (%)' },
+                { key: 'index', label: 'Index Level' },
+              ]}
+            />
+            <ChartToggle type={ppiYoyType} setType={setPpiYoyType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
@@ -335,7 +358,19 @@ export function PpiIndex({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — INDEX LEVEL (BASE: NOV 2009 = 100)</span>
-          <ChartToggle type={ppiIndexType} setType={setPpiIndexType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered}
+              filename={`ppi_index_level_${series}`}
+              columns={[
+                { key: 'date',  label: 'Date' },
+                { key: 'index', label: 'PPI Index Level (Base Nov-2009=100)' },
+                { key: 'mom',   label: 'MoM Change (%)' },
+                { key: 'yoy',   label: 'YoY Change (%)' },
+              ]}
+            />
+            <ChartToggle type={ppiIndexType} setType={setPpiIndexType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>

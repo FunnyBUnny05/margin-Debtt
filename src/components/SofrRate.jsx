@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Bar
 } from 'recharts';
+import { ExportCsvButton } from './ExportCsvButton';
 
 const ChartToggle = ({ type, setType }) => (
   <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
@@ -216,7 +217,18 @@ export function SofrRate({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SOFR RATE OVER TIME</span>
-          <ChartToggle type={sofrMainType} setType={setSofrMainType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered}
+              filename="sofr_rate"
+              columns={[
+                { key: 'date', label: 'Date' },
+                { key: 'rate', label: 'SOFR Rate (%)' },
+                { key: 'volume', label: 'Volume (Billions USD)' },
+              ]}
+            />
+            <ChartToggle type={sofrMainType} setType={setSofrMainType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
@@ -262,7 +274,21 @@ export function SofrRate({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SOFR PERCENTILE BANDS (P1 / P25 / P75 / P99)</span>
-          <ChartToggle type={sofrBandType} setType={setSofrBandType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered}
+              filename="sofr_percentile_bands"
+              columns={[
+                { key: 'date', label: 'Date' },
+                { key: 'p1',   label: 'P1 (%)' },
+                { key: 'p25',  label: 'P25 (%)' },
+                { key: 'rate', label: 'Median SOFR (%)' },
+                { key: 'p75',  label: 'P75 (%)' },
+                { key: 'p99',  label: 'P99 (%)' },
+              ]}
+            />
+            <ChartToggle type={sofrBandType} setType={setSofrBandType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
@@ -320,7 +346,18 @@ export function SofrRate({ isMobile }) {
       <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>DAILY TRANSACTION VOLUME (USD BILLIONS)</span>
-          <ChartToggle type={sofrVolType} setType={setSofrVolType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={filtered}
+              filename="sofr_volume"
+              columns={[
+                { key: 'date',   label: 'Date' },
+                { key: 'volume', label: 'Volume (Billions USD)' },
+                { key: 'rate',   label: 'SOFR Rate (%)' },
+              ]}
+            />
+            <ChartToggle type={sofrVolType} setType={setSofrVolType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 160 : 220}>

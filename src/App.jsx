@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
+import { ExportCsvButton } from './components/ExportCsvButton';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
@@ -550,7 +551,18 @@ export default function App() {
             <div className="glass-card" style={{ padding: isMobile ? '0' : '0', marginBottom: '1px', marginTop: '1px' }}>
               <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>MARGIN DEBT OVER TIME</span>
-                <ChartToggle type={marginMainType} setType={setMarginMainType} />
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <ExportCsvButton
+                    data={filteredData.map(d => ({ date: d.date, margin_debt_millions: d.margin_debt, margin_debt_billions: d.margin_debt_bn?.toFixed(2) }))}
+                    filename="margin_debt"
+                    columns={[
+                      { key: 'date', label: 'Date' },
+                      { key: 'margin_debt_millions', label: 'Margin Debt (Millions USD)' },
+                      { key: 'margin_debt_billions', label: 'Margin Debt (Billions USD)' },
+                    ]}
+                  />
+                  <ChartToggle type={marginMainType} setType={setMarginMainType} />
+                </div>
               </div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 220 : 320}>
@@ -596,7 +608,17 @@ export default function App() {
             <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
               <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>YEAR-OVER-YEAR GROWTH RATE</span>
-                <ChartToggle type={marginYoyType} setType={setMarginYoyType} />
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <ExportCsvButton
+                    data={filteredData.filter(d => d.yoy_growth !== null).map(d => ({ date: d.date, yoy_growth_pct: d.yoy_growth }))}
+                    filename="margin_debt_yoy"
+                    columns={[
+                      { key: 'date', label: 'Date' },
+                      { key: 'yoy_growth_pct', label: 'YoY Growth (%)' },
+                    ]}
+                  />
+                  <ChartToggle type={marginYoyType} setType={setMarginYoyType} />
+                </div>
               </div>
               <div style={{ padding: isMobile ? '12px' : '16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
@@ -834,7 +856,19 @@ export default function App() {
                   <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
                     <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>ASSET ALLOCATION OVER TIME</span>
-                      <ChartToggle type={aaiiAllocType} setType={setAaiiAllocType} />
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <ExportCsvButton
+                          data={aaiiFilteredData}
+                          filename="aaii_allocation"
+                          columns={[
+                            { key: 'date', label: 'Date' },
+                            { key: 'stocks', label: 'Stocks (%)' },
+                            { key: 'bonds', label: 'Bonds (%)' },
+                            { key: 'cash', label: 'Cash (%)' },
+                          ]}
+                        />
+                        <ChartToggle type={aaiiAllocType} setType={setAaiiAllocType} />
+                      </div>
                     </div>
                     <div style={{ padding: isMobile ? '12px' : '16px' }}>
                     <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
@@ -895,7 +929,19 @@ export default function App() {
                   <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
                     <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>STOCK ALLOCATION SPREAD (% STOCKS − % CASH)</span>
-                      <ChartToggle type={aaiiSpreadType} setType={setAaiiSpreadType} />
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <ExportCsvButton
+                          data={aaiiFilteredData.map(d => ({ date: d.date, stocks_pct: d.stocks, cash_pct: d.cash, spread_pct: (d.stocks || 0) - (d.cash || 0) }))}
+                          filename="aaii_spread"
+                          columns={[
+                            { key: 'date', label: 'Date' },
+                            { key: 'stocks_pct', label: 'Stocks (%)' },
+                            { key: 'cash_pct', label: 'Cash (%)' },
+                            { key: 'spread_pct', label: 'Spread Stock-Cash (%)' },
+                          ]}
+                        />
+                        <ChartToggle type={aaiiSpreadType} setType={setAaiiSpreadType} />
+                      </div>
                     </div>
                     <div style={{ padding: isMobile ? '12px' : '16px' }}>
                     <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>

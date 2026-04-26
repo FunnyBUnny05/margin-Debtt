@@ -32,6 +32,7 @@ const ChartToggle = ({ type, setType }) => (
 );
 import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 import { useFredBuffettData } from './useFredBuffettData';
+import { ExportCsvButton } from '../ExportCsvButton';
 
 // Historical baseline: 1995–2020 (hardcoded from official Berkshire annual reports)
 // 1995–1999: cash & cash equivalents (T-bill tracking not separately disclosed pre-2000)
@@ -314,7 +315,22 @@ export const BuffettIndicator = ({ isMobile }) => {
               <span style={{ fontSize: '9px', color: '#F59E0B', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.5px', marginLeft: '8px' }}>● STATIC / CACHED</span>
             )}
           </div>
-          <ChartToggle type={buffettMainType} setType={setBuffettMainType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={biChartData}
+              filename="buffett_indicator"
+              columns={[
+                { key: 'date',        label: 'Date' },
+                { key: 'ratio_pct',   label: 'Market Cap / GDP Ratio (%)' },
+                { key: 'trend_pct',   label: 'Log Trend (%)' },
+                { key: 'band_plus2',  label: '+2σ Band (%)' },
+                { key: 'band_plus1',  label: '+1σ Band (%)' },
+                { key: 'band_minus1', label: '-1σ Band (%)' },
+                { key: 'band_minus2', label: '-2σ Band (%)' },
+              ]}
+            />
+            <ChartToggle type={buffettMainType} setType={setBuffettMainType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '14px' }}>
 
@@ -526,7 +542,18 @@ export const BuffettIndicator = ({ isMobile }) => {
         <div className="glass-card" style={{ padding: '0' }}>
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>CASH &amp; T-BILL HOLDINGS</span>
-            <ChartToggle type={cashMainType} setType={setCashMainType} />
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <ExportCsvButton
+                data={filtered}
+                filename="berkshire_cash_holdings"
+                columns={[
+                  { key: 'year', label: 'Year' },
+                  { key: 'cash', label: 'Cash + T-Bills (Billions USD)' },
+                  { key: 'yoy',  label: 'YoY Growth (%)' },
+                ]}
+              />
+              <ChartToggle type={cashMainType} setType={setCashMainType} />
+            </div>
           </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginBottom: '12px' }}>
@@ -571,7 +598,18 @@ export const BuffettIndicator = ({ isMobile }) => {
         <div className="glass-card" style={{ padding: '0' }}>
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>YEAR-OVER-YEAR GROWTH</span>
-            <ChartToggle type={cashYoyType} setType={setCashYoyType} />
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <ExportCsvButton
+                data={filtered.filter(d => d.yoy !== null)}
+                filename="berkshire_cash_yoy"
+                columns={[
+                  { key: 'year', label: 'Year' },
+                  { key: 'yoy',  label: 'YoY Growth (%)' },
+                  { key: 'cash', label: 'Cash + T-Bills (Billions USD)' },
+                ]}
+              />
+              <ChartToggle type={cashYoyType} setType={setCashYoyType} />
+            </div>
           </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '10px', color: '#6B7280', marginBottom: '12px' }}>

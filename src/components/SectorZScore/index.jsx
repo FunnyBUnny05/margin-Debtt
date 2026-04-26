@@ -7,6 +7,7 @@ import { SectorList } from './SectorList';
 import { SectorChart } from './SectorChart';
 import { PriceChart } from './PriceChart';
 import { SignalBadge } from './SignalBadge';
+import { ExportCsvButton } from '../ExportCsvButton';
 
 const ChartToggle = ({ type, setType }) => (
   <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
@@ -260,7 +261,21 @@ export const SectorZScore = ({ isMobile }) => {
         <div className="glass-card" style={{ padding: '0' }}>
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Z-SCORE OVER TIME</span>
-            <ChartToggle type={zScoreType} setType={setZScoreType} />
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <ExportCsvButton
+                data={sectors
+                  .filter(s => s.currentZScore !== null)
+                  .map(s => ({ symbol: s.symbol, name: s.name, current_z_score: s.currentZScore?.toFixed(4) }))
+                }
+                filename="sector_z_scores"
+                columns={[
+                  { key: 'symbol',         label: 'Sector ETF' },
+                  { key: 'name',           label: 'Sector Name' },
+                  { key: 'current_z_score', label: 'Current Z-Score' },
+                ]}
+              />
+              <ChartToggle type={zScoreType} setType={setZScoreType} />
+            </div>
           </div>
           <div style={{ padding: isMobile ? '12px' : '14px' }}>
           <div style={{ height: isMobile ? '280px' : '360px' }}>
@@ -293,7 +308,26 @@ export const SectorZScore = ({ isMobile }) => {
               </span>
             )}
           </div>
-          <ChartToggle type={priceType} setType={setPriceType} />
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <ExportCsvButton
+              data={(() => {
+                if (!selectedSectorData?.prices?.length) return [];
+                const startPrice = selectedSectorData.prices[0].price;
+                return selectedSectorData.prices.map(p => ({
+                  date: p.date instanceof Date ? p.date.toISOString().slice(0, 10) : p.date,
+                  price: p.price?.toFixed(4),
+                  pct_change_from_start: (((p.price / startPrice) - 1) * 100).toFixed(2),
+                }));
+              })()}
+              filename={`price_performance_${selectedSector || 'all'}_vs_${benchmark}`}
+              columns={[
+                { key: 'date',                  label: 'Date' },
+                { key: 'price',                 label: `${selectedSector || ''} Price (USD)` },
+                { key: 'pct_change_from_start',  label: 'Return from Start (%)' },
+              ]}
+            />
+            <ChartToggle type={priceType} setType={setPriceType} />
+          </div>
         </div>
         <div style={{ padding: isMobile ? '12px' : '14px' }}>
         {selectedSectorData && (
