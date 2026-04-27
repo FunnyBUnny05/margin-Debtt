@@ -46,6 +46,11 @@ jobs:
         run: python scripts/fetch_buffett_indicator.py
         continue-on-error: true
 
+      - name: Fetch ETF price data
+        id: etf_fetch
+        run: python scripts/fetch_etf_data.py
+        continue-on-error: true
+
       - name: Report data freshness
         if: always()
         run: |
@@ -61,10 +66,19 @@ jobs:
                   print(f'{f}: latest_data={latest}, last_updated={updated}')
               else:
                   print(f'{f}: FILE MISSING')
+          etf_path = 'public/etf_data.json'
+          if os.path.exists(etf_path):
+              data = json.load(open(etf_path))
+              symbols_ok = data.get('symbols_fetched', 0)
+              symbols_fail = data.get('symbols_failed', [])
+              updated = data.get('last_updated', 'unknown')[:10]
+              print(f'etf_data.json: symbols_ok={symbols_ok}, failed={symbols_fail}, last_updated={updated}')
+          else:
+              print('etf_data.json: FILE MISSING')
           "
 
       - name: Warn on fetch failures
-        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure' || steps.buffett_fetch.outcome == 'failure'
+        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure' || steps.buffett_fetch.outcome == 'failure' || steps.etf_fetch.outcome == 'failure'
         run: |
           if [ "${{ steps.finra_fetch.outcome }}" = "failure" ]; then
             echo "::warning::FINRA margin data fetch failed - data may be stale"
@@ -78,12 +92,16 @@ jobs:
           if [ "${{ steps.buffett_fetch.outcome }}" = "failure" ]; then
             echo "::warning::Buffett Indicator data fetch failed - data may be stale"
           fi
+          if [ "${{ steps.etf_fetch.outcome }}" = "failure" ]; then
+            echo "::warning::ETF price data fetch failed - sector analysis may use stale or live-fetched data"
+          fi
 
       - name: Commit updated data
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json public/buffett_indicator_data.json
+          git add public/etf_data.json 2>/dev/null || true
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
