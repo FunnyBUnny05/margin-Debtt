@@ -14,6 +14,12 @@ from io import BytesIO
 from pathlib import Path
 from bs4 import BeautifulSoup
 
+try:
+    import cloudscraper
+    _CLOUDSCRAPER_AVAILABLE = True
+except ImportError:
+    _CLOUDSCRAPER_AVAILABLE = False
+
 # Primary page for investor-facing margin statistics
 FINRA_LANDING_URL = "https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics"
 # Known working Excel URL (contains all historical data through the latest published month)
@@ -22,16 +28,34 @@ OUTPUT_PATH = Path(__file__).parent.parent / "public" / "margin_data.json"
 STALE_THRESHOLD_DAYS = 65  # FINRA publishes monthly data with ~4-8 week lag
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,*/*',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/html,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics',
 }
+
+
+def make_session():
+    """Return a cloudscraper session (bypasses Cloudflare) or fall back to requests."""
+    if _CLOUDSCRAPER_AVAILABLE:
+        print("  Using cloudscraper (Cloudflare bypass)")
+        return cloudscraper.create_scraper(
+            browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+        )
+    print("  cloudscraper not available — falling back to requests")
+    s = requests.Session()
+    s.headers.update(HEADERS)
+    return s
 
 
 def discover_finra_urls():
     """Scrape the FINRA margin statistics page to find current download links."""
     print(f"Discovering download URLs from {FINRA_LANDING_URL}")
     try:
-        response = requests.get(FINRA_LANDING_URL, headers=HEADERS, timeout=30)
+        session = make_session()
+        # Don't override cloudscraper's internal headers; just add Referer
+        extra = {'Referer': FINRA_LANDING_URL} if _CLOUDSCRAPER_AVAILABLE else HEADERS
+        response = session.get(FINRA_LANDING_URL, headers=extra, timeout=30)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -86,7 +110,10 @@ def find_date_column(df):
 def try_fetch_excel(url):
     """Attempt to fetch and parse an Excel URL."""
     print(f"  Trying Excel: {url}")
-    response = requests.get(url, headers=HEADERS, timeout=60)
+    session = make_session()
+    # Don't override cloudscraper's internal headers; just add Referer
+    extra = {'Referer': FINRA_LANDING_URL} if _CLOUDSCRAPER_AVAILABLE else HEADERS
+    response = session.get(url, headers=extra, timeout=60)
     response.raise_for_status()
     content_type = response.headers.get('content-type', '')
     if 'html' in content_type.lower() and 'spreadsheet' not in content_type.lower():

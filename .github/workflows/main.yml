@@ -24,7 +24,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        run: pip install pandas openpyxl requests beautifulsoup4
+        run: pip install pandas openpyxl requests beautifulsoup4 cloudscraper
 
       - name: Fetch FINRA margin data
         id: finra_fetch
