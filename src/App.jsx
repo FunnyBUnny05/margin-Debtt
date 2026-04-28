@@ -7,6 +7,7 @@ import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
+import { FearGreedIndex } from './components/FearGreedIndex';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
@@ -423,7 +424,7 @@ export default function App() {
           </div>
           <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : dataSource === 'sofr' ? 'SECURED OVERNIGHT FINANCING RATE (SOFR)' : dataSource === 'ppi' ? 'PRODUCER PRICE INDEX — FINAL DEMAND' : 'BUFFETT INDICATOR'}
+              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : dataSource === 'sofr' ? 'SECURED OVERNIGHT FINANCING RATE (SOFR)' : dataSource === 'ppi' ? 'PRODUCER PRICE INDEX — FINAL DEMAND' : dataSource === 'fear_greed' ? 'FEAR & GREED INDEX' : 'BUFFETT INDICATOR'}
             </span>
           </div>
           {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
@@ -438,7 +439,7 @@ export default function App() {
         {/* Subtitle bar */}
         <div style={{ background: '#111827', borderBottom: '1px solid #1F2937', padding: '6px 16px', marginBottom: '0' }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7280' }}>
-            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'sofr' ? 'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed' : dataSource === 'ppi' ? 'Monthly price changes received by domestic producers — BLS' : "Berkshire Hathaway annual cash & T-bill holdings"}
+            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'sofr' ? 'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed' : dataSource === 'ppi' ? 'Monthly price changes received by domestic producers — BLS' : dataSource === 'fear_greed' ? 'Composite market sentiment driven by 7 distinct market indicators' : "Berkshire Hathaway annual cash & T-bill holdings"}
           </span>
         </div>
 
@@ -451,6 +452,7 @@ export default function App() {
             { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
             { key: 'sofr',    label: isMobile ? 'SOFR'    : 'SOFR RATE' },
             { key: 'ppi',     label: isMobile ? 'PPI'     : 'PPI INDEX' },
+            { key: 'fear_greed', label: isMobile ? 'F&G' : 'FEAR & GREED' },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -479,7 +481,7 @@ export default function App() {
         </div>
 
         {/* Time Range Buttons */}
-        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && (
+        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
           <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
@@ -1046,6 +1048,13 @@ export default function App() {
           </ErrorBoundary>
         )}
 
+        {/* FEAR GREED INDEX */}
+        {dataSource === 'fear_greed' && (
+          <ErrorBoundary>
+            <FearGreedIndex isMobile={isMobile} />
+          </ErrorBoundary>
+        )}
+
         {/* Footer */}
         <div className="app-footer" style={{ borderTop: '1px solid #111827', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <span style={{ fontFamily: 'var(--font-mono)', color: '#374151', fontSize: '10px', letterSpacing: '0.5px' }}>
@@ -1078,6 +1087,10 @@ export default function App() {
               case 'ppi':
                 sourceUrl = 'https://www.bls.gov/ppi/';
                 sourceName = 'U.S. Bureau of Labor Statistics';
+                break;
+              case 'fear_greed':
+                sourceUrl = 'https://github.com/FunnyBUnny05/margin-Debtt';
+                sourceName = 'Internal Aggregation (FRED, YF, CBOE)';
                 break;
               default:
                 return null;
