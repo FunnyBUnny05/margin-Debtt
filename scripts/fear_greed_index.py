@@ -2,42 +2,41 @@
 """
 Fear & Greed Index Calculator
 Computes a 0-100 composite sentiment indicator from 7 components.
-Output: fear_greed_index.csv  (1998-01-01 → present)
+Output: fear_greed_index.csv  (2003-07-01 → present)
 
 All data sources verified free and programmatically accessible:
 
-  Source              Series / Ticker         Coverage
-  ──────────────────  ──────────────────────  ─────────────
-  yfinance            ^GSPC                   1928 → today
-  yfinance            ^TNX  (10-yr yield)     1962 → today
-  yfinance            ^VIX                    1990 → today
-  yfinance            ^RUT  (Russell 2000)    1979 → today
-  FRED fredgraph.csv  DAAA  (AAA corp yield)  1983 → today  *daily, full history
-  FRED fredgraph.csv  DBAA  (BAA corp yield)  1986 → today  *daily, full history
-  CBOE CDN            total.csv (P/C ratio)   1995 → today  *may be IP-blocked locally
-                      ↳ fallback: VIX/SMA-126 ratio (same fear signal, different metric)
+  Source              Series / Ticker              Coverage
+  ──────────────────  ───────────────────────────  ─────────────
+  yfinance            ^GSPC                        1928 → today
+  yfinance            ^VIX                         1990 → today
+  yfinance            TLT  (20+ Yr Treasury ETF)   2002-07 → today
+  yfinance            XLK,XLF,XLV,… (11 sectors)  2002-12 → today
+  FRED fredgraph.csv  DAAA  (Moody's AAA daily)    1983 → today
+  FRED fredgraph.csv  DBAA  (Moody's BAA daily)    1986 → today
+  CBOE CDN            total.csv (P/C ratio)        1995 → today
+                      ↳ fallback: VIX/SMA-126 ratio
 
-Why DAAA/DBAA instead of BAMLH0A0HYM2/BAMLC0A0CM?
-  The BAML/ICE OAS series on FRED are licensed — FRED's public fredgraph.csv
-  endpoint only returns the most recent ~793 rows (~3 years) for those series.
-  DAAA and DBAA (Moody's) are unrestricted and return full daily history since
-  the 1980s through the same endpoint. The BAA-AAA quality spread captures the
-  same credit-risk sentiment signal (widens in fear, tightens in greed).
+Why DAAA/DBAA instead of BAMLH0A0HYM2?
+  The BAML/ICE OAS series on FRED are licensed — only ~3 years of history
+  available via fredgraph.csv. DAAA/DBAA (Moody's) are unrestricted and return
+  full daily history since the 1980s. BAA-AAA quality spread captures the same
+  credit-risk sentiment signal; renamed to credit_spread to be accurate.
 
-Why SPX 52-week range position instead of FRED HIGNLOWS?
-  FRED series 'HIGNLOWS' returns HTTP 404 — it does not exist in FRED's public API.
-  The SPX 52-week price range position (0 = at 52-week low, 1 = at 52-week high)
-  captures the same breadth concept: a market near its 52-week high implies
-  widespread individual stock strength. Available from yfinance since 1928.
+Why sector ETF % above 125-SMA instead of SPX 52-week range position?
+  SPX range position pegs near 100 in any sustained bull market, providing
+  no useful signal. Sector participation (% of 11 SPDR sectors above their
+  125-day SMA) is a true breadth/participation measure.
 
-Why RUT-SPX return differential for McClellan instead of FRED BPANDI?
-  FRED series 'BPANDI' returns HTTP 404. The daily Russell 2000 vs S&P 500
-  return differential proxies NYSE advance/decline breadth: when small-caps
-  outperform large-caps (broad participation), breadth is expanding (greed).
-  The EMA19 - EMA39 formula mirrors the traditional McClellan Oscillator.
+Why TLT instead of ^TNX for safe-haven?
+  TNX pct_change measures yield % change (e.g. 4.3%→4.1% = -4.7%), which is
+  dimensionally incomparable to equity returns. TLT price returns are directly
+  comparable. TLT inception July 2002 → INDEX_START = 2003-07-01.
 """
 
-import warnings, sys
+import json
+import warnings
+import sys
 warnings.filterwarnings("ignore")
 
 import numpy as np
@@ -56,11 +55,14 @@ except ImportError:
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 FETCH_START  = "1986-01-01"   # earliest needed: DBAA starts 1986-01-02
-INDEX_START  = "1998-01-01"   # effective first output date per spec
+INDEX_START  = "2003-07-01"   # TLT (safe-haven proxy) inception + 1yr warm-up
 TODAY        = date.today().isoformat()
 OUTPUT_FILE  = "public/fear_greed_index.csv"
-NORM_WINDOW  = 730            # rolling normalization window (trading observations)
-NORM_MIN_PER = 365            # min observations before normalization activates
+META_FILE    = "public/fear_greed_meta.json"
+NORM_WINDOW  = 504            # ≈ 2 years of trading days (252 * 2)
+NORM_MIN_PER = 252            # ≈ 1 year warm-up
+
+SECTOR_TICKERS = ["XLK", "XLF", "XLV", "XLY", "XLP", "XLE", "XLI", "XLU", "XLB", "XLRE", "XLC"]
 
 
 # ── FRED Helper ───────────────────────────────────────────────────────────────
@@ -83,12 +85,21 @@ def _fred_csv(series_id: str) -> pd.Series:
 # ── Data Fetchers ─────────────────────────────────────────────────────────────
 def fetch_market_data() -> dict:
     """Download all yfinance tickers in one call."""
-    tickers = ["^GSPC", "^TNX", "^VIX", "^RUT"]
+    tickers = ["^GSPC", "^VIX", "TLT"]
     print(f"  [yfinance] {tickers}")
     raw = yf.download(tickers, start=FETCH_START, end=TODAY,
                       auto_adjust=True, progress=False, threads=True)
     close = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw
     return {t: close[t].dropna() for t in tickers}
+
+
+def fetch_sector_data() -> pd.DataFrame:
+    """Fetch 11 SPDR sector ETFs. XLRE starts 2015, XLC starts 2018 — handled gracefully."""
+    print(f"  [yfinance] {SECTOR_TICKERS}")
+    raw = yf.download(SECTOR_TICKERS, start=FETCH_START, end=TODAY,
+                      auto_adjust=True, progress=False, threads=True)
+    close = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw
+    return close
 
 
 def fetch_fred_credit() -> tuple:
@@ -147,8 +158,7 @@ def fetch_cboe_putcall():  # -> pd.Series | None
             except Exception:
                 continue
 
-    print("  [CBOE] All sources returned 403/timeout (IP-blocked locally).")
-    print("         → Using VIX/SMA-126 ratio as put/call proxy (same fear signal).")
+    print("  [CBOE] All sources returned 403/timeout (IP-blocked locally).", file=sys.stderr)
     return None
 
 
@@ -160,29 +170,24 @@ def comp_momentum(gspc: pd.Series) -> pd.Series:
     return ((gspc - sma) / sma * 100).rename("momentum")
 
 
-def comp_strength(gspc: pd.Series) -> pd.Series:
-    """
-    SPX 52-week (252-day) price range position.
-    0 = at 252-day low (all lows), 1 = at 252-day high (all highs).
-    Higher = greed. No inversion.
-    """
-    lo  = gspc.rolling(252, min_periods=126).min()
-    hi  = gspc.rolling(252, min_periods=126).max()
-    rng = hi - lo
-    s   = (gspc - lo) / rng
-    return s.where(rng > 0, 0.5).rename("strength")
+def comp_strength(sectors: pd.DataFrame) -> pd.Series:
+    """% of sector ETFs trading above their 125-day SMA. Range: 0-1 (normalized to 0-100)."""
+    sma = sectors.rolling(window=125, min_periods=63).mean()
+    above = (sectors > sma).astype(float)
+    valid = sectors.notna() & sma.notna()
+    pct_above = above.where(valid).sum(axis=1) / valid.sum(axis=1).replace(0, np.nan)
+    return pct_above.rename("strength")
 
 
-def comp_breadth(gspc: pd.Series, rut: pd.Series) -> pd.Series:
-    """
-    McClellan-style oscillator from (RUT - SPX) daily return differential.
-    When small caps outperform large caps → broad participation → greed.
-    EMA19 - EMA39 mirrors the traditional McClellan formula.
-    Higher = greed. No inversion.
-    """
-    ad    = rut.pct_change(1) - gspc.pct_change(1)
-    ema19 = ad.ewm(span=19, adjust=False).mean()
-    ema39 = ad.ewm(span=39, adjust=False).mean()
+def comp_breadth(sectors: pd.DataFrame) -> pd.Series:
+    """Synthetic McClellan Oscillator from sector ETF daily breadth."""
+    rets = sectors.pct_change()
+    advancing = (rets > 0).sum(axis=1)
+    declining = (rets < 0).sum(axis=1)
+    valid_count = sectors.notna().sum(axis=1).replace(0, np.nan)
+    net = (advancing - declining) / valid_count
+    ema19 = net.ewm(span=19, adjust=False).mean()
+    ema39 = net.ewm(span=39, adjust=False).mean()
     return (ema19 - ema39).rename("breadth")
 
 
@@ -208,21 +213,18 @@ def comp_volatility(vix: pd.Series) -> pd.Series:
     return vix.rename("volatility")
 
 
-def comp_junk_bond(dbaa: pd.Series, daaa: pd.Series) -> pd.Series:
+def comp_credit_spread(dbaa: pd.Series, daaa: pd.Series) -> pd.Series:
     """
-    Moody's BAA yield minus AAA yield (quality credit spread).
+    Moody's BAA yield minus AAA yield (investment-grade quality credit spread).
     Widens during fear (credit stress), tightens during greed.
     Higher spread = fear → inverted after normalization.
     """
-    return (dbaa - daaa).rename("junk_bond")
+    return (dbaa - daaa).rename("credit_spread")
 
 
-def comp_safe_haven(gspc: pd.Series, tnx: pd.Series) -> pd.Series:
-    """
-    SPX 20-day return minus TNX 20-day yield change.
-    Higher = equities outperforming bonds = greed. No inversion.
-    """
-    return (gspc.pct_change(20) - tnx.pct_change(20)).rename("safe_haven")
+def comp_safe_haven(gspc: pd.Series, tlt: pd.Series) -> pd.Series:
+    """20-day SPX return minus 20-day TLT return. Higher = equity outperformance = greed."""
+    return (gspc.pct_change(20) - tlt.pct_change(20)).rename("safe_haven")
 
 
 # ── Normalization ─────────────────────────────────────────────────────────────
@@ -245,9 +247,16 @@ def normalize(s: pd.Series, invert: bool = False) -> pd.Series:
 # ── Alignment ─────────────────────────────────────────────────────────────────
 
 def align(raw: dict, master_idx: pd.DatetimeIndex) -> dict:
-    """Reindex all series to master trading-day index; ffill then bfill (≤5 days)."""
-    return {name: s.reindex(master_idx).ffill().bfill(limit=5)
-            for name, s in raw.items()}
+    """Reindex all series to master trading-day index; ffill, then bfill only leading NaNs."""
+    out = {}
+    for name, s in raw.items():
+        reindexed = s.reindex(master_idx).ffill()
+        first_valid = reindexed.first_valid_index()
+        if first_valid is not None:
+            head_idx = reindexed.index[:5]
+            reindexed.loc[head_idx] = reindexed.loc[head_idx].bfill()
+        out[name] = reindexed
+    return out
 
 
 # ── Main Pipeline ─────────────────────────────────────────────────────────────
@@ -262,30 +271,34 @@ def main() -> pd.DataFrame:
     print("\n[1/5] Market data (yfinance)…")
     mkt  = fetch_market_data()
     gspc = mkt["^GSPC"]
-    tnx  = mkt["^TNX"]
     vix  = mkt["^VIX"]
-    rut  = mkt["^RUT"]
+    tlt  = mkt["TLT"]
 
-    print("\n[2/5] Credit spreads (FRED DAAA / DBAA)…")
+    print("\n[2/5] Sector ETF data (yfinance)…")
+    sectors = fetch_sector_data()
+
+    print("\n[3/5] Credit spreads (FRED DAAA / DBAA)…")
     daaa, dbaa = fetch_fred_credit()
 
-    print("\n[3/5] CBOE Put/Call ratio…")
+    print("\n[4/5] CBOE Put/Call ratio…")
     cboe_pc = fetch_cboe_putcall()
+    using_pc_proxy = cboe_pc is None
+    if using_pc_proxy:
+        print("WARNING: CBOE put/call fetch failed. Using VIX/SMA-126 proxy.", file=sys.stderr)
 
     # 2. Raw components ────────────────────────────────────────────────────────
-    print("\n[4/5] Computing components…")
+    print("\n[5/5] Computing components…")
     raw = {
-        "momentum":   comp_momentum(gspc),
-        "strength":   comp_strength(gspc),
-        "breadth":    comp_breadth(gspc, rut),
-        "put_call":   comp_putcall(cboe_pc) if cboe_pc is not None
-                      else comp_putcall_proxy(vix),
-        "volatility": comp_volatility(vix),
-        "junk_bond":  comp_junk_bond(dbaa, daaa),
-        "safe_haven": comp_safe_haven(gspc, tnx),
+        "momentum":      comp_momentum(gspc),
+        "strength":      comp_strength(sectors),
+        "breadth":       comp_breadth(sectors),
+        "put_call":      comp_putcall(cboe_pc) if cboe_pc is not None
+                         else comp_putcall_proxy(vix),
+        "volatility":    comp_volatility(vix),
+        "credit_spread": comp_credit_spread(dbaa, daaa),
+        "safe_haven":    comp_safe_haven(gspc, tlt),
     }
 
-    using_pc_proxy = cboe_pc is None
     pc_label = "VIX/SMA-126 proxy" if using_pc_proxy else "CBOE total P/C"
     print(f"  put_call source: {pc_label}")
 
@@ -294,17 +307,17 @@ def main() -> pd.DataFrame:
     aligned    = align(raw, master_idx)
 
     # 4. Normalize (invert fear components) ───────────────────────────────────
-    INVERT = {"put_call", "volatility", "junk_bond"}
+    INVERT = {"put_call", "volatility", "credit_spread"}
     normed = {name: normalize(s, invert=(name in INVERT))
               for name, s in aligned.items()}
 
     # 5. Assemble ──────────────────────────────────────────────────────────────
-    print("\n[5/5] Assembling index…")
+    print("\n  Assembling index…")
     df = pd.DataFrame(normed).dropna()
     df = df[df.index >= INDEX_START]
 
     components = ["momentum", "strength", "breadth", "put_call",
-                  "volatility", "junk_bond", "safe_haven"]
+                  "volatility", "credit_spread", "safe_haven"]
     df["fear_greed_index"] = df[components].mean(axis=1)
 
     df = df[["fear_greed_index"] + components].round(2)
@@ -312,21 +325,23 @@ def main() -> pd.DataFrame:
     df.to_csv(OUTPUT_FILE)
     print(f"  Saved → {OUTPUT_FILE}  ({len(df):,} rows)")
 
+    # Write metadata for frontend
+    with open(META_FILE, "w") as f:
+        json.dump({"put_call_is_proxy": using_pc_proxy, "last_updated": TODAY}, f)
+    print(f"  Saved → {META_FILE}")
+
     # 6. Validation ────────────────────────────────────────────────────────────
     fg = df["fear_greed_index"]
     print(f"\n{'='*64}")
     print("VALIDATION REPORT")
     print(f"{'='*64}")
-    print(f"  First date           : {df.index[0].date()}")
-    print(f"  Last date            : {df.index[-1].date()}")
-    print(f"  Total trading days   : {len(df):,}")
-    print(f"  put_call source      : {pc_label}")
 
-    print(f"\n  Fear & Greed Index:")
-    print(f"    Min   {fg.min():.2f}   (Extreme Fear)")
-    print(f"    Max   {fg.max():.2f}   (Extreme Greed)")
-    print(f"    Mean  {fg.mean():.2f}")
-    print(f"    Std   {fg.std():.2f}")
+    print(f"First date: {df.index.min().date()}")
+    print(f"Last date:  {df.index.max().date()}")
+    print(f"Rows:       {len(df)}")
+    print(f"Index stats: min={fg.min():.1f}, mean={fg.mean():.1f}, max={fg.max():.1f}")
+
+    print(f"  put_call source      : {pc_label}")
 
     print(f"\n  Distribution:")
     print(f"    Extreme Fear  0–25  : {(fg < 25).sum():5,} days  ({(fg < 25).mean()*100:.1f}%)")
@@ -339,8 +354,8 @@ def main() -> pd.DataFrame:
     xf = df[df["fear_greed_index"] < 20][["fear_greed_index"]].head(10)
     print(xf.to_string() if not xf.empty else "    None in this period")
 
-    print(f"\n  Component Correlation Matrix:")
-    print(df[components].corr().round(3).to_string())
+    print(f"\nComponent correlation matrix:")
+    print(df[components].corr().round(2))
 
     print(f"\n  Latest 5 trading days:")
     print(df.tail(5).to_string())
