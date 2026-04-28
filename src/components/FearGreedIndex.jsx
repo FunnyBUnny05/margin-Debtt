@@ -64,6 +64,7 @@ export function FearGreedIndex({ isMobile }) {
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('5y');
   const [chartType, setChartType] = useState('area');
+  const [meta, setMeta] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -73,10 +74,10 @@ export function FearGreedIndex({ isMobile }) {
         const r = await fetch('./fear_greed_index.csv');
         if (!r.ok) throw new Error('Failed to load Fear & Greed data');
         const text = await r.text();
-        
+
         const lines = text.trim().split(/\r?\n/).filter(Boolean);
         if (lines.length < 2) throw new Error('Invalid CSV data');
-        
+
         const headers = lines[0].split(',').map(h => h.trim());
         const parsed = lines.slice(1).map(line => {
           const cells = line.split(',');
@@ -95,6 +96,8 @@ export function FearGreedIndex({ isMobile }) {
       } finally {
         if (!cancelled) setLoading(false);
       }
+
+      fetch('./fear_greed_meta.json').then(r => r.json()).then(m => { if (!cancelled) setMeta(m); }).catch(() => {});
     };
     load();
     return () => { cancelled = true; };
@@ -168,14 +171,15 @@ export function FearGreedIndex({ isMobile }) {
       </div>
 
       {/* Components Stats */}
-      <div className="responsive-grid" style={{ marginBottom: '1px', gap: '1px', background: '#111827', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)' }}>
+      <div className="responsive-grid" style={{ marginBottom: '1px', gap: '1px', background: '#111827', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)' }}>
         {[
           { key: 'momentum', label: 'MOMENTUM' },
           { key: 'strength', label: 'STRENGTH' },
           { key: 'breadth', label: 'BREADTH' },
           { key: 'put_call', label: 'PUT/CALL' },
           { key: 'volatility', label: 'VOLATILITY' },
-          { key: 'junk_bond', label: 'JUNK BOND' },
+          { key: 'credit_spread', label: 'CREDIT SPREAD' },
+          { key: 'safe_haven', label: 'SAFE HAVEN' },
         ].map(comp => {
           const val = current[comp.key];
           if (val === undefined) return null;
@@ -191,6 +195,9 @@ export function FearGreedIndex({ isMobile }) {
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: stat.color, marginTop: '2px' }}>
                 {stat.label}
               </div>
+              {comp.key === 'put_call' && meta.put_call_is_proxy && (
+                <div style={{ fontSize: '8px', color: '#F59E0B', marginTop: '2px' }}>VIX PROXY</div>
+              )}
             </div>
           );
         })}
