@@ -17,16 +17,17 @@ All data sources verified free and programmatically accessible:
   CBOE CDN            total.csv (P/C ratio)        1995 → today
                       ↳ fallback: VIX/SMA-126 ratio
 
-Why DAAA/DBAA instead of BAMLH0A0HYM2?
-  The BAML/ICE OAS series on FRED are licensed — only ~3 years of history
-  available via fredgraph.csv. DAAA/DBAA (Moody's) are unrestricted and return
-  full daily history since the 1980s. BAA-AAA quality spread captures the same
-  credit-risk sentiment signal; renamed to credit_spread to be accurate.
+Credit spread source (runtime-selected):
+  Prefers ICE BofA HY OAS (BAMLH0A0HYM2) minus IG OAS (BAMLC0A0CM) — true
+  junk spread, highly sensitive to risk-off. After FRED's April 2026 licensing
+  change these may return only ~793 rows; if so, falls back to Moody's DAAA/DBAA
+  which are unrestricted and return full history since the 1980s.
 
-Why sector ETF % above 125-SMA instead of SPX 52-week range position?
-  SPX range position pegs near 100 in any sustained bull market, providing
-  no useful signal. Sector participation (% of 11 SPDR sectors above their
-  125-day SMA) is a true breadth/participation measure.
+Why sector ETF % above 50-SMA instead of SPX 52-week range position?
+  SPX range position pegs near 100 in any sustained bull market. Sector
+  participation (% of 11 SPDR sectors above their 50-day SMA) is a true
+  breadth/participation measure. 50-day (not 125-day) reacts to corrections
+  within 2-3 weeks; 125-day lags too far to register sudden shocks.
 
 Why TLT instead of ^TNX for safe-haven?
   TNX pct_change measures yield % change (e.g. 4.3%→4.1% = -4.7%), which is
@@ -104,18 +105,32 @@ def fetch_sector_data() -> pd.DataFrame:
 
 def fetch_fred_credit() -> tuple:
     """
-    Fetch Moody's daily AAA and BAA corporate bond yields from FRED.
-    Returns full history (1983+/1986+) — no licensing restriction.
+    Prefer ICE BofA HY OAS (BAMLH0A0HYM2) and IG OAS (BAMLC0A0CM) — actual junk/IG spread.
+    After FRED's April 2026 ICE BofA licensing change these may return only ~793 rows (~3 yrs).
+    If either returns < 2000 rows, fall back to Moody's DAAA/DBAA which are unrestricted.
+    Returns (spread_wide, spread_narrow) — wide widens in stress, narrow is the reference.
     """
+    try:
+        print("  [FRED] BAMLH0A0HYM2 (ICE BofA HY OAS) …")
+        hy = _fred_csv("BAMLH0A0HYM2")
+        print(f"         {hy.index[0].date()} → {hy.index[-1].date()}  ({len(hy):,} obs)")
+        print("  [FRED] BAMLC0A0CM   (ICE BofA IG OAS) …")
+        ig = _fred_csv("BAMLC0A0CM")
+        print(f"         {ig.index[0].date()} → {ig.index[-1].date()}  ({len(ig):,} obs)")
+        if len(hy) >= 2000 and len(ig) >= 2000:
+            print("  → Using ICE BofA HY - IG OAS spread (true junk bond spread)")
+            return hy, ig
+        print(f"  → ICE BofA history too short ({len(hy)}/{len(ig)} rows). Falling back to Moody's.")
+    except Exception as e:
+        print(f"  → ICE BofA fetch failed ({e}). Falling back to Moody's.")
+
     print("  [FRED] DAAA (Moody's AAA daily)")
     daaa = _fred_csv("DAAA")
     print(f"         {daaa.index[0].date()} → {daaa.index[-1].date()}  ({len(daaa):,} obs)")
-
     print("  [FRED] DBAA (Moody's BAA daily)")
     dbaa = _fred_csv("DBAA")
     print(f"         {dbaa.index[0].date()} → {dbaa.index[-1].date()}  ({len(dbaa):,} obs)")
-
-    return daaa, dbaa
+    return dbaa, daaa
 
 
 def fetch_cboe_putcall():  # -> pd.Series | None
@@ -171,8 +186,8 @@ def comp_momentum(gspc: pd.Series) -> pd.Series:
 
 
 def comp_strength(sectors: pd.DataFrame) -> pd.Series:
-    """% of sector ETFs trading above their 125-day SMA. Range: 0-1 (normalized to 0-100)."""
-    sma = sectors.rolling(window=125, min_periods=63).mean()
+    """% of sector ETFs above their 50-day SMA. 50-day reacts to corrections within 2-3 weeks."""
+    sma = sectors.rolling(window=50, min_periods=25).mean()
     above = (sectors > sma).astype(float)
     valid = sectors.notna() & sma.notna()
     pct_above = above.where(valid).sum(axis=1) / valid.sum(axis=1).replace(0, np.nan)
@@ -213,13 +228,13 @@ def comp_volatility(vix: pd.Series) -> pd.Series:
     return vix.rename("volatility")
 
 
-def comp_credit_spread(dbaa: pd.Series, daaa: pd.Series) -> pd.Series:
+def comp_credit_spread(wide: pd.Series, narrow: pd.Series) -> pd.Series:
     """
-    Moody's BAA yield minus AAA yield (investment-grade quality credit spread).
+    Wide spread minus narrow spread. Works for HY-IG OAS or BAA-AAA Moody's yield.
     Widens during fear (credit stress), tightens during greed.
     Higher spread = fear → inverted after normalization.
     """
-    return (dbaa - daaa).rename("credit_spread")
+    return (wide - narrow).rename("credit_spread")
 
 
 def comp_safe_haven(gspc: pd.Series, tlt: pd.Series) -> pd.Series:
@@ -278,7 +293,7 @@ def main() -> pd.DataFrame:
     sectors = fetch_sector_data()
 
     print("\n[3/5] Credit spreads (FRED DAAA / DBAA)…")
-    daaa, dbaa = fetch_fred_credit()
+    cred_wide, cred_narrow = fetch_fred_credit()
 
     print("\n[4/5] CBOE Put/Call ratio…")
     cboe_pc = fetch_cboe_putcall()
@@ -295,7 +310,7 @@ def main() -> pd.DataFrame:
         "put_call":      comp_putcall(cboe_pc) if cboe_pc is not None
                          else comp_putcall_proxy(vix),
         "volatility":    comp_volatility(vix),
-        "credit_spread": comp_credit_spread(dbaa, daaa),
+        "credit_spread": comp_credit_spread(cred_wide, cred_narrow),
         "safe_haven":    comp_safe_haven(gspc, tlt),
     }
 
