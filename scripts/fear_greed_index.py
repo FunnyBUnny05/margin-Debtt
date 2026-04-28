@@ -58,7 +58,7 @@ except ImportError:
 FETCH_START  = "1986-01-01"   # earliest needed: DBAA starts 1986-01-02
 INDEX_START  = "1998-01-01"   # effective first output date per spec
 TODAY        = date.today().isoformat()
-OUTPUT_FILE  = "fear_greed_index.csv"
+OUTPUT_FILE  = "public/fear_greed_index.csv"
 NORM_WINDOW  = 730            # rolling normalization window (trading observations)
 NORM_MIN_PER = 365            # min observations before normalization activates
 
