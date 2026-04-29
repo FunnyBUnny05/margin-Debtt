@@ -19,7 +19,7 @@ Z-score (rolling 252d, ±2σ clip) is outlier-robust and matches CNN's spec.
   breadth       : RSP/SPY 20-day return spread              (proxy; CNN uses NYSE McClellan Summation)
                   ↳ fallback: sector McClellan oscillator
   put_call      : CBOE total P/C ratio, 5-day SMA smoothed  (CNN applies ~5d smoothing)
-                  ↳ fallback: VIX/50MA proxy
+                  ↳ fallback: VIX/realized-vol proxy (variance risk premium)
   volatility    : VIX / VIX.rolling(50).mean()              (CNN: "concentrating on 50-day MA")
   credit_spread : ICE BofA HY OAS - IG OAS (or BAA-AAA)    (CNN: junk bond demand)
   safe_haven    : SPX 20d return - TLT 20d return           (CNN exact match)
@@ -309,13 +309,16 @@ def comp_putcall(pc: pd.Series) -> pd.Series:
     return pc.rolling(5, min_periods=3).mean().rename("put_call")
 
 
-def comp_putcall_proxy(vix: pd.Series) -> pd.Series:
+def comp_putcall_proxy(vix: pd.Series, gspc: pd.Series) -> pd.Series:
     """
-    Fallback: VIX / 50-day SMA.
-    NOTE: overlaps with volatility component when CBOE is blocked — flagged in metadata.
+    Fallback: VIX / 20-day realized volatility (variance risk premium).
+    When implied vol (VIX) exceeds actual realized vol, the options market is
+    paying a fear premium — a direct proxy for elevated put buying.
+    Distinct from comp_volatility (VIX/50MA) so the two components don't double-count.
+    Available from full VIX history (1990+).
     """
-    vix_sma = vix.rolling(50, min_periods=25).mean()
-    return (vix / vix_sma).where(vix_sma > 0, np.nan).rename("put_call")
+    rvol = gspc.pct_change().rolling(20, min_periods=10).std() * np.sqrt(252) * 100
+    return (vix / rvol.replace(0, np.nan)).rename("put_call")
 
 
 def comp_volatility(vix: pd.Series) -> pd.Series:
@@ -441,7 +444,7 @@ def main() -> pd.DataFrame:
     cboe_pc = fetch_cboe_putcall()
     using_pc_proxy = cboe_pc is None
     if using_pc_proxy:
-        print("WARNING: Using VIX/50MA proxy for P/C — overlaps with volatility component.",
+        print("WARNING: CBOE blocked. Using VIX/realized-vol proxy for put/call.",
               file=sys.stderr)
 
     # 2. Select sources ────────────────────────────────────────────────────────
@@ -453,7 +456,7 @@ def main() -> pd.DataFrame:
                        else "RSP_SPY_ratio" if has_rsp
                        else "sector_50SMA")
     breadth_source  = "RSP_SPY_20d_spread" if has_rsp else "sector_McClellan"
-    pc_source       = "CBOE_total_5dSMA" if not using_pc_proxy else "VIX_50MA_proxy"
+    pc_source       = "CBOE_total_5dSMA" if not using_pc_proxy else "VIX_realizedvol_proxy"
 
     print(f"\n  Sources: strength={strength_source}  breadth={breadth_source}"
           f"  put_call={pc_source}  credit={credit_source}")
@@ -476,7 +479,7 @@ def main() -> pd.DataFrame:
         "strength":      strength,
         "breadth":       breadth,
         "put_call":      comp_putcall(cboe_pc) if not using_pc_proxy
-                         else comp_putcall_proxy(vix),
+                         else comp_putcall_proxy(vix, gspc),
         "volatility":    comp_volatility(vix),
         "credit_spread": comp_credit_spread(cred_wide, cred_narrow),
         "safe_haven":    comp_safe_haven(gspc, tlt),
