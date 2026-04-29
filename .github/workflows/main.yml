@@ -91,7 +91,11 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json public/buffett_indicator_data.json public/fear_greed_index.csv public/fear_greed_meta.json
+          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json public/buffett_indicator_data.json
+          # Only stage fear & greed outputs if the build step actually wrote them
+          for f in public/fear_greed_index.csv public/fear_greed_meta.json; do
+            [ -f "$f" ] && git add "$f" || echo "Skipping $f (not present)"
+          done
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
