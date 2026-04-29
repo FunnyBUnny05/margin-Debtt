@@ -1,0 +1,27 @@
+{
+  "last_updated": "2026-04-28",
+  "index_start": "2003-07-01",
+  "normalization": "rolling_zscore_252d_clip2sigma",
+  "sources": {
+    "strength": "RSP_SPY_proxy",
+    "breadth": "RSP_SPY_20d_momentum",
+    "put_call": "VIX_50MA_proxy",
+    "credit_spread": "Moodys_BAA_AAA",
+    "volatility": "VIX_vs_50MA",
+    "momentum": "SPX_vs_125MA",
+    "safe_haven": "SPX_minus_TLT_20d"
+  },
+  "known_deviations_from_cnn": [
+    "CNN uses NYSE Volume McClellan Summation Index for breadth; we use RSP/SPY 20d spread",
+    "CNN uses NYSE 52-week H/L for strength; we use RSP/SPY z-score if no Stooq key",
+    "CNN's exact normalization window is undisclosed; we use 252-day rolling z-score \u00b12\u03c3",
+    "Moody's BAA-AAA spread is IG-only, not equivalent to CNN's HY-IG junk spread",
+    "Historical reconstruction will differ from CNN real-time readings (normalization path-dependence)"
+  ],
+  "validation": {
+    "pearson_r": 0.7302900082250999,
+    "rmse": 14.491761478988694,
+    "mae": 11.669307541751582,
+    "n_days": 3828
+  }
+}
