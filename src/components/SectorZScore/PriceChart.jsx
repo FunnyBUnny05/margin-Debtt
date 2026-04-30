@@ -34,7 +34,7 @@ const ZERO_LINE_PLUGIN = {
     const yPixel = yAxis.getPixelForValue(0);
     ctx.save();
     ctx.beginPath();
-    ctx.strokeStyle = '#374151';
+    ctx.strokeStyle = 'rgba(55, 65, 81, 0.5)'; // var(--bb-gray-3) with opacity
     ctx.lineWidth = 1;
     ctx.moveTo(xAxis.left, yPixel);
     ctx.lineTo(xAxis.right, yPixel);
@@ -52,7 +52,7 @@ const buildOptions = (isMobile) => ({
       display: true,
       position: 'top',
       labels: {
-        color: '#9CA3AF',
+        color: '#9CA3AF', // var(--bb-gray-2)
         font: { size: 10, family: 'JetBrains Mono, monospace' },
         usePointStyle: true,
         padding: 12,
@@ -62,7 +62,7 @@ const buildOptions = (isMobile) => ({
     },
     tooltip: {
       enabled: true,
-      backgroundColor: '#0B0F19',
+      backgroundColor: 'var(--bb-black)',
       titleColor: '#F59E0B',
       bodyColor: '#D1D5DB',
       borderColor: '#1F2937',
@@ -89,17 +89,17 @@ const buildOptions = (isMobile) => ({
     x: {
       type: 'time',
       time: { unit: 'year', displayFormats: { year: 'yyyy' } },
-      grid: { color: '#111827', drawBorder: false },
+      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false }, // var(--bb-border-light)
       ticks: {
-        color: '#6B7280',
+        color: '#9CA3AF', // var(--bb-gray-2)
         font: { size: 10, family: 'JetBrains Mono, monospace' },
         maxTicksLimit: isMobile ? 5 : 10
       }
     },
     y: {
-      grid: { color: '#111827', drawBorder: false },
+      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false },
       ticks: {
-        color: '#6B7280',
+        color: '#9CA3AF',
         font: { size: 10, family: 'JetBrains Mono, monospace' },
         callback: (value) => `${value >= 0 ? '+' : ''}${value}%`
       }

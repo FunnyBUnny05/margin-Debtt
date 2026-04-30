@@ -41,10 +41,10 @@ const buildOptions = (isMobile) => ({
     },
     tooltip: {
       enabled: true,
-      backgroundColor: '#0B0F19',
-      titleColor: '#F59E0B',
-      bodyColor: '#D1D5DB',
-      borderColor: '#1F2937',
+      backgroundColor: 'var(--bb-black)',
+      titleColor: '#F59E0B', // var(--bb-yellow)
+      bodyColor: '#D1D5DB', // var(--bb-gray-1)
+      borderColor: '#1F2937', // var(--bb-border)
       borderWidth: 1,
       padding: 10,
       cornerRadius: 0,
@@ -92,9 +92,9 @@ const buildOptions = (isMobile) => ({
     x: {
       type: 'time',
       time: { unit: 'year', displayFormats: { year: 'yyyy' } },
-      grid: { color: '#111827', drawBorder: false },
+      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false }, // var(--bb-border-light)
       ticks: {
-        color: '#6B7280',
+        color: '#9CA3AF', // var(--bb-gray-2)
         font: { size: 10, family: 'JetBrains Mono, monospace' },
         maxTicksLimit: isMobile ? 5 : 10
       }
@@ -102,9 +102,9 @@ const buildOptions = (isMobile) => ({
     y: {
       min: -6,
       max: 6,
-      grid: { color: '#111827', drawBorder: false },
+      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false },
       ticks: {
-        color: '#6B7280',
+        color: '#9CA3AF',
         font: { size: 10, family: 'JetBrains Mono, monospace' },
         stepSize: 2
       }
@@ -119,9 +119,9 @@ const REFERENCE_LINE_PLUGIN = {
     const yAxis = chart.scales.y;
     const xAxis = chart.scales.x;
     const lines = [
-      { y: 2, color: '#EF444466' },
-      { y: 0, color: '#374151' },
-      { y: -2, color: '#10B98166' }
+      { y: 2, color: '#EF444466' }, // var(--bb-red) w/ opacity
+      { y: 0, color: '#4B5563' },   // var(--bb-gray-3)
+      { y: -2, color: '#10B98166' } // var(--bb-green) w/ opacity
     ];
     lines.forEach((line) => {
       const yPixel = yAxis.getPixelForValue(line.y);

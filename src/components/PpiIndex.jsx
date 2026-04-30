@@ -108,13 +108,13 @@ export function PpiIndex({ isMobile }) {
   }, []);
 
   if (loading) return (
-    <div className="glass-card" style={{ padding: '40px', textAlign: 'center', marginTop: '1px' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: '#F59E0B', letterSpacing: 2 }} className="pulse-animation">LOADING PPI...</div>
+    <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-yellow)', letterSpacing: '2px' }} className="pulse-animation">LOADING PPI...</div>
     </div>
   );
   if (error) return (
-    <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px', borderLeft: '3px solid #EF4444' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', color: '#EF4444', fontSize: 13 }}>ERROR: {error}</div>
+    <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px', borderTop: '3px solid var(--bb-red)' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-red)', fontSize: '14px', letterSpacing: '1px', fontWeight: '700' }}>ERROR: {error}</div>
     </div>
   );
 
@@ -145,87 +145,83 @@ export function PpiIndex({ isMobile }) {
   return (
     <>
       {/* Series toggle + time range – inline */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto' }}>
+      <div className="mobile-scroll" style={{ display: 'flex', gap: '16px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', alignItems: 'center' }}>
         {/* Series toggle */}
-        {[{ k: 'unadj', l: 'NSA' }, { k: 'adj', l: 'SA' }].map(({ k, l }) => (
-          <button key={k} onClick={() => setSeries(k)} style={{
-            padding: isMobile ? '10px 18px' : '7px 14px',
-            fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px',
-            background: series === k ? '#2D1E00' : 'transparent',
-            color: series === k ? '#F59E0B' : '#6B7280',
-            border: 'none', borderRight: '1px solid #1F2937',
-            borderBottom: series === k ? '2px solid #F59E0B' : '2px solid transparent',
-            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-            minHeight: isMobile ? 44 : 'auto',
-          }}>
-            {l}
-          </button>
-        ))}
-        <div style={{ width: 1, background: '#374151', margin: '4px 0' }} />
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {[{ k: 'unadj', l: 'NSA' }, { k: 'adj', l: 'SA' }].map(({ k, l }) => (
+            <button
+              key={k}
+              onClick={() => setSeries(k)}
+              className={`bb-tab ${series === k ? 'active' : ''}`}
+              style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+        <div style={{ width: '1px', height: '24px', background: 'var(--bb-border-light)' }} />
         {/* Time range */}
-        {['2y', '5y', '10y', 'all'].map(r => (
-          <button key={r} onClick={() => setTimeRange(r)} style={{
-            padding: isMobile ? '10px 18px' : '7px 14px',
-            fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.5px',
-            background: timeRange === r ? '#2D1E00' : 'transparent',
-            color: timeRange === r ? '#F59E0B' : '#6B7280',
-            border: 'none', borderRight: '1px solid #111827',
-            borderBottom: timeRange === r ? '2px solid #F59E0B' : '2px solid transparent',
-            cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-            minHeight: isMobile ? 44 : 'auto',
-          }}>
-            {r.toUpperCase()}
-          </button>
-        ))}
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {['2y', '5y', '10y', 'all'].map(r => (
+            <button
+              key={r}
+              onClick={() => setTimeRange(r)}
+              className={`bb-tab ${timeRange === r ? 'active' : ''}`}
+              style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
+            >
+              {r.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="responsive-grid" style={{ marginTop: '1px', marginBottom: '1px', gap: '1px', background: '#111827' }}>
-        <div className="stat-card" style={{ borderLeft: `3px solid ${momColor(latestMom)}`, padding: '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '20px' }}>
+        <div className="stat-card" style={{ borderTop: `3px solid ${momColor(latestMom)}` }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             MOM CHANGE ({latest?.date})
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: momColor(latestMom) }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: momColor(latestMom) }}>
             {latestMom != null ? `${latestMom > 0 ? '+' : ''}${latestMom.toFixed(2)}%` : 'N/A'}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#6B7280', marginTop: 4 }}>{seriesLabel}</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>{seriesLabel}</div>
         </div>
 
-        <div className="stat-card" style={{ borderLeft: `3px solid ${yoyColor(latestYoy)}`, padding: '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        <div className="stat-card" style={{ borderTop: `3px solid ${yoyColor(latestYoy)}` }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             YOY CHANGE
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: yoyColor(latestYoy) }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: yoyColor(latestYoy) }}>
             {latestYoy != null ? `${latestYoy > 0 ? '+' : ''}${latestYoy.toFixed(2)}%` : 'N/A'}
           </div>
         </div>
 
-        <div className="stat-card" style={{ borderLeft: '3px solid #FCD34D', padding: '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid var(--bb-yellow)' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             INDEX LEVEL
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 24 : 28, fontWeight: 700, color: '#FCD34D' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-yellow)' }}>
             {latest?.index?.toFixed(1)}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#6B7280', marginTop: 4 }}>Base: Nov 2009 = 100</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>Base: Nov 2009 = 100</div>
         </div>
 
-        <div className="stat-card" style={{ borderLeft: '3px solid #9CA3AF', padding: '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: 10, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        <div className="stat-card" style={{ borderTop: '3px solid var(--bb-gray-2)' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             YOY RANGE (ALL-TIME)
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? 14 : 18, fontWeight: 700, color: '#9CA3AF' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '16px' : '20px', fontWeight: '700', color: 'var(--bb-gray-1)' }}>
             {minYoy.toFixed(1)}% – {maxYoy.toFixed(1)}%
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#6B7280', marginTop: 4 }}>AVG: {avgYoy}%</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>AVG: {avgYoy}%</div>
         </div>
       </div>
 
       {/* MoM Bar Chart */}
-      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+      <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '100ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — MONTH-OVER-MONTH % CHANGE</span>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton
               data={filtered}
               filename={`ppi_mom_${series}`}
@@ -238,34 +234,38 @@ export function PpiIndex({ isMobile }) {
             <ChartToggle type={ppiMomType} setType={setPpiMomType} />
           </div>
         </div>
-        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+        <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
                 interval={chartInterval}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={v => `${v > 0 ? '+' : ''}${v.toFixed(1)}%`}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={0} stroke="#4B5563" strokeWidth={1} />
-              <ReferenceLine y={0.5}  stroke="#EF4444" strokeDasharray="4 4" strokeOpacity={0.6}
-                label={{ value: '+0.5%', fill: '#EF4444', fontSize: 9 }} />
-              <ReferenceLine y={-0.5} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.6}
-                label={{ value: '-0.5%', fill: '#10B981', fontSize: 9 }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(245, 158, 11, 0.05)' }} />
+              <ReferenceLine y={0} stroke="var(--bb-gray-3)" strokeWidth={1} />
+              <ReferenceLine y={0.5}  stroke="var(--bb-red)" strokeDasharray="4 4" strokeOpacity={0.6}
+                label={{ value: '+0.5%', fill: 'var(--bb-red)', fontSize: 9 }} />
+              <ReferenceLine y={-0.5} stroke="var(--bb-green)" strokeDasharray="4 4" strokeOpacity={0.6}
+                label={{ value: '-0.5%', fill: 'var(--bb-green)', fontSize: 9 }} />
               {ppiMomType === 'bar' ? (
                 <Bar
                   dataKey="mom"
                   name="MoM %"
-                  radius={[2, 2, 0, 0]}
-                  fill="#F59E0B"
+                  radius={[4, 4, 0, 0]}
+                  fill="var(--bb-yellow)"
                   label={false}
                   cell={filtered.map((entry, i) => (
                     { fill: momColor(entry.mom) }
@@ -276,26 +276,26 @@ export function PpiIndex({ isMobile }) {
                   type="monotone"
                   dataKey="mom"
                   name="MoM %"
-                  stroke="#F59E0B"
+                  stroke="var(--bb-yellow)"
                   strokeWidth={2}
                   dot={false}
                 />
               )}
             </ComposedChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: 10 }}>
-            <div className="badge badge-warning" style={{ background: '#450A0A', color: '#EF4444', border: '1px solid #EF4444' }}>HOT (&gt;+0.5%)</div>
-            <div className="badge" style={{ background: '#2D1E00', color: '#F59E0B', border: '1px solid #F59E0B' }}>WARM (0–+0.5%)</div>
-            <div className="badge badge-success">COOLING (&lt;0%)</div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)' }}>HOT (&gt;+0.5%)</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.1)' }}>WARM (0–+0.5%)</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)' }}>COOLING (&lt;0%)</div>
           </div>
         </div>
       </div>
 
       {/* YoY Line Chart */}
-      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+      <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — YEAR-OVER-YEAR % CHANGE</span>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton
               data={filtered.filter(d => d.yoy !== null)}
               filename={`ppi_yoy_${series}`}
@@ -308,57 +308,61 @@ export function PpiIndex({ isMobile }) {
             <ChartToggle type={ppiYoyType} setType={setPpiYoyType} />
           </div>
         </div>
-        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+        <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
             <ComposedChart data={filtered.filter(d => d.yoy !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="ppiYoyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="var(--bb-yellow)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="var(--bb-yellow)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
                 interval={chartInterval}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={v => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={0}  stroke="#4B5563" strokeWidth={1} />
-              <ReferenceLine y={2}  stroke="#F59E0B" strokeDasharray="4 4" strokeOpacity={0.7}
-                label={{ value: 'Fed target ~2%', fill: '#F59E0B', fontSize: 9 }} />
-              <ReferenceLine y={4}  stroke="#EF4444" strokeDasharray="4 4" strokeOpacity={0.6}
-                label={{ value: '+4%', fill: '#EF4444', fontSize: 9 }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(245, 158, 11, 0.05)' }} />
+              <ReferenceLine y={0}  stroke="var(--bb-gray-3)" strokeWidth={1} />
+              <ReferenceLine y={2}  stroke="var(--bb-yellow)" strokeDasharray="4 4" strokeOpacity={0.7}
+                label={{ value: 'Fed target ~2%', fill: 'var(--bb-yellow)', fontSize: 9 }} />
+              <ReferenceLine y={4}  stroke="var(--bb-red)" strokeDasharray="4 4" strokeOpacity={0.6}
+                label={{ value: '+4%', fill: 'var(--bb-red)', fontSize: 9 }} />
               {ppiYoyType === 'line' ? (
                 <Line
-                  type="monotone" dataKey="yoy" stroke="#F59E0B" strokeWidth={2.5}
+                  type="monotone" dataKey="yoy" stroke="var(--bb-yellow)" strokeWidth={3}
                   dot={false} name="YoY %"
                 />
               ) : (
-                <Bar dataKey="yoy" fill="#F59E0B" name="YoY %" />
+                <Bar dataKey="yoy" fill="var(--bb-yellow)" radius={[4, 4, 0, 0]} name="YoY %" />
               )}
             </ComposedChart>
           </ResponsiveContainer>
-          <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: 10 }}>
-            <div className="badge" style={{ background: '#450A0A', color: '#EF4444', border: '1px solid #EF4444' }}>DANGER (&gt;4%)</div>
-            <div className="badge" style={{ background: '#2D1E00', color: '#F59E0B', border: '1px solid #F59E0B' }}>FED TARGET (~2%)</div>
-            <div className="badge badge-success">DEFLATIONARY (&lt;0%)</div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)' }}>DANGER (&gt;4%)</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.1)' }}>FED TARGET (~2%)</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)' }}>DEFLATIONARY (&lt;0%)</div>
           </div>
         </div>
       </div>
 
       {/* Index Level Chart */}
-      <div className="glass-card" style={{ padding: 0, marginTop: '1px', marginBottom: '1px' }}>
+      <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '300ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>PPI FINAL DEMAND — INDEX LEVEL (BASE: NOV 2009 = 100)</span>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton
               data={filtered}
               filename={`ppi_index_level_${series}`}
@@ -372,37 +376,41 @@ export function PpiIndex({ isMobile }) {
             <ChartToggle type={ppiIndexType} setType={setPpiIndexType} />
           </div>
         </div>
-        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+        <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 180 : 240}>
             <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="ppiIndexGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#FCD34D" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#FCD34D" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="var(--bb-yellow)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--bb-yellow)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+              <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
                 interval={chartInterval}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
-                stroke="#374151"
-                tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                stroke="var(--bb-gray-3)"
+                tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={v => v.toFixed(0)}
                 domain={['auto', 'auto']}
+                axisLine={false}
+                tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(245, 158, 11, 0.05)' }} />
               {ppiIndexType === 'line' ? (
                 <Line
-                  type="monotone" dataKey="index" stroke="#FCD34D" strokeWidth={2}
+                  type="monotone" dataKey="index" stroke="var(--bb-yellow)" strokeWidth={2}
                   dot={false} name="Index" fill="url(#ppiIndexGrad)"
                 />
               ) : (
-                <Bar dataKey="index" fill="#FCD34D" name="Index" />
+                <Bar dataKey="index" fill="var(--bb-yellow)" radius={[4, 4, 0, 0]} name="Index" />
               )}
             </ComposedChart>
           </ResponsiveContainer>
@@ -410,12 +418,12 @@ export function PpiIndex({ isMobile }) {
       </div>
 
       {/* About */}
-      <div className="glass-card" style={{ padding: 0, marginTop: '1px', borderLeft: '3px solid #F59E0B' }}>
-        <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: 700, color: '#F59E0B', fontSize: 10, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div className="glass-card animate-in" style={{ padding: '16px 20px', borderLeft: '3px solid var(--bb-yellow)', animationDelay: '400ms' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
             ABOUT PPI FINAL DEMAND
           </div>
-          <p style={{ fontFamily: 'var(--font-mono)', color: '#D1D5DB', fontSize: 12, lineHeight: '1.6', margin: 0 }}>
+          <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-1)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
             The Producer Price Index (PPI) Final Demand measures average changes in prices received by domestic
             producers for their output sold for final demand — consumption, investment, government and exports.
             Published monthly by the Bureau of Labor Statistics, PPI is a leading indicator of consumer inflation (CPI),

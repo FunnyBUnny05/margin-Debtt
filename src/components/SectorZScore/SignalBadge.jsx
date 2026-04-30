@@ -3,18 +3,18 @@ import { SIGNAL_THRESHOLDS } from './constants';
 
 const getSignal = (zScore) => {
   if (zScore === null || zScore === undefined) {
-    return { label: 'N/A', color: '#4B5563', bg: '#0B0F19', border: '#374151' };
+    return { label: 'N/A', color: 'var(--bb-gray-2)', bg: 'rgba(0, 0, 0, 0.2)', border: 'var(--bb-border-light)' };
   }
   if (zScore <= SIGNAL_THRESHOLDS.CYCLICAL_LOW) {
-    return { label: 'CYCLIC LOW', color: '#10B981', bg: '#064E3B', border: '#10B981' };
+    return { label: 'CYCLIC LOW', color: 'var(--bb-green)', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.3)' };
   }
   if (zScore <= SIGNAL_THRESHOLDS.CHEAP) {
-    return { label: 'CHEAP', color: '#38BDF8', bg: '#082F49', border: '#38BDF8' };
+    return { label: 'CHEAP', color: 'var(--bb-cyan)', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.3)' };
   }
   if (zScore >= SIGNAL_THRESHOLDS.EXTENDED) {
-    return { label: 'EXTENDED', color: '#EF4444', bg: '#450A0A', border: '#EF4444' };
+    return { label: 'EXTENDED', color: 'var(--bb-red)', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' };
   }
-  return { label: 'NEUTRAL', color: '#6B7280', bg: '#111827', border: '#374151' };
+  return { label: 'NEUTRAL', color: 'var(--bb-gray-2)', bg: 'rgba(255, 255, 255, 0.05)', border: 'var(--bb-border-light)' };
 };
 
 export const SignalBadge = ({ zScore }) => {
@@ -24,8 +24,8 @@ export const SignalBadge = ({ zScore }) => {
     <span
       style={{
         padding: '2px 6px',
-        borderRadius: '0',
-        fontFamily: 'JetBrains Mono, monospace',
+        borderRadius: '4px',
+        fontFamily: 'var(--font-mono)',
         fontSize: '9px',
         fontWeight: '700',
         color: signal.color,

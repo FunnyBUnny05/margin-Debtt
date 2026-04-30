@@ -33,21 +33,21 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
         }}
       >
         {sorted.map((sector) => (
-          <div key={sector.symbol} style={{ borderBottom: '1px solid #111827' }}>
+          <div key={sector.symbol} style={{ borderBottom: '1px solid var(--bb-border-light)' }}>
             <div
               onClick={() => onSelect(sector.symbol)}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '8px 12px',
+                padding: '12px 16px',
                 cursor: 'pointer',
-                background: selectedSector === sector.symbol ? '#78350F' : 'transparent',
-                borderLeft: selectedSector === sector.symbol ? '3px solid #F59E0B' : '3px solid transparent',
+                background: selectedSector === sector.symbol ? 'var(--bb-panel-alt)' : 'transparent',
+                borderLeft: selectedSector === sector.symbol ? '3px solid var(--bb-yellow)' : '3px solid transparent',
               }}
               onMouseEnter={(e) => {
                 if (selectedSector !== sector.symbol) {
-                  e.currentTarget.style.background = '#111827';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -57,15 +57,15 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                <div style={{ width: '6px', height: '6px', background: sector.color, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#F9FAFB', fontSize: '12px', fontWeight: '700' }}>
+                <div style={{ width: '8px', height: '8px', background: sector.color, flexShrink: 0, borderRadius: '50%' }} />
+                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '13px', fontWeight: '700' }}>
                   {sector.symbol}
                 </span>
                 {!isMobile && (
                   <span style={{
                     fontFamily: 'var(--font-ui)',
-                    color: '#6B7280',
-                    fontSize: '10px',
+                    color: 'var(--bb-gray-2)',
+                    fontSize: '11px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -76,26 +76,26 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                   </span>
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 <button
                   onClick={(e) => toggleExpand(sector.symbol, e)}
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#4B5563',
+                    color: 'var(--bb-gray-2)',
                     cursor: 'pointer',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11px',
                     padding: '2px 4px',
                   }}
                 >
                   {expandedSector === sector.symbol ? '[-]' : '[+]'}
                 </button>
                 <span style={{
-                  fontFamily: 'JetBrains Mono, monospace',
-                  color: sector.currentZScore < 0 ? '#10B981' : '#EF4444',
+                  fontFamily: 'var(--font-mono)',
+                  color: sector.currentZScore < 0 ? 'var(--bb-green)' : 'var(--bb-red)',
                   fontWeight: '700',
-                  fontSize: '12px',
+                  fontSize: '13px',
                   minWidth: '46px',
                   textAlign: 'right'
                 }}>
@@ -107,37 +107,37 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
 
             {/* Expanded Details */}
             {expandedSector === sector.symbol && sector.structuralBaseline !== null && (
-              <div style={{
-                padding: '10px 12px 10px 15px',
-                background: '#0B0F19',
-                borderLeft: '3px solid #1F2937',
-                fontFamily: 'JetBrains Mono, monospace',
+              <div className="animate-in" style={{
+                padding: '12px 16px',
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderLeft: '3px solid var(--bb-border-light)',
+                fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
                 lineHeight: '1.6'
               }}>
-                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
                   CURRENT BREAKDOWN
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>STRUCT BASELINE:</span>
-                    <span style={{ color: sector.structuralBaseline < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
+                    <span style={{ color: 'var(--bb-gray-2)' }}>STRUCT BASELINE:</span>
+                    <span style={{ color: sector.structuralBaseline < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
                       {sector.structuralBaseline >= 0 ? '+' : ''}{sector.structuralBaseline.toFixed(2)}%
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>REL RETURN:</span>
-                    <span style={{ color: sector.relativeReturn < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
+                    <span style={{ color: 'var(--bb-gray-2)' }}>REL RETURN:</span>
+                    <span style={{ color: sector.relativeReturn < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
                       {sector.relativeReturn >= 0 ? '+' : ''}{sector.relativeReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '4px', marginTop: '4px', borderTop: '1px solid #111827' }}>
-                    <span style={{ color: '#9CA3AF', fontWeight: '700' }}>EXCESS RETURN:</span>
-                    <span style={{ color: sector.excessReturn < 0 ? '#EF4444' : '#10B981', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', marginTop: '6px', borderTop: '1px solid var(--bb-border-light)' }}>
+                    <span style={{ color: 'var(--bb-gray-1)', fontWeight: '700' }}>EXCESS RETURN:</span>
+                    <span style={{ color: sector.excessReturn < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
                       {sector.excessReturn >= 0 ? '+' : ''}{sector.excessReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ marginTop: '4px', padding: '4px 8px', background: '#0B0F19', fontSize: '10px', color: '#6B7280', fontFamily: 'var(--font-ui)' }}>
+                  <div style={{ marginTop: '8px', padding: '6px 8px', background: 'rgba(255, 255, 255, 0.05)', fontSize: '11px', color: 'var(--bb-gray-2)', fontFamily: 'var(--font-ui)' }}>
                     {sector.excessReturn !== null && sector.excessReturn !== undefined && (
                       <>
                         {sector.excessReturn < -5
@@ -155,7 +155,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
 
                   {/* Limited history warning for young ETFs */}
                   {sector.dataPoints != null && sector.dataPoints < 700 && (
-                    <div style={{ marginTop: '6px', padding: '4px 8px', background: '#1C1400', border: '1px solid #78350F', fontSize: '10px', color: '#FCD34D', fontFamily: 'var(--font-ui)' }}>
+                    <div style={{ marginTop: '8px', padding: '6px 8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', fontSize: '11px', color: 'var(--bb-yellow)', fontFamily: 'var(--font-ui)' }}>
                       Limited history ({sector.dataPoints} wks) — signals may be less reliable
                     </div>
                   )}
@@ -181,30 +181,30 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                     const extendedPct = (extendedCount / totalPoints) * 100;
 
                     return (
-                      <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #111827' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--bb-border-light)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
                           HISTORICAL TIME SPENT
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>CYCLIC LOW (&le;-2):</span>
-                            <span style={{ color: '#10B981', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--bb-gray-2)' }}>CYCLIC LOW (&le;-2):</span>
+                            <span style={{ color: 'var(--bb-green)', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>CHEAP (-2 TO -1):</span>
-                            <span style={{ color: '#38BDF8', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--bb-gray-2)' }}>CHEAP (-2 TO -1):</span>
+                            <span style={{ color: 'var(--bb-cyan)', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>NEUTRAL (-1 TO +1]:</span>
-                            <span style={{ color: '#6B7280', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--bb-gray-2)' }}>NEUTRAL (-1 TO +1]:</span>
+                            <span style={{ color: 'var(--bb-gray-2)', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>SOMEWHAT EXT (+1 TO +2):</span>{/* range: 1 < z < 2, exclusive on both ends */}
-                            <span style={{ color: '#FCD34D', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--bb-gray-2)' }}>SOMEWHAT EXT (+1 TO +2):</span>
+                            <span style={{ color: 'var(--bb-yellow)', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: '#6B7280' }}>EXTENDED (&ge;+2):</span>
-                            <span style={{ color: '#EF4444', fontWeight: '700' }}>{extendedPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--bb-gray-2)' }}>EXTENDED (&ge;+2):</span>
+                            <span style={{ color: 'var(--bb-red)', fontWeight: '700' }}>{extendedPct.toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>
@@ -217,8 +217,8 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
         ))}
         {sorted.length === 0 && (
           <div style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            color: '#4B5563',
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--bb-gray-2)',
             textAlign: 'center',
             padding: '32px 20px',
             fontSize: '12px'

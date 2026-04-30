@@ -89,28 +89,28 @@ const parseFinraMarginCsv = (text) => {
 };
 
 const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-    <button
-      onClick={() => setType('bar')}
-      style={{
-        background: type === 'bar' ? '#4B5563' : 'transparent',
-        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      BAR
-    </button>
-  </div>
+    <div style={{ display: 'flex', background: 'var(--bb-black)', border: '1px solid var(--bb-border)', overflow: 'hidden', borderRadius: '2px' }}>
+      <button
+        onClick={() => setType('line')}
+        style={{
+          background: type === 'line' ? 'var(--bb-border-light)' : 'transparent',
+          color: type === 'line' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
+          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+        }}
+      >
+        LINE
+      </button>
+      <button
+        onClick={() => setType('bar')}
+        style={{
+          background: type === 'bar' ? 'var(--bb-border-light)' : 'transparent',
+          color: type === 'bar' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
+          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
+        }}
+      >
+        BAR
+      </button>
+    </div>
 );
 
 export default function App() {
@@ -124,7 +124,6 @@ export default function App() {
   const [dataSource, setDataSource] = useState('margin');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 640);
 
-  // Chart type toggles
   const [marginMainType, setMarginMainType] = useState('line');
   const [marginYoyType, setMarginYoyType] = useState('line');
   const [aaiiAllocType, setAaiiAllocType] = useState('line');
@@ -144,7 +143,6 @@ export default function App() {
       setError(null);
 
       const loadMarginData = async () => {
-        // Try fetching live data from FINRA first (direct, then via proxies)
         const urlsToTry = [
           FINRA_CSV_URL,
           ...CORS_PROXIES.map(fn => fn(FINRA_CSV_URL))
@@ -171,11 +169,9 @@ export default function App() {
               return;
             }
           } catch {
-            // try next URL
           }
         }
 
-        // Fall back to bundled JSON
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load margin data');
         const json = await res.json();
@@ -209,7 +205,6 @@ export default function App() {
         await Promise.all([
           loadMarginData(),
           loadAaiiData().catch(() => {
-            // AAII data is optional, don't fail if missing
           })
         ]);
       } catch (err) {
@@ -334,7 +329,6 @@ export default function App() {
     data.forEach((point, idx) => {
       if (point.yoy_growth == null || !isFinite(point.yoy_growth)) return;
 
-      // Track periods above +30%
       if (point.yoy_growth >= 30) {
         if (!currentAbovePeriod) {
           currentAbovePeriod = { start: idx, count: 1 };
@@ -348,7 +342,6 @@ export default function App() {
         }
       }
 
-      // Track periods below -30%
       if (point.yoy_growth <= -30) {
         if (!currentBelowPeriod) {
           currentBelowPeriod = { start: idx, count: 1 };
@@ -363,7 +356,6 @@ export default function App() {
       }
     });
 
-    // Determine current status
     const latestPoint = data[data.length - 1];
     let currentStatus = 'neutral';
     let currentDuration = 0;
@@ -378,7 +370,6 @@ export default function App() {
       }
     }
 
-    // Handle completed periods (not ongoing)
     const completedAbove = currentStatus === 'above30' ? aboveThirty : [...aboveThirty];
     const completedBelow = currentStatus === 'belowNeg30' ? belowNegThirty : [...belowNegThirty];
 
@@ -416,40 +407,33 @@ export default function App() {
   return (
     <div className="app-background" style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Bloomberg Topbar */}
-        <div style={{ background: '#F59E0B', padding: '0', marginBottom: '0', display: 'flex', alignItems: 'stretch' }}>
-          <div className="bb-topbar-brand" style={{ padding: '8px 16px', borderRight: '1px solid #D97706', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '900', fontSize: '16px', color: '#000', letterSpacing: '1px' }}>BLOOMBERG</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '400', fontSize: '16px', color: '#000', marginLeft: '6px', opacity: 0.7 }}>FINANCIAL</span>
+        <div className="bb-panel" style={{ margin: isMobile ? '8px' : '16px 0', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div className="bb-topbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '0%', background: 'var(--bb-cyan)' }}></div>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '800', fontSize: '18px', color: 'var(--bb-white)', letterSpacing: '1.5px' }}>STOCK</span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '300', fontSize: '18px', color: 'var(--bb-cyan)', letterSpacing: '1px' }}>SENTINEL</span>
           </div>
-          <div style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#000', opacity: 0.8, letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {dataSource === 'margin' ? 'FINRA MARGIN DEBT TRACKER' : dataSource === 'aaii' ? 'AAII ASSET ALLOCATION SURVEY' : dataSource === 'sectors' ? 'SECTOR Z-SCORE DASHBOARD' : dataSource === 'sofr' ? 'SECURED OVERNIGHT FINANCING RATE (SOFR)' : dataSource === 'ppi' ? 'PRODUCER PRICE INDEX — FINAL DEMAND' : dataSource === 'fear_greed' ? 'FEAR & GREED INDEX' : 'BUFFETT INDICATOR'}
-            </span>
-          </div>
-          {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-            <div className="bb-topbar-date" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', borderLeft: '1px solid #D97706', flexShrink: 0 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#000', opacity: 0.8 }}>
-                UPD: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '600', fontSize: '12px', color: 'var(--bb-gray-2)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : dataSource === 'aaii' ? 'AAII Asset Allocation Survey' : dataSource === 'sectors' ? 'Sector Z-Score Dashboard' : dataSource === 'sofr' ? 'Secured Overnight Financing Rate' : dataSource === 'ppi' ? 'Producer Price Index' : dataSource === 'fear_greed' ? 'Fear & Greed Index' : 'Buffett Indicator'}
               </span>
+              {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
+                <span className="bb-topbar-date" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bb-cyan)' }}>
+                  UPDATED: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Subtitle bar */}
-        <div style={{ background: '#111827', borderBottom: '1px solid #1F2937', padding: '6px 16px', marginBottom: '0' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#6B7280' }}>
-            {dataSource === 'margin' ? 'Securities margin account debit balances (USD billions)' : dataSource === 'aaii' ? 'Individual investor asset allocation trends (%)' : dataSource === 'sectors' ? 'Relative sector performance analysis vs benchmark' : dataSource === 'sofr' ? 'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed' : dataSource === 'ppi' ? 'Monthly price changes received by domestic producers — BLS' : dataSource === 'fear_greed' ? 'Composite market sentiment driven by 7 distinct market indicators' : "Berkshire Hathaway annual cash & T-bill holdings"}
-          </span>
-        </div>
-
-        {/* Data Source Tabs */}
-        <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {[
-            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'FINRA MARGIN DEBT' },
-            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII ALLOCATION' },
+            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'MARGIN DEBT' },
+            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII SURVEY' },
             { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
-            { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT INDICATOR' },
+            { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT IND' },
             { key: 'sofr',    label: isMobile ? 'SOFR'    : 'SOFR RATE' },
             { key: 'ppi',     label: isMobile ? 'PPI'     : 'PPI INDEX' },
             { key: 'fear_greed', label: isMobile ? 'F&G' : 'FEAR & GREED' },
@@ -457,52 +441,22 @@ export default function App() {
             <button
               key={key}
               onClick={() => setDataSource(key)}
-              style={{
-                padding: '10px 18px',
-                fontFamily: 'var(--font-ui)',
-                fontWeight: '700',
-                fontSize: '11px',
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-                border: 'none',
-                borderRight: '1px solid #1F2937',
-                borderBottom: dataSource === key ? '2px solid #F59E0B' : '2px solid transparent',
-                cursor: 'pointer',
-                background: dataSource === key ? '#111827' : 'transparent',
-                color: dataSource === key ? '#F59E0B' : '#6B7280',
-                transition: 'all 0.1s ease',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
+              className={`bb-tab ${dataSource === key ? 'active' : ''}`}
+              style={{ flexShrink: 0 }}
             >
               {label}
             </button>
           ))}
         </div>
 
-        {/* Time Range Buttons */}
         {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
-          <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '0', borderBottom: '1px solid #1F2937', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             {['2y', '5y', '10y', 'all'].map(range => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                style={{
-                  padding: isMobile ? '10px 20px' : '7px 16px',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  letterSpacing: '0.5px',
-                  background: timeRange === range ? '#78350F' : 'transparent',
-                  color: timeRange === range ? '#F59E0B' : '#6B7280',
-                  border: 'none',
-                  borderRight: '1px solid #111827',
-                  borderBottom: timeRange === range ? '2px solid #F59E0B' : '2px solid transparent',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  minHeight: isMobile ? '44px' : 'auto',
-                }}
+                className={`bb-tab ${timeRange === range ? 'active' : ''}`}
+                style={{ padding: '6px 16px', fontSize: '12px', flexShrink: 0 }}
               >
                 {range.toUpperCase()}
               </button>
@@ -510,50 +464,47 @@ export default function App() {
           </div>
         )}
 
-        {/* MARGIN DATA SOURCE */}
         {dataSource === 'margin' && (
           <>
-            {/* Key Metrics */}
-            <div className="responsive-grid" style={{ marginBottom: '1px', marginTop: '1px', gap: '1px', background: '#111827' }}>
-              <div className="stat-card" style={{ borderLeft: '3px solid #F59E0B', padding: '12px 16px' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
+              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   CURRENT ({currentDebt.date})
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#F59E0B' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                   ${currentDebt.margin_debt_bn.toFixed(0)}B
                 </div>
               </div>
-              <div className="stat-card" style={{ borderLeft: `3px solid ${currentDebt.yoy_growth > 0 ? '#EF4444' : '#10B981'}`, padding: '12px 16px' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              <div className="stat-card" style={{ borderTop: `3px solid ${currentDebt.yoy_growth > 0 ? 'var(--bb-red)' : 'var(--bb-green)'}` }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: currentDebt.yoy_growth > 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   YOY GROWTH
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: currentDebt.yoy_growth > 0 ? '#EF4444' : '#10B981' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                   {currentDebt.yoy_growth != null ? `${currentDebt.yoy_growth > 0 ? '+' : ''}${currentDebt.yoy_growth.toFixed(1)}%` : 'N/A'}
                 </div>
               </div>
-              <div className="stat-card" style={{ borderLeft: '3px solid #FCD34D', padding: '12px 16px' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-yellow)' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-yellow)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   VS 2021 PEAK
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#FCD34D' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                   {currentDebt.margin_debt >= peak2021.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2021.margin_debt - 1) * 100).toFixed(0)}%
                 </div>
               </div>
-              <div className="stat-card" style={{ borderLeft: '3px solid #38BDF8', padding: '12px 16px' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-purple)' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-purple)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   VS 2000 PEAK
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#38BDF8' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                   {currentDebt.margin_debt >= peak2000.margin_debt ? '+' : ''}{((currentDebt.margin_debt / peak2000.margin_debt - 1) * 100).toFixed(0)}%
                 </div>
               </div>
             </div>
 
-            {/* Margin Debt Chart */}
-            <div className="glass-card" style={{ padding: isMobile ? '0' : '0', marginBottom: '1px', marginTop: '1px' }}>
+            <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px' }}>
               <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>MARGIN DEBT OVER TIME</span>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <ExportCsvButton
                     data={filteredData.map(d => ({ date: d.date, margin_debt_millions: d.margin_debt, margin_debt_billions: d.margin_debt_bn?.toFixed(2) }))}
                     filename="margin_debt"
@@ -566,51 +517,54 @@ export default function App() {
                   <ChartToggle type={marginMainType} setType={setMarginMainType} />
                 </div>
               </div>
-              <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 220 : 320}>
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+                  <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
                   <XAxis
                     dataKey="date"
-                    stroke="#374151"
-                    tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                    stroke="var(--bb-gray-3)"
+                    tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                     tickFormatter={formatDate}
                     interval={chartInterval}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis
-                    stroke="#374151"
-                    tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                    stroke="var(--bb-gray-3)"
+                    tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                     tickFormatter={(v) => `$${v}B`}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {marginMainType === 'line' ? (
                     <Area
                       type="monotone"
                       dataKey="margin_debt_bn"
-                      stroke="#F59E0B"
-                      strokeWidth={2}
+                      stroke="var(--bb-cyan)"
+                      strokeWidth={3}
                       fill="url(#marginGradient)"
                       name="Margin Debt"
                     />
                   ) : (
-                    <Bar dataKey="margin_debt_bn" fill="#F59E0B" name="Margin Debt" />
+                    <Bar dataKey="margin_debt_bn" fill="var(--bb-cyan)" radius={[4, 4, 0, 0]} name="Margin Debt" />
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
             </div>
 
-            {/* YoY Growth Chart */}
-            <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
-              <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '100ms' }}>
+              <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--bb-purple)' }}>
                 <span>YEAR-OVER-YEAR GROWTH RATE</span>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <ExportCsvButton
                     data={filteredData.filter(d => d.yoy_growth !== null).map(d => ({ date: d.date, yoy_growth_pct: d.yoy_growth }))}
                     filename="margin_debt_yoy"
@@ -622,52 +576,53 @@ export default function App() {
                   <ChartToggle type={marginYoyType} setType={setMarginYoyType} />
                 </div>
               </div>
-              <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
               <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                 <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+                  <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
                   <XAxis
                     dataKey="date"
-                    stroke="#374151"
-                    tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                    stroke="var(--bb-gray-3)"
+                    tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                     tickFormatter={formatDate}
                     interval={chartInterval}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis
-                    stroke="#374151"
-                    tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                    stroke="var(--bb-border-light)"
+                    tick={{ fill: 'var(--bb-gray-2)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                     tickFormatter={(v) => `${v}%`}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <ReferenceLine y={0} stroke="#4B5563" strokeWidth={1} />
-                  <ReferenceLine y={30} stroke="#EF4444" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '+30%', fill: '#EF4444', fontSize: 9 }} />
-                  <ReferenceLine y={-30} stroke="#10B981" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '-30%', fill: '#10B981', fontSize: 9 }} />
+                  <ReferenceLine y={0} stroke="var(--bb-border)" strokeWidth={1} />
+                  <ReferenceLine y={30} stroke="var(--bb-red)" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '+30%', fill: 'var(--bb-red)', fontSize: 9 }} />
+                  <ReferenceLine y={-30} stroke="var(--bb-green)" strokeDasharray="4 4" strokeOpacity={0.8} label={{ value: '-30%', fill: 'var(--bb-green)', fontSize: 9 }} />
                   {marginYoyType === 'line' ? (
                     <Line
                       type="monotone"
                       dataKey="yoy_growth"
-                      stroke="#FCD34D"
+                      stroke="var(--bb-yellow)"
                       strokeWidth={2}
                       dot={false}
                       name="YoY Growth"
                     />
                   ) : (
-                    <Bar dataKey="yoy_growth" fill="#FCD34D" name="YoY Growth" />
+                    <Bar dataKey="yoy_growth" fill="var(--bb-yellow)" name="YoY Growth" />
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
-              <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '10px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono' }}>
+              <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '10px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)' }}>
                 <div className="badge badge-warning">+30% EUPHORIA ZONE</div>
                 <div className="badge badge-success">-30% CAPITULATION ZONE</div>
               </div>
               </div>
             </div>
 
-            {/* Historical Pattern Insight */}
-            <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px', borderLeft: '3px solid #FCD34D' }}>
-              <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '6px' }}>HISTORICAL PATTERN</div>
-                <p style={{ fontFamily: 'var(--font-mono)', color: '#D1D5DB', fontSize: '12px', lineHeight: '1.6' }}>
+            <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms', borderLeft: '3px solid var(--bb-yellow)' }}>
+              <div style={{ padding: isMobile ? '16px' : '20px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>HISTORICAL PATTERN</div>
+                <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-1)', fontSize: '13px', lineHeight: '1.6' }}>
                   Sustained 30%+ YoY margin debt growth has preceded every major market correction.
                   2000 peak (+80% YoY) &rarr; dot-com crash. 2007 peak (+62% YoY) &rarr; financial crisis.
                   2021 peak (+71% YoY) &rarr; 2022 bear market.
@@ -675,42 +630,40 @@ export default function App() {
               </div>
             </div>
 
-            {/* Threshold Statistics */}
-            <div className="glass-card" style={{ padding: '0', marginTop: '1px' }}>
+            <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '300ms' }}>
               <div className="bb-panel-header">THRESHOLD DURATION STATISTICS</div>
-              <div style={{ padding: isMobile ? '12px' : '16px' }}>
+              <div style={{ padding: isMobile ? '16px' : '24px' }}>
 
-              {/* Current Status */}
-              <div style={{
-                marginBottom: '12px',
-                padding: '10px 14px',
-                background: thresholdStats.current.status === 'above30' ? '#450A0A' :
-                            thresholdStats.current.status === 'belowNeg30' ? '#064E3B' :
-                            '#0B0F19',
-                border: thresholdStats.current.status === 'above30' ? '1px solid #EF4444' :
-                        thresholdStats.current.status === 'belowNeg30' ? '1px solid #10B981' :
-                        '1px solid #1F2937'
+              <div className="glass-card" style={{
+                marginBottom: '20px',
+                padding: '16px 20px',
+                background: thresholdStats.current.status === 'above30' ? 'rgba(251, 113, 133, 0.1)' :
+                            thresholdStats.current.status === 'belowNeg30' ? 'rgba(52, 211, 153, 0.1)' :
+                            'rgba(255, 255, 255, 0.02)',
+                borderLeft: thresholdStats.current.status === 'above30' ? '3px solid var(--bb-red)' :
+                        thresholdStats.current.status === 'belowNeg30' ? '3px solid var(--bb-green)' :
+                        '3px solid var(--bb-border-light)'
               }}>
-                <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '700', marginBottom: '8px', color: '#FCD34D', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: '700', marginBottom: '12px', color: 'var(--bb-yellow)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   CURRENT STATUS
                 </div>
                 {thresholdStats.current.status === 'above30' ? (
                   <div className="badge badge-warning">
                     <span>ABOVE +30% THRESHOLD</span>
-                    <span style={{ marginLeft: '8px', color: '#9CA3AF' }}>
+                    <span style={{ marginLeft: '8px', color: 'var(--bb-white)' }}>
                       DUR: {formatDuration(thresholdStats.current.duration)} | YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
                     </span>
                   </div>
                 ) : thresholdStats.current.status === 'belowNeg30' ? (
                   <div className="badge badge-success">
                     <span>BELOW -30% THRESHOLD</span>
-                    <span style={{ marginLeft: '8px', color: '#9CA3AF' }}>
+                    <span style={{ marginLeft: '8px', color: 'var(--bb-white)' }}>
                       DUR: {formatDuration(thresholdStats.current.duration)} | YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}%
                     </span>
                   </div>
                 ) : (
-                  <div style={{ fontFamily: 'var(--font-mono)', color: '#9CA3AF', fontSize: '12px' }}>
-                    <span style={{ color: '#D1D5DB', fontWeight: '700' }}>NEUTRAL ZONE</span>
+                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--bb-gray-1)', fontWeight: '700' }}>NEUTRAL ZONE</span>
                     <span style={{ marginLeft: '12px' }}>
                       YOY: {thresholdStats.current.yoyGrowth?.toFixed(1)}% (between -30% and +30%)
                     </span>
@@ -718,30 +671,28 @@ export default function App() {
                 )}
               </div>
 
-              {/* Historical Stats Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '1px', background: '#111827' }}>
-                {/* Above Threshold */}
-                <div className="glass-card" style={{ padding: '12px 14px', borderLeft: '3px solid #EF4444' }}>
-                  <div className="badge badge-warning" style={{ marginBottom: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+                <div className="glass-card" style={{ padding: '16px 20px', borderTop: '3px solid var(--bb-red)' }}>
+                  <div className="badge badge-warning" style={{ marginBottom: '16px' }}>
                     ABOVE +30% (EUPHORIA)
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG DURATION</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', color: '#F9FAFB', fontSize: '18px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AVG DURATION</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '20px', fontWeight: '700' }}>
                         {formatDuration(thresholdStats.above30.avgMonths)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>OCCURRENCES</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', color: '#F9FAFB', fontSize: '16px', fontWeight: '600' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>OCCURRENCES</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '18px', fontWeight: '600' }}>
                         {thresholdStats.above30.occurrences}
                       </div>
                     </div>
                     {thresholdStats.above30.periods.length > 0 && (
-                      <div style={{ paddingTop: '8px', borderTop: '1px solid #1F2937' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', color: '#6B7280', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>PERIOD DURATIONS (MO):</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', color: '#9CA3AF', fontSize: '11px' }}>
+                      <div style={{ paddingTop: '12px', borderTop: '1px solid var(--bb-border)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-3)', fontSize: '11px', textTransform: 'uppercase', marginBottom: '6px' }}>PERIOD DURATIONS (MO):</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px' }}>
                           {thresholdStats.above30.periods.join(', ')}
                         </div>
                       </div>
@@ -749,28 +700,27 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Below Threshold */}
-                <div className="glass-card" style={{ padding: '12px 14px', borderLeft: '3px solid #10B981' }}>
-                  <div className="badge badge-success" style={{ marginBottom: '10px' }}>
+                <div className="glass-card" style={{ padding: '16px 20px', borderTop: '3px solid var(--bb-green)' }}>
+                  <div className="badge badge-success" style={{ marginBottom: '16px' }}>
                     BELOW -30% (CAPITULATION)
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG DURATION</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', color: '#F9FAFB', fontSize: '18px', fontWeight: '700' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AVG DURATION</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '20px', fontWeight: '700' }}>
                         {formatDuration(thresholdStats.belowNeg30.avgMonths)}
                       </div>
                     </div>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>OCCURRENCES</div>
-                      <div style={{ fontFamily: 'var(--font-mono)', color: '#F9FAFB', fontSize: '16px', fontWeight: '600' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>OCCURRENCES</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '18px', fontWeight: '600' }}>
                         {thresholdStats.belowNeg30.occurrences}
                       </div>
                     </div>
                     {thresholdStats.belowNeg30.periods.length > 0 && (
-                      <div style={{ paddingTop: '8px', borderTop: '1px solid #1F2937' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', color: '#6B7280', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>PERIOD DURATIONS (MO):</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', color: '#9CA3AF', fontSize: '11px' }}>
+                      <div style={{ paddingTop: '12px', borderTop: '1px solid var(--bb-border)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-3)', fontSize: '11px', textTransform: 'uppercase', marginBottom: '6px' }}>PERIOD DURATIONS (MO):</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px' }}>
                           {thresholdStats.belowNeg30.periods.join(', ')}
                         </div>
                       </div>
@@ -779,7 +729,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ marginTop: '8px', fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#4B5563', textAlign: 'center' }}>
+              <div style={{ marginTop: '16px', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', textAlign: 'center' }}>
                 Statistics calculated from all available historical data. Each period = consecutive months where YoY growth remained above/below threshold.
               </div>
               </div>
@@ -787,7 +737,6 @@ export default function App() {
           </>
         )}
 
-        {/* AAII DATA SOURCE */}
         {dataSource === 'aaii' && aaiiRawData.length > 0 && (
           <>
             {(() => {
@@ -805,60 +754,57 @@ export default function App() {
 
               return (
                 <>
-                  {/* Current Allocation */}
-                  <div className="responsive-grid" style={{ marginBottom: '1px', marginTop: '1px', gap: '1px', background: '#111827' }}>
-                    <div className="stat-card" style={{ borderLeft: '3px solid #38BDF8', padding: '12px 16px' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         STOCKS ({currentAllocation?.date})
                       </div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#38BDF8' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                         {currentAllocation?.stocks?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
-                    <div className="stat-card" style={{ borderLeft: '3px solid #FCD34D', padding: '12px 16px' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-yellow)' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-yellow)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         BONDS
                       </div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#FCD34D' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                         {currentAllocation?.bonds?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
-                    <div className="stat-card" style={{ borderLeft: '3px solid #10B981', padding: '12px 16px' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-green)' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-green)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         CASH
                       </div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: '#10B981' }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
                         {currentAllocation?.cash?.toFixed(1) || 'N/A'}%
                       </div>
                     </div>
                   </div>
 
-                  {/* Historical Averages */}
-                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                  <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '100ms' }}>
                     <div className="bb-panel-header">HISTORICAL AVERAGE (SINCE 1987)</div>
-                    <div style={{ padding: '12px 16px' }}>
-                    <div className="responsive-grid" style={{ gap: '1px', background: '#111827' }}>
-                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #38BDF8' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG STOCKS</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#38BDF8' }}>{avgStocks.toFixed(1)}%</div>
+                    <div style={{ padding: '16px 20px' }}>
+                    <div className="responsive-grid" style={{ gap: '16px' }}>
+                      <div className="glass-card" style={{ padding: '16px 20px', borderTop: '3px solid var(--bb-cyan)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AVG STOCKS</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: '700', color: 'var(--bb-white)' }}>{avgStocks.toFixed(1)}%</div>
                       </div>
-                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #FCD34D' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG BONDS</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#FCD34D' }}>{avgBonds.toFixed(1)}%</div>
+                      <div className="glass-card" style={{ padding: '16px 20px', borderTop: '3px solid var(--bb-yellow)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AVG BONDS</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: '700', color: 'var(--bb-white)' }}>{avgBonds.toFixed(1)}%</div>
                       </div>
-                      <div className="glass-card" style={{ padding: '10px 14px', borderLeft: '3px solid #10B981' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>AVG CASH</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: '#10B981' }}>{avgCash.toFixed(1)}%</div>
+                      <div className="glass-card" style={{ padding: '16px 20px', borderTop: '3px solid var(--bb-green)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>AVG CASH</div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: '700', color: 'var(--bb-white)' }}>{avgCash.toFixed(1)}%</div>
                       </div>
                     </div>
                     </div>
                   </div>
 
-                  {/* Allocation Chart */}
-                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                  <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
                     <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>ASSET ALLOCATION OVER TIME</span>
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <ExportCsvButton
                           data={aaiiFilteredData}
                           filename="aaii_allocation"
@@ -872,66 +818,69 @@ export default function App() {
                         <ChartToggle type={aaiiAllocType} setType={setAaiiAllocType} />
                       </div>
                     </div>
-                    <div style={{ padding: isMobile ? '12px' : '16px' }}>
+                    <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
                     <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="#38BDF8" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="bondsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#FCD34D" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="#FCD34D" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="var(--bb-yellow)" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="var(--bb-yellow)" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="var(--bb-green)" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="var(--bb-green)" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+                        <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
                         <XAxis
                           dataKey="date"
-                          stroke="#374151"
-                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          stroke="var(--bb-gray-3)"
+                          tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                           tickFormatter={formatDate}
                           interval={aaiiChartInterval}
+                          axisLine={false}
+                          tickLine={false}
                         />
                         <YAxis
-                          stroke="#374151"
-                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          stroke="var(--bb-gray-3)"
+                          tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                           tickFormatter={(v) => `${v}%`}
                           domain={[0, 100]}
+                          axisLine={false}
+                          tickLine={false}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         {aaiiAllocType === 'line' ? (
                           <>
-                            <Area type="monotone" dataKey="stocks" stroke="#38BDF8" strokeWidth={2} fill="url(#stocksGradient)" name="Stocks" />
-                            <Area type="monotone" dataKey="bonds" stroke="#FCD34D" strokeWidth={2} fill="url(#bondsGradient)" name="Bonds" />
-                            <Area type="monotone" dataKey="cash" stroke="#10B981" strokeWidth={2} fill="url(#cashGradient)" name="Cash" />
+                            <Area type="monotone" dataKey="stocks" stroke="var(--bb-cyan)" strokeWidth={3} fill="url(#stocksGradient)" name="Stocks" />
+                            <Area type="monotone" dataKey="bonds" stroke="var(--bb-yellow)" strokeWidth={3} fill="url(#bondsGradient)" name="Bonds" />
+                            <Area type="monotone" dataKey="cash" stroke="var(--bb-green)" strokeWidth={3} fill="url(#cashGradient)" name="Cash" />
                           </>
                         ) : (
                           <>
-                            <Bar dataKey="stocks" fill="#38BDF8" name="Stocks" stackId="alloc" />
-                            <Bar dataKey="bonds" fill="#FCD34D" name="Bonds" stackId="alloc" />
-                            <Bar dataKey="cash" fill="#10B981" name="Cash" stackId="alloc" />
+                            <Bar dataKey="stocks" fill="var(--bb-cyan)" name="Stocks" stackId="alloc" />
+                            <Bar dataKey="bonds" fill="var(--bb-yellow)" name="Bonds" stackId="alloc" />
+                            <Bar dataKey="cash" fill="var(--bb-green)" name="Cash" stackId="alloc" />
                           </>
                         )}
                       </ComposedChart>
                     </ResponsiveContainer>
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: '10px' }}>
-                      <div className="badge" style={{ background: '#082F49', color: '#38BDF8', border: '1px solid #38BDF8' }}>STOCKS</div>
-                      <div className="badge" style={{ background: '#422006', color: '#FCD34D', border: '1px solid #FCD34D' }}>BONDS</div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+                      <div className="badge badge-info">STOCKS</div>
+                      <div className="badge badge-warning">BONDS</div>
                       <div className="badge badge-success">CASH</div>
                     </div>
                     </div>
                   </div>
 
-                  {/* Bear vs Bull Spread Chart */}
-                  <div className="glass-card" style={{ padding: '0', marginBottom: '1px', marginTop: '1px' }}>
+                  <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '300ms' }}>
                     <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>STOCK ALLOCATION SPREAD (% STOCKS − % CASH)</span>
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <ExportCsvButton
                           data={aaiiFilteredData.map(d => ({ date: d.date, stocks_pct: d.stocks, cash_pct: d.cash, spread_pct: (d.stocks || 0) - (d.cash || 0) }))}
                           filename="aaii_spread"
@@ -945,56 +894,59 @@ export default function App() {
                         <ChartToggle type={aaiiSpreadType} setType={setAaiiSpreadType} />
                       </div>
                     </div>
-                    <div style={{ padding: isMobile ? '12px' : '16px' }}>
+                    <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
                     <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                       <ComposedChart
                         data={aaiiFilteredData.map(d => ({ ...d, spread: (d.stocks || 0) - (d.cash || 0) }))}
                         margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
+                        <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
                         <XAxis
                           dataKey="date"
-                          stroke="#374151"
-                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          stroke="var(--bb-gray-3)"
+                          tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                           tickFormatter={formatDate}
                           interval={aaiiChartInterval}
+                          axisLine={false}
+                          tickLine={false}
                         />
                         <YAxis
-                          stroke="#374151"
-                          tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                          stroke="var(--bb-gray-3)"
+                          tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                           tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
+                          axisLine={false}
+                          tickLine={false}
                         />
                         <Tooltip content={<CustomTooltip />} />
-                        <ReferenceLine y={0} stroke="#4B5563" />
-                        <ReferenceLine y={40} stroke="#EF4444" strokeDasharray="3 3" label={{ value: '+40% Extreme Bull', fill: '#EF4444', fontSize: 9 }} />
-                        <ReferenceLine y={10} stroke="#10B981" strokeDasharray="3 3" label={{ value: '+10% Bear Signal', fill: '#10B981', fontSize: 9 }} />
+                        <ReferenceLine y={0} stroke="var(--bb-gray-4)" />
+                        <ReferenceLine y={40} stroke="var(--bb-red)" strokeDasharray="3 3" label={{ value: '+40% Extreme Bull', fill: 'var(--bb-red)', fontSize: 9 }} />
+                        <ReferenceLine y={10} stroke="var(--bb-green)" strokeDasharray="3 3" label={{ value: '+10% Bear Signal', fill: 'var(--bb-green)', fontSize: 9 }} />
                         {aaiiSpreadType === 'line' ? (
-                          <Line type="monotone" dataKey="spread" stroke="#A855F7" strokeWidth={2} dot={false} name="Spread (Stock − Cash)" />
+                          <Line type="monotone" dataKey="spread" stroke="var(--bb-purple)" strokeWidth={3} dot={false} name="Spread (Stock − Cash)" />
                         ) : (
                           <Bar dataKey="spread" name="Spread (Stock − Cash)">
                             {aaiiFilteredData.map((entry, index) => (
                               <Cell
                                 key={`cell-${index}`}
-                                fill={((entry.stocks || 0) - (entry.cash || 0)) > 40 ? '#EF4444' : ((entry.stocks || 0) - (entry.cash || 0)) < 10 ? '#10B981' : '#A855F7'}
+                                fill={((entry.stocks || 0) - (entry.cash || 0)) > 40 ? 'var(--bb-red)' : ((entry.stocks || 0) - (entry.cash || 0)) < 10 ? 'var(--bb-green)' : 'var(--bb-purple)'}
                               />
                             ))}
                           </Bar>
                         )}
                       </ComposedChart>
                     </ResponsiveContainer>
-                    <div style={{ display: 'flex', gap: '12px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: '10px' }}>
-                      <div className="badge" style={{ background: '#450A0A', color: '#EF4444', border: '1px solid #EF4444' }}>EXTREME BULL (&gt;+40%)</div>
-                      <div className="badge" style={{ background: '#2D1E00', color: '#A855F7', border: '1px solid #A855F7' }}>NEUTRAL</div>
-                      <div className="badge badge-success">BEAR SIGNAL (&lt;+10%)</div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+                      <div className="badge badge-warning" style={{ background: 'rgba(251, 113, 133, 0.1)', color: 'var(--bb-red)', borderColor: 'rgba(251, 113, 133, 0.2)' }}>EXTREME BULL (&gt;+40%)</div>
+                      <div className="badge" style={{ background: 'rgba(167, 139, 250, 0.1)', color: 'var(--bb-purple)', border: '1px solid rgba(167, 139, 250, 0.2)' }}>NEUTRAL</div>
+                      <div className="badge badge-success" style={{ background: 'rgba(52, 211, 153, 0.1)', color: 'var(--bb-green)', borderColor: 'rgba(52, 211, 153, 0.2)' }}>BEAR SIGNAL (&lt;+10%)</div>
                     </div>
                     </div>
                   </div>
 
-                  {/* About AAII */}
-                  <div className="glass-card" style={{ padding: '0', marginTop: '1px', borderLeft: '3px solid #38BDF8' }}>
-                    <div style={{ padding: isMobile ? '12px 14px' : '12px 16px' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#38BDF8', fontSize: '10px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '6px' }}>ABOUT AAII ASSET ALLOCATION</div>
-                      <p style={{ fontFamily: 'var(--font-mono)', color: '#D1D5DB', fontSize: '12px', lineHeight: '1.6' }}>
+                  <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '400ms', borderLeft: '3px solid var(--bb-cyan)' }}>
+                    <div style={{ padding: isMobile ? '16px' : '20px' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-cyan)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>ABOUT AAII ASSET ALLOCATION</div>
+                      <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-1)', fontSize: '13px', lineHeight: '1.6' }}>
                         The AAII Asset Allocation Survey tracks how individual investors allocate their portfolios among stocks, bonds, and cash.
                         Extreme allocations to stocks often signal euphoria, while high cash levels may indicate fear or caution in the markets.
                       </p>
@@ -1007,107 +959,64 @@ export default function App() {
         )}
 
         {dataSource === 'aaii' && aaiiRawData.length === 0 && (
-          <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#FCD34D', marginBottom: '12px', letterSpacing: '2px' }}>NO DATA</div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '700', color: '#F9FAFB', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: 'var(--bb-yellow)', marginBottom: '16px', letterSpacing: '2px', fontWeight: '700' }}>NO DATA</div>
+            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               No AAII Data Available
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', color: '#6B7280', fontSize: '12px' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '14px' }}>
               Please provide the AAII allocation data to display charts.
             </div>
           </div>
         )}
 
-        {/* SECTORS DATA SOURCE */}
         {dataSource === 'sectors' && (
           <ErrorBoundary>
             <SectorZScore isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
-
-
-        {/* BUFFETT INDICATOR */}
         {dataSource === 'buffett' && (
           <ErrorBoundary>
             <BuffettIndicator isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
-        {/* SOFR RATE */}
         {dataSource === 'sofr' && (
           <ErrorBoundary>
             <SofrRate isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
-        {/* PPI INDEX */}
         {dataSource === 'ppi' && (
           <ErrorBoundary>
             <PpiIndex isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
-        {/* FEAR GREED INDEX */}
         {dataSource === 'fear_greed' && (
           <ErrorBoundary>
             <FearGreedIndex isMobile={isMobile} />
           </ErrorBoundary>
         )}
 
-        {/* Footer */}
-        <div className="app-footer" style={{ borderTop: '1px solid #111827', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', color: '#374151', fontSize: '10px', letterSpacing: '0.5px' }}>
-            MARKET INTELLIGENCE TERMINAL
+        <div className="app-footer" style={{ borderTop: '1px solid var(--bb-border-light)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: 'var(--bb-black)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', letterSpacing: '0.5px' }}>
+            © {new Date().getFullYear()} STOCK SENTINEL. ALL RIGHTS RESERVED.
           </span>
-          {(() => {
-            let sourceUrl = '';
-            let sourceName = '';
-            switch(dataSource) {
-              case 'margin':
-                sourceUrl = metadata?.sourceUrl || 'https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics';
-                sourceName = metadata?.source || 'FINRA';
-                break;
-              case 'aaii':
-                sourceUrl = aaiiMetadata?.sourceUrl || 'https://www.aaii.com/investor-surveys';
-                sourceName = aaiiMetadata?.source || 'AAII Asset Allocation Survey';
-                break;
-              case 'sectors':
-                sourceUrl = 'https://finance.yahoo.com';
-                sourceName = 'Yahoo Finance';
-                break;
-              case 'buffett':
-                sourceUrl = 'https://fred.stlouisfed.org';
-                sourceName = 'FRED / Berkshire Hathaway';
-                break;
-              case 'sofr':
-                sourceUrl = 'https://www.newyorkfed.org/markets/reference-rates/sofr';
-                sourceName = 'Federal Reserve Bank of New York';
-                break;
-              case 'ppi':
-                sourceUrl = 'https://www.bls.gov/ppi/';
-                sourceName = 'U.S. Bureau of Labor Statistics';
-                break;
-              case 'fear_greed':
-                sourceUrl = 'https://github.com/FunnyBUnny05/margin-Debtt';
-                sourceName = 'Internal Aggregation (FRED, YF, CBOE)';
-                break;
-              default:
-                return null;
-            }
-            return (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontFamily: 'var(--font-mono)', color: '#4B5563', fontSize: '10px', textDecoration: 'none' }}
-                onMouseEnter={(e) => e.target.style.color = '#F59E0B'}
-                onMouseLeave={(e) => e.target.style.color = '#4B5563'}
-              >
-                SRC: {sourceName}
-              </a>
-            );
-          })()}
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-4)', fontSize: '10px' }}>v1.0.0</span>
+            <a 
+              href="https://github.com/FunnyBunny05" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={(e) => e.target.style.color = 'var(--bb-yellow)'}
+              onMouseLeave={(e) => e.target.style.color = 'var(--bb-gray-3)'}
+            >
+              GITHUB
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -1,63 +1,62 @@
-/* Bloomberg Professional Terminal Design System */
+/* 
+ * Pro Terminal Design System
+ * Flat, high-contrast, data-dense aesthetics.
+ */
 
 :root {
-  /* Core Bloomberg / Modern Dashboard Palette */
-  --bb-black: #0F172A; /* Slate 900 instead of pure black */
-  --bb-panel: #1E293B; /* Slate 800 */
-  --bb-panel-alt: #334155; /* Slate 700 */
-  --bb-border: #334155;
-  --bb-border-light: #475569;
+  /* Core Palette - Matte Black */
+  --bb-black: #050505; /* Deep Terminal Black */
+  --bb-panel: #0A0A0A; /* Slightly lighter for panels */
+  --bb-panel-alt: #111111; /* Hover state for panels */
+  --bb-border: #222222; /* Hard structural borders */
+  --bb-border-light: #333333; /* Slightly lighter borders */
+  --bb-bg-gradient: #0A0A0A; /* Replaces gradient with flat color */
 
-  /* Accent Colors (Softer) */
-  --bb-orange: #F59E0B; /* Kept but rely on opacity classes to soften */
-  --bb-orange-dim: #D97706;
-  --bb-green: #10B981;
-  --bb-red: #F43F5E; /* Rose instead of pure red */
-  --bb-yellow: #FCD34D;
-  --bb-cyan: #38BDF8;
+  /* Terminal Accents (Flat, high contrast) */
+  --bb-orange: #FF8A00;
+  --bb-orange-dim: #B36100;
+  --bb-green: #00E676; /* Pure Terminal Green */
+  --bb-red: #FF3D00; /* Pure Terminal Red */
+  --bb-yellow: #FFD600; /* Bright Warning Yellow */
+  --bb-cyan: #00E5FF; /* Cyan Highlight */
+  --bb-purple: #D500F9; /* Flat Purple */
 
   /* Text */
-  --bb-white: #F8FAFC;
-  --bb-gray-1: #E2E8F0;
-  --bb-gray-2: #94A3B8;
-  --bb-gray-3: #64748B;
-  --bb-gray-4: #475569;
+  --bb-white: #FFFFFF;
+  --bb-gray-1: #E0E0E0;
+  --bb-gray-2: #9E9E9E;
+  --bb-gray-3: #616161;
+  --bb-gray-4: #424242;
 
   /* Typography */
   --font-mono: 'JetBrains Mono', monospace;
-  --font-ui: 'Inter', sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Legacy aliases for compatibility */
-  --text-primary: #F8FAFC;
-  --text-secondary: #E2E8F0;
-  --text-tertiary: #94A3B8;
-  --text-muted: #64748B;
-  --background-primary: #0F172A;
-  --background-secondary: #1E293B;
-  --glass-bg: #1E293B;
-  --glass-border: #334155;
-  --glass-hover: #334155;
-  --accent-coral: #F43F5E;
-  --accent-emerald: #10B981;
-  --accent-cyan: #38BDF8;
-  --accent-blue: #38BDF8;
-  --accent-purple: #F59E0B;
-  --accent-amber: #FCD34D;
-  --gradient-coral: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
-  --gradient-emerald: linear-gradient(135deg, #10B981 0%, #059669 100%);
-  --gradient-blue: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
-  --gradient-purple: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --text-primary: #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-tertiary: #9E9E9E;
+  --text-muted: #616161;
+  --background-primary: #050505;
+  --background-secondary: #0A0A0A;
+  --glass-bg: #0A0A0A;
+  --glass-border: #222222;
+  --glass-hover: #111111;
+  
+  /* Shadows & Radius (Flattened) */
   --shadow-sm: none;
   --shadow-md: none;
-  --shadow-lg: none;
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.8);
   --shadow-glow: none;
-  --radius-sm: 4px; /* Give panels slightly rounded corners to soften the feel */
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --transition-fast: 0.1s ease;
-  --transition-smooth: 0.15s ease;
-  --transition-slow: 0.2s ease;
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  
+  /* Transitions */
+  --transition-fast: 0s; /* Snappy, instant changes */
+  --transition-smooth: 0.1s ease-in-out;
+  --transition-slow: 0.2s ease-in-out;
 }
 
 * {
@@ -70,126 +69,153 @@ body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--bb-black);
+  background-color: var(--bb-black);
   color: var(--bb-white);
-}
-
-/* App Background - Static Black */
-.app-background {
-  background: var(--bb-black);
   min-height: 100vh;
 }
 
-/* Bloomberg Panel (replaces glass-card) */
+/* App Background */
+.app-background {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Solid Panels */
 .bb-panel,
 .glass-card {
   background: var(--bb-panel);
   border: 1px solid var(--bb-border);
   border-radius: var(--radius-md);
+  box-shadow: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
 .bb-panel:hover,
 .glass-card:hover {
   background: var(--bb-panel-alt);
   border-color: var(--bb-border-light);
+  transform: none; /* No bouncy effects */
 }
 
 /* Panel Header Bar */
 .bb-panel-header {
-  background: var(--bb-orange);
-  color: var(--bb-white);
+  background: #151515;
+  border-bottom: 1px solid var(--bb-border);
+  color: var(--bb-gray-2);
   font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   padding: 8px 12px;
-  margin: -1px -1px 0 -1px;
+  margin: 0;
   border-top-left-radius: var(--radius-md);
   border-top-right-radius: var(--radius-md);
 }
 
-/* Bloomberg Buttons */
+/* Buttons */
 .bb-btn,
 .btn-primary {
-  padding: 8px 16px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
   letter-spacing: 0.5px;
   border: 1px solid var(--bb-border-light);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  background: var(--bb-panel-alt);
-  color: var(--bb-gray-2);
-  transition: all var(--transition-fast);
-  position: relative;
-  overflow: hidden;
+  background: var(--bb-panel);
+  color: var(--bb-white);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  box-shadow: none;
+  text-transform: uppercase;
 }
 
 .bb-btn:hover,
 .btn-primary:hover {
-  background: var(--bb-border);
-  color: var(--bb-white);
-  border-color: var(--bb-orange);
+  background: var(--bb-border-light);
+  border-color: var(--bb-cyan);
+  color: var(--bb-cyan);
+  transform: none;
+  box-shadow: none;
 }
 
 .bb-btn:active,
 .btn-primary:active {
-  background: var(--bb-orange-dim);
-  color: var(--bb-white);
+  transform: none;
+  background: var(--bb-panel);
 }
 
 /* Navigation Tabs */
 .bb-tab {
-  padding: 8px 18px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 14px;
+  padding: 8px 16px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
   letter-spacing: 0.5px;
-  border: 1px solid var(--bb-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   cursor: pointer;
-  background: var(--bb-panel-alt);
-  color: var(--bb-gray-2);
+  background: transparent;
+  color: var(--bb-gray-3);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.bb-tab:hover {
+  color: var(--bb-white);
+  background: var(--bb-panel);
 }
 
 .bb-tab-active,
 .bb-tab.active {
-  background: var(--bb-orange);
-  color: var(--bb-white);
-  border-color: var(--bb-orange);
+  background: var(--bb-panel-alt);
+  color: var(--bb-cyan);
+  border-color: var(--bb-border);
+  box-shadow: none;
 }
 
 /* Data Typography */
 .bb-data {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
 }
 
 .bb-label {
   font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--bb-yellow);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--bb-gray-2);
 }
 
 /* Table Rows */
 .bb-row {
   border-bottom: 1px solid var(--bb-border);
-  padding: 6px 10px;
+  padding: 12px 16px;
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
+  transition: background var(--transition-fast);
+}
+
+.bb-row:last-child {
+  border-bottom: none;
 }
 
 .bb-row:hover {
-  background: var(--bb-panel-alt);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .bb-row.selected {
-  background: #78350F;
-  border-left: 3px solid var(--bb-orange);
+  background: rgba(34, 211, 238, 0.1);
+  border-left: 3px solid var(--bb-cyan);
 }
 
 /* Badges */
@@ -197,142 +223,97 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
   letter-spacing: 0.5px;
   border: 1px solid;
+  text-transform: uppercase;
 }
 
 .badge-success {
-  background: #064E3B;
+  background: rgba(52, 211, 153, 0.1);
   color: var(--bb-green);
-  border-color: var(--bb-green);
+  border-color: rgba(52, 211, 153, 0.2);
 }
 
 .badge-warning {
-  background: #450A0A;
+  background: rgba(251, 113, 133, 0.1);
   color: var(--bb-red);
-  border-color: var(--bb-red);
+  border-color: rgba(251, 113, 133, 0.2);
 }
 
 .badge-info {
-  background: #082F49;
+  background: rgba(34, 211, 238, 0.1);
   color: var(--bb-cyan);
-  border-color: var(--bb-cyan);
+  border-color: rgba(34, 211, 238, 0.2);
 }
 
-/* Stat Card */
+/* Stat Card specific overrides */
 .stat-card {
-  background: var(--bb-panel);
-  border: 1px solid var(--bb-border);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  overflow: hidden;
-  position: relative;
+  padding: 24px;
 }
 
-.stat-card::before {
-  display: none;
-}
-
-.stat-card:hover {
-  background: var(--bb-panel-alt);
-  border-color: var(--bb-orange);
-}
-
-/* Loading pulse */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.pulse-animation {
-  animation: pulse 1.5s ease infinite;
-}
-
-/* Shimmer (simplified) */
-.shimmer {
-  background: var(--bb-panel-alt);
-}
-
-/* Tooltip */
+/* Tooltip (Flat) */
 .custom-tooltip {
-  background: var(--bb-panel) !important;
+  background: var(--bb-black) !important;
   border: 1px solid var(--bb-border-light) !important;
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-sm) !important;
   padding: 12px 16px !important;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5) !important;
-}
-
-/* Chart container */
-.chart-container {
-  position: relative;
-}
-
-.chart-container::after {
-  display: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  box-shadow: var(--shadow-lg) !important;
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bb-black);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--bb-border-light);
+  border-radius: var(--radius-xl);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--bb-gray-3);
 }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Selection */
-::selection {
-  background: var(--bb-orange);
-  color: var(--bb-black);
-}
-
-/* Focus styles */
-*:focus-visible {
-  outline: 1px solid var(--bb-orange);
-  outline-offset: 1px;
-}
-
-/* Animate in */
-.animate-in {
-  opacity: 1;
-}
-
 /* Responsive grid */
 .responsive-grid {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 @media (max-width: 640px) {
   .responsive-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 
-/* Utility: hide scrollbars while preserving touch scroll */
+/* Smooth fade-in for page load (flattened slightly) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: fadeInUp 0.2s ease-in forwards;
+}
+
 .mobile-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -341,48 +322,31 @@ html {
   display: none;
 }
 
-/* iPhone-specific adjustments (covers all iPhone models up to Pro Max) */
 @media (max-width: 480px) {
-  /* Safe area: bottom padding for home indicator bar */
   .app-background {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-
-  /* Hide update date in topbar — frees up space for content */
   .bb-topbar-date {
     display: none;
   }
-
-  /* Smaller brand text so the middle section has room */
   .bb-topbar-brand {
     padding: 6px 10px !important;
   }
   .bb-topbar-brand span {
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
-
-  /* Apple minimum touch target is 44px */
   .bb-tab {
     min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 14px !important;
-    font-size: 10px !important;
+    padding: 8px 16px !important;
+    font-size: 12px !important;
   }
-
-  /* Tighter stat card padding — prevents content clipping on 375px screens */
   .stat-card {
-    padding: 10px 10px !important;
+    padding: 16px !important;
   }
-
-  /* Ensure 2-column grid on all narrow phones */
   .responsive-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
-
-  /* Footer safe area padding */
   .app-footer {
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 }

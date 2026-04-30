@@ -51,11 +51,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const getStatus = (val) => {
-  if (val < 25) return { label: 'EXTREME FEAR', color: '#EF4444' };
-  if (val < 45) return { label: 'FEAR', color: '#F59E0B' };
-  if (val <= 55) return { label: 'NEUTRAL', color: '#9CA3AF' };
-  if (val <= 75) return { label: 'GREED', color: '#10B981' };
-  return { label: 'EXTREME GREED', color: '#38BDF8' };
+  if (val < 25) return { label: 'EXTREME FEAR', color: 'var(--bb-red)' };
+  if (val < 45) return { label: 'FEAR', color: 'var(--bb-yellow)' };
+  if (val <= 55) return { label: 'NEUTRAL', color: 'var(--bb-gray-2)' };
+  if (val <= 75) return { label: 'GREED', color: 'var(--bb-green)' };
+  return { label: 'EXTREME GREED', color: 'var(--bb-cyan)' };
 };
 
 export function FearGreedIndex({ isMobile }) {
@@ -105,19 +105,19 @@ export function FearGreedIndex({ isMobile }) {
 
   if (loading) {
     return (
-      <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#F59E0B', marginBottom: '16px' }} className="pulse-animation">LOADING...</div>
-        <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'white' }}>Loading Fear & Greed Index</div>
+      <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-cyan)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">LOADING...</div>
+        <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', textTransform: 'uppercase', letterSpacing: '1px' }}>Loading Fear & Greed Index</div>
       </div>
     );
   }
 
   if (error || !data.length) {
     return (
-      <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginTop: '1px', borderLeft: '3px solid #EF4444' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: '#EF4444', marginBottom: '16px' }}>ERROR</div>
-        <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'white' }}>Couldn't Load Data</div>
-        <div style={{ fontFamily: 'var(--font-mono)', color: '#9CA3AF', fontSize: '12px' }}>{error || 'No data available'}</div>
+      <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px', borderTop: '3px solid var(--bb-red)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: 'var(--bb-red)', marginBottom: '16px', fontWeight: '700', letterSpacing: '2px' }}>ERROR</div>
+        <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', textTransform: 'uppercase', letterSpacing: '1px' }}>Couldn't Load Data</div>
+        <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '14px', marginTop: '8px' }}>{error || 'No data available'}</div>
       </div>
     );
   }
@@ -135,20 +135,13 @@ export function FearGreedIndex({ isMobile }) {
   return (
     <>
       {/* Time Range */}
-      <div className="mobile-scroll" style={{ display: 'flex', gap: '0', marginBottom: '1px', background: '#0B0F19', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['3m', '1y', '2y', '5y', '10y', 'all'].map(range => (
           <button
             key={range}
             onClick={() => setTimeRange(range)}
-            style={{
-              padding: isMobile ? '10px 20px' : '7px 16px',
-              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: '700',
-              background: timeRange === range ? '#78350F' : 'transparent',
-              color: timeRange === range ? '#F59E0B' : '#6B7280',
-              border: 'none', borderRight: '1px solid #111827',
-              borderBottom: timeRange === range ? '2px solid #F59E0B' : '2px solid transparent',
-              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0
-            }}
+            className={`bb-tab ${timeRange === range ? 'active' : ''}`}
+            style={{ padding: '6px 16px', fontSize: '12px', flexShrink: 0 }}
           >
             {range.toUpperCase()}
           </button>
@@ -156,22 +149,22 @@ export function FearGreedIndex({ isMobile }) {
       </div>
 
       {/* Main Stats */}
-      <div className="responsive-grid" style={{ marginBottom: '1px', gap: '1px', background: '#111827' }}>
-        <div className="stat-card" style={{ borderLeft: `3px solid ${currentStatus.color}`, padding: '12px 16px' }}>
-          <div style={{ fontFamily: 'var(--font-ui)', color: '#FCD34D', fontSize: '10px', fontWeight: '700', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '16px' }}>
+        <div className="stat-card" style={{ borderTop: `3px solid ${currentStatus.color}` }}>
+          <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-white)', fontSize: '12px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             FEAR & GREED ({current.date})
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: currentStatus.color }}>
-            {current.fear_greed_index.toFixed(1)} <span style={{ fontSize: '14px' }}>/ 100</span>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '32px' : '36px', fontWeight: '700', color: currentStatus.color }}>
+            {current.fear_greed_index.toFixed(1)} <span style={{ fontSize: '16px', color: 'var(--bb-gray-3)' }}>/ 100</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: '800', color: currentStatus.color, marginTop: '4px', letterSpacing: '1px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '800', color: currentStatus.color, marginTop: '8px', letterSpacing: '1px' }}>
             {currentStatus.label}
           </div>
         </div>
       </div>
 
       {/* Components Stats */}
-      <div className="responsive-grid" style={{ marginBottom: '1px', gap: '1px', background: '#111827', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)' }}>
+      <div className="responsive-grid" style={{ marginBottom: '20px', gap: '12px', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)' }}>
         {[
           { key: 'momentum', label: 'MOMENTUM' },
           { key: 'strength', label: 'STRENGTH' },
@@ -185,18 +178,18 @@ export function FearGreedIndex({ isMobile }) {
           if (val === undefined) return null;
           const stat = getStatus(val);
           return (
-            <div key={comp.key} className="stat-card" style={{ padding: '8px 12px', borderLeft: `2px solid ${stat.color}` }}>
-              <div style={{ fontFamily: 'var(--font-ui)', color: '#9CA3AF', fontSize: '9px', fontWeight: '700', marginBottom: '2px', textTransform: 'uppercase' }}>
+            <div key={comp.key} className="glass-card animate-in" style={{ padding: '16px 12px', borderTop: `2px solid ${stat.color}`, animationDelay: '100ms' }}>
+              <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '10px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {comp.label}
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: '700', color: 'white' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: 'var(--bb-white)' }}>
                 {val.toFixed(0)}
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: stat.color, marginTop: '2px' }}>
+              <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '600', color: stat.color, marginTop: '8px', letterSpacing: '0.5px' }}>
                 {stat.label}
               </div>
               {comp.key === 'put_call' && meta.put_call_is_proxy && (
-                <div style={{ fontSize: '8px', color: '#F59E0B', marginTop: '2px' }}>VIX PROXY</div>
+                <div style={{ fontSize: '9px', color: 'var(--bb-yellow)', marginTop: '4px', opacity: 0.8 }}>VIX PROXY</div>
               )}
             </div>
           );
@@ -204,50 +197,50 @@ export function FearGreedIndex({ isMobile }) {
       </div>
 
       {/* Main Chart */}
-      <div className="glass-card" style={{ padding: '0', marginBottom: '1px' }}>
+      <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>FEAR & GREED INDEX (0-100)</span>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton data={filteredData} filename="fear_greed_index" />
             <ChartToggle type={chartType} setType={setChartType} />
           </div>
         </div>
-        <div style={{ padding: isMobile ? '12px' : '16px' }}>
+        <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
           <ResponsiveContainer width="100%" height={isMobile ? 240 : 360}>
             <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#38BDF8" stopOpacity={0.6}/>
-                  <stop offset="25%" stopColor="#10B981" stopOpacity={0.4}/>
-                  <stop offset="50%" stopColor="#9CA3AF" stopOpacity={0.2}/>
-                  <stop offset="75%" stopColor="#F59E0B" stopOpacity={0.4}/>
-                  <stop offset="100%" stopColor="#EF4444" stopOpacity={0.6}/>
+                  <stop offset="0%" stopColor="var(--bb-cyan)" stopOpacity={0.5}/>
+                  <stop offset="25%" stopColor="var(--bb-green)" stopOpacity={0.3}/>
+                  <stop offset="50%" stopColor="var(--bb-gray-2)" stopOpacity={0.1}/>
+                  <stop offset="75%" stopColor="var(--bb-yellow)" stopOpacity={0.3}/>
+                  <stop offset="100%" stopColor="var(--bb-red)" stopOpacity={0.5}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
-              <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} />
-              <YAxis domain={[0, 100]} stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'var(--font-mono)' }} />
+              <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
+              <XAxis dataKey="date" stroke="var(--bb-gray-3)" tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 100]} stroke="var(--bb-gray-3)" tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               
-              <ReferenceLine y={25} stroke="#EF4444" strokeDasharray="3 3" label={{ value: '25 - Extreme Fear', fill: '#EF4444', fontSize: 9, position: 'insideTopLeft' }} />
-              <ReferenceLine y={45} stroke="#F59E0B" strokeDasharray="3 3" />
-              <ReferenceLine y={55} stroke="#10B981" strokeDasharray="3 3" />
-              <ReferenceLine y={75} stroke="#38BDF8" strokeDasharray="3 3" label={{ value: '75 - Extreme Greed', fill: '#38BDF8', fontSize: 9, position: 'insideBottomLeft' }} />
+              <ReferenceLine y={25} stroke="var(--bb-red)" strokeDasharray="3 3" label={{ value: '25 - Extreme Fear', fill: 'var(--bb-red)', fontSize: 9, position: 'insideTopLeft' }} />
+              <ReferenceLine y={45} stroke="var(--bb-yellow)" strokeDasharray="3 3" />
+              <ReferenceLine y={55} stroke="var(--bb-gray-2)" strokeDasharray="3 3" />
+              <ReferenceLine y={75} stroke="var(--bb-green)" strokeDasharray="3 3" label={{ value: '75 - Extreme Greed', fill: 'var(--bb-green)', fontSize: 9, position: 'insideBottomLeft' }} />
               
               {chartType === 'area' ? (
-                <Area type="monotone" dataKey="fear_greed_index" stroke="#F9FAFB" strokeWidth={2} fill="url(#fgGradient)" name="Index" dot={false} />
+                <Area type="monotone" dataKey="fear_greed_index" stroke="var(--bb-white)" strokeWidth={2} fill="url(#fgGradient)" name="Index" dot={false} />
               ) : (
-                <Line type="monotone" dataKey="fear_greed_index" stroke="#F9FAFB" strokeWidth={2} dot={false} name="Index" />
+                <Line type="monotone" dataKey="fear_greed_index" stroke="var(--bb-white)" strokeWidth={2} dot={false} name="Index" />
               )}
             </ComposedChart>
           </ResponsiveContainer>
           
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '9px', justifyContent: 'center' }}>
-            <div style={{ padding: '2px 6px', border: '1px solid #EF4444', color: '#EF4444' }}>0-25 EXTREME FEAR</div>
-            <div style={{ padding: '2px 6px', border: '1px solid #F59E0B', color: '#F59E0B' }}>25-45 FEAR</div>
-            <div style={{ padding: '2px 6px', border: '1px solid #9CA3AF', color: '#9CA3AF' }}>45-55 NEUTRAL</div>
-            <div style={{ padding: '2px 6px', border: '1px solid #10B981', color: '#10B981' }}>55-75 GREED</div>
-            <div style={{ padding: '2px 6px', border: '1px solid #38BDF8', color: '#38BDF8' }}>75-100 EXTREME GREED</div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(251, 113, 133, 0.3)', background: 'rgba(251, 113, 133, 0.1)' }}>0-25 EXTREME FEAR</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(252, 211, 77, 0.3)', background: 'rgba(252, 211, 77, 0.1)' }}>25-45 FEAR</div>
+            <div className="badge" style={{ color: 'var(--bb-gray-2)', borderColor: 'rgba(148, 163, 184, 0.3)', background: 'rgba(148, 163, 184, 0.1)' }}>45-55 NEUTRAL</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(52, 211, 153, 0.3)', background: 'rgba(52, 211, 153, 0.1)' }}>55-75 GREED</div>
+            <div className="badge" style={{ color: 'var(--bb-cyan)', borderColor: 'rgba(34, 211, 238, 0.3)', background: 'rgba(34, 211, 238, 0.1)' }}>75-100 EXTREME GREED</div>
           </div>
         </div>
       </div>
