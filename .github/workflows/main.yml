@@ -63,7 +63,6 @@ jobs:
           files = {
             'margin_data.json':           ('data', 'date'),
             'aaii_allocation_data.json':  ('data', 'date'),
-            'put_call_data.json':         ('data', 'date'),
             'buffett_indicator_data.json':('data', 'date'),
           }
           for fname, (arr_key, date_key) in files.items():
@@ -93,7 +92,6 @@ jobs:
           git add \
             public/margin_data.json \
             public/aaii_allocation_data.json \
-            public/put_call_data.json \
             public/buffett_indicator_data.json \
             public/fear_greed_index.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
