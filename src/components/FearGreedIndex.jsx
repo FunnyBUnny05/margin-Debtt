@@ -11,54 +11,64 @@ import { ChartTooltip } from './ChartTooltip';
 
 const CustomTooltip = (props) => <ChartTooltip {...props} />;
 
-const getStatus = (val) => {
-  if (val < 25) return { label: 'EXTREME FEAR', color: 'var(--bb-red)' };
-  if (val < 45) return { label: 'FEAR', color: 'var(--bb-yellow)' };
-  if (val <= 55) return { label: 'NEUTRAL', color: 'var(--bb-gray-2)' };
-  if (val <= 75) return { label: 'GREED', color: 'var(--bb-green)' };
-  return { label: 'EXTREME GREED', color: 'var(--bb-royal)' };
+const RATING_STYLE = {
+  'Extreme Fear': { color: 'var(--bb-red)' },
+  'Fear':         { color: 'var(--bb-yellow)' },
+  'Neutral':      { color: 'var(--bb-gray-2)' },
+  'Greed':        { color: 'var(--bb-green)' },
+  'Extreme Greed':{ color: 'var(--bb-blue)' },
 };
 
+const ratingColor = (rating) => (RATING_STYLE[rating] || RATING_STYLE['Neutral']).color;
+
+const scoreColor = (score) => {
+  if (score < 25) return 'var(--bb-red)';
+  if (score < 45) return 'var(--bb-yellow)';
+  if (score <= 55) return 'var(--bb-gray-2)';
+  if (score <= 75) return 'var(--bb-green)';
+  return 'var(--bb-blue)';
+};
+
+const COMPONENTS = [
+  { key: 'momentum',  label: 'MOMENTUM'  },
+  { key: 'strength',  label: 'STRENGTH'  },
+  { key: 'breadth',   label: 'BREADTH'   },
+  { key: 'put_call',  label: 'PUT/CALL'  },
+  { key: 'volatility',label: 'VOLATILITY'},
+  { key: 'junk_bond', label: 'JUNK BOND' },
+  { key: 'safe_haven',label: 'SAFE HAVEN'},
+];
+
 export function FearGreedIndex({ isMobile }) {
-  const [data, setData] = useState([]);
+  const [historical, setHistorical] = useState([]);
+  const [current, setCurrent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [timeRange, setTimeRange] = useState('5y');
   const [chartType, setChartType] = useState('area');
-  const [meta, setMeta] = useState({});
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       setLoading(true); setError(null);
       try {
-        const r = await fetch('./fear_greed_index.csv');
+        const r = await fetch('./fear_greed_index.json');
         if (!r.ok) throw new Error('Failed to load Fear & Greed data');
-        const text = await r.text();
-
-        const lines = text.trim().split(/\r?\n/).filter(Boolean);
-        if (lines.length < 2) throw new Error('Invalid CSV data');
-
-        const headers = lines[0].split(',').map(h => h.trim());
-        const parsed = lines.slice(1).map(line => {
-          const cells = line.split(',');
-          const row = {};
-          headers.forEach((h, i) => {
-            row[h] = h === 'date' ? cells[i] : Number(cells[i]);
-          });
-          return row;
-        }).filter(d => d.date && !isNaN(d.fear_greed_index));
+        const json = await r.json();
 
         if (!cancelled) {
-          setData(parsed);
+          const hist = (json.historical || []).map(d => ({
+            date: d.date,
+            fear_greed_index: d.value,
+          }));
+          setHistorical(hist);
+          setCurrent(json.current || null);
         }
       } catch (e) {
         if (!cancelled) setError(e.message || 'Unable to load data');
       } finally {
         if (!cancelled) setLoading(false);
       }
-
-      fetch('./fear_greed_meta.json').then(r => r.json()).then(m => { if (!cancelled) setMeta(m); }).catch(() => {});
     };
     load();
     return () => { cancelled = true; };
@@ -67,13 +77,13 @@ export function FearGreedIndex({ isMobile }) {
   if (loading) {
     return (
       <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-royal)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">LOADING...</div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-blue)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">LOADING...</div>
         <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', textTransform: 'uppercase', letterSpacing: '1px' }}>Loading Fear & Greed Index</div>
       </div>
     );
   }
 
-  if (error || !data.length) {
+  if (error || !historical.length) {
     return (
       <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px', borderTop: '3px solid var(--bb-red)' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', color: 'var(--bb-red)', marginBottom: '16px', fontWeight: '700', letterSpacing: '2px' }}>ERROR</div>
@@ -83,15 +93,18 @@ export function FearGreedIndex({ isMobile }) {
     );
   }
 
-  const filteredData = timeRange === 'all' ? data :
-    timeRange === '10y' ? data.slice(-2520) :
-    timeRange === '5y' ? data.slice(-1260) :
-    timeRange === '2y' ? data.slice(-504) :
-    timeRange === '1y' ? data.slice(-252) : data.slice(-63); // 1y = ~252 trading days
+  const filteredData =
+    timeRange === 'all'  ? historical :
+    timeRange === '10y'  ? historical.slice(-2520) :
+    timeRange === '5y'   ? historical.slice(-1260) :
+    timeRange === '2y'   ? historical.slice(-504) :
+    timeRange === '1y'   ? historical.slice(-252) :
+                           historical.slice(-63);
 
   const chartInterval = Math.floor((filteredData.length || 1) / 8);
-  const current = data[data.length - 1];
-  const currentStatus = getStatus(current.fear_greed_index);
+  const score   = current?.score ?? historical[historical.length - 1]?.fear_greed_index ?? 50;
+  const rating  = current?.rating ?? 'Neutral';
+  const mainColor = ratingColor(rating);
 
   return (
     <>
@@ -109,55 +122,61 @@ export function FearGreedIndex({ isMobile }) {
         ))}
       </div>
 
-      {/* Main Stats */}
+      {/* Current reading */}
       <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '16px' }}>
-        <div className="stat-card" style={{ borderTop: `3px solid ${currentStatus.color}` }}>
+        <div className="stat-card" style={{ borderTop: `3px solid ${mainColor}` }}>
           <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-white)', fontSize: '12px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            FEAR & GREED ({current.date})
+            CNN FEAR & GREED {current?.timestamp ? `(${current.timestamp.slice(0, 10)})` : ''}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '32px' : '36px', fontWeight: '700', color: currentStatus.color }}>
-            {current.fear_greed_index.toFixed(1)} <span style={{ fontSize: '16px', color: 'var(--bb-gray-3)' }}>/ 100</span>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '32px' : '36px', fontWeight: '700', color: mainColor }}>
+            {score.toFixed(1)} <span style={{ fontSize: '16px', color: 'var(--bb-gray-3)' }}>/ 100</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '800', color: currentStatus.color, marginTop: '8px', letterSpacing: '1px' }}>
-            {currentStatus.label}
+          <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '800', color: mainColor, marginTop: '8px', letterSpacing: '1px' }}>
+            {rating.toUpperCase()}
           </div>
+          {current && (
+            <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
+              {[
+                { label: 'PREV CLOSE',   val: current.previous_close },
+                { label: '1 WEEK AGO',   val: current.previous_1_week },
+                { label: '1 MONTH AGO',  val: current.previous_1_month },
+                { label: '1 YEAR AGO',   val: current.previous_1_year },
+              ].filter(x => x.val).map(({ label, val }) => (
+                <div key={label} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
+                  <span style={{ color: 'var(--bb-gray-3)', fontSize: '9px', display: 'block', letterSpacing: '0.5px' }}>{label}</span>
+                  <span style={{ color: scoreColor(val), fontWeight: '700' }}>{val.toFixed(1)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Components Stats */}
-      <div className="responsive-grid" style={{ marginBottom: '20px', gap: '12px', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)' }}>
-        {[
-          { key: 'momentum', label: 'MOMENTUM' },
-          { key: 'strength', label: 'STRENGTH' },
-          { key: 'breadth', label: 'BREADTH' },
-          { key: 'put_call', label: 'PUT/CALL' },
-          { key: 'volatility', label: 'VOLATILITY' },
-          { key: 'credit_spread', label: 'CREDIT SPREAD' },
-          { key: 'safe_haven', label: 'SAFE HAVEN' },
-        ].map(comp => {
-          const val = current[comp.key];
-          if (val === undefined) return null;
-          const stat = getStatus(val);
-          return (
-            <div key={comp.key} className="glass-card animate-in" style={{ padding: '16px 12px', borderTop: `2px solid ${stat.color}`, animationDelay: '100ms' }}>
-              <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '10px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                {comp.label}
+      {/* Component cards — only shown when CNN returns live component data */}
+      {current?.components && Object.keys(current.components).length > 0 && (
+        <div className="responsive-grid" style={{ marginBottom: '20px', gap: '12px', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(7, 1fr)' }}>
+          {COMPONENTS.map(comp => {
+            const c = current.components[comp.key];
+            if (!c) return null;
+            const col = ratingColor(c.rating);
+            return (
+              <div key={comp.key} className="glass-card animate-in" style={{ padding: '16px 12px', borderTop: `2px solid ${col}`, animationDelay: '100ms' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '10px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {comp.label}
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: 'var(--bb-white)' }}>
+                  {c.score.toFixed(0)}
+                </div>
+                <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '600', color: col, marginTop: '8px', letterSpacing: '0.5px' }}>
+                  {c.rating.toUpperCase()}
+                </div>
               </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: '700', color: 'var(--bb-white)' }}>
-                {val.toFixed(0)}
-              </div>
-              <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', fontWeight: '600', color: stat.color, marginTop: '8px', letterSpacing: '0.5px' }}>
-                {stat.label}
-              </div>
-              {comp.key === 'put_call' && meta.put_call_is_proxy && (
-                <div style={{ fontSize: '9px', color: 'var(--bb-yellow)', marginTop: '4px', opacity: 0.8 }}>VIX PROXY</div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Main Chart */}
+      {/* Historical Chart */}
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>FEAR & GREED INDEX (0-100)</span>
@@ -171,7 +190,7 @@ export function FearGreedIndex({ isMobile }) {
             <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--bb-cyan)" stopOpacity={0.5}/>
+                  <stop offset="0%" stopColor="var(--bb-blue)" stopOpacity={0.5}/>
                   <stop offset="25%" stopColor="var(--bb-green)" stopOpacity={0.3}/>
                   <stop offset="50%" stopColor="var(--bb-gray-2)" stopOpacity={0.1}/>
                   <stop offset="75%" stopColor="var(--bb-yellow)" stopOpacity={0.3}/>
@@ -182,12 +201,12 @@ export function FearGreedIndex({ isMobile }) {
               <XAxis dataKey="date" stroke="var(--bb-gray-3)" tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} stroke="var(--bb-gray-3)" tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              
-              <ReferenceLine y={25} stroke="var(--bb-red)" strokeDasharray="3 3" label={{ value: '25 - Extreme Fear', fill: 'var(--bb-red)', fontSize: 9, position: 'insideTopLeft' }} />
+
+              <ReferenceLine y={25} stroke="var(--bb-red)" strokeDasharray="3 3" label={{ value: '25 — Extreme Fear', fill: 'var(--bb-red)', fontSize: 9, position: 'insideTopLeft' }} />
               <ReferenceLine y={45} stroke="var(--bb-yellow)" strokeDasharray="3 3" />
               <ReferenceLine y={55} stroke="var(--bb-gray-2)" strokeDasharray="3 3" />
-              <ReferenceLine y={75} stroke="var(--bb-green)" strokeDasharray="3 3" label={{ value: '75 - Extreme Greed', fill: 'var(--bb-green)', fontSize: 9, position: 'insideBottomLeft' }} />
-              
+              <ReferenceLine y={75} stroke="var(--bb-green)" strokeDasharray="3 3" label={{ value: '75 — Extreme Greed', fill: 'var(--bb-green)', fontSize: 9, position: 'insideBottomLeft' }} />
+
               {chartType === 'area' ? (
                 <Area type="monotone" dataKey="fear_greed_index" stroke="var(--bb-white)" strokeWidth={2} fill="url(#fgGradient)" name="Index" dot={false} />
               ) : (
@@ -195,21 +214,21 @@ export function FearGreedIndex({ isMobile }) {
               )}
             </ComposedChart>
           </ResponsiveContainer>
-          
+
           <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)' }}>0-25 EXTREME FEAR</div>
+            <div className="badge" style={{ color: 'var(--bb-red)',    borderColor: 'var(--bb-red)',    background: 'var(--bb-panel-alt)' }}>0-25 EXTREME FEAR</div>
             <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'var(--bb-yellow)', background: 'var(--bb-panel-alt)' }}>25-45 FEAR</div>
             <div className="badge" style={{ color: 'var(--bb-gray-2)', borderColor: 'var(--bb-border-light)', background: 'var(--bb-panel-alt)' }}>45-55 NEUTRAL</div>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)' }}>55-75 GREED</div>
-            <div className="badge" style={{ color: 'var(--bb-royal)', borderColor: 'var(--bb-royal)', background: 'var(--bb-panel-alt)' }}>75-100 EXTREME GREED</div>
+            <div className="badge" style={{ color: 'var(--bb-green)',  borderColor: 'var(--bb-green)',  background: 'var(--bb-panel-alt)' }}>55-75 GREED</div>
+            <div className="badge" style={{ color: 'var(--bb-blue)',   borderColor: 'var(--bb-blue)',   background: 'var(--bb-panel-alt)' }}>75-100 EXTREME GREED</div>
           </div>
         </div>
       </div>
 
       <SourceLink
-        href="https://money.cnn.com/data/fear-and-greed/"
-        label="CNN Fear &amp; Greed Index"
-        note="Custom proxy — methodology inspired by CNN's composite sentiment indicator"
+        href="https://www.cnn.com/markets/fear-and-greed"
+        label="CNN Fear & Greed Index"
+        note="Live data via CNN API — updated daily"
       />
     </>
   );
