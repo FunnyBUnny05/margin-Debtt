@@ -47,7 +47,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
               }}
               onMouseEnter={(e) => {
                 if (selectedSector !== sector.symbol) {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.background = 'var(--bb-panel-alt)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -109,7 +109,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
             {expandedSector === sector.symbol && sector.structuralBaseline !== null && (
               <div className="animate-in" style={{
                 padding: '12px 16px',
-                background: 'rgba(0, 0, 0, 0.2)',
+                background: 'var(--bb-border-light)',
                 borderLeft: '3px solid var(--bb-border-light)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
@@ -137,7 +137,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                       {sector.excessReturn >= 0 ? '+' : ''}{sector.excessReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ marginTop: '8px', padding: '6px 8px', background: 'rgba(255, 255, 255, 0.05)', fontSize: '11px', color: 'var(--bb-gray-2)', fontFamily: 'var(--font-ui)' }}>
+                  <div style={{ marginTop: '8px', padding: '6px 8px', background: 'var(--bb-panel-alt)', fontSize: '11px', color: 'var(--bb-gray-2)', fontFamily: 'var(--font-ui)' }}>
                     {sector.excessReturn !== null && sector.excessReturn !== undefined && (
                       <>
                         {sector.excessReturn < -5

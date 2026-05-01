@@ -261,8 +261,8 @@ export const SectorZScore = ({ isMobile }) => {
             <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} />
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)', fontSize: '10px' }}>CYCLICAL LOW (-2)</div>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)', fontSize: '10px' }}>EXTENDED (+2)</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)', fontSize: '10px' }}>CYCLICAL LOW (-2)</div>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)', fontSize: '10px' }}>EXTENDED (+2)</div>
           </div>
           </div>
         </div>
@@ -340,7 +340,7 @@ export const SectorZScore = ({ isMobile }) => {
             This calculation accounts for each sector's structural relationship with the benchmark.
           </p>
           <div style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: 'var(--bb-border-light)',
             padding: '12px 16px',
             borderLeft: '2px solid var(--bb-yellow)',
             fontFamily: 'var(--font-mono)',

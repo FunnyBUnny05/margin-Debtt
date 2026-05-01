@@ -80,7 +80,7 @@ export function SofrRate({ isMobile }) {
 
   if (loading) return (
     <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-cyan)', letterSpacing: '2px' }} className="pulse-animation">LOADING SOFR...</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-royal)', letterSpacing: '2px' }} className="pulse-animation">LOADING SOFR...</div>
     </div>
   );
 
@@ -118,11 +118,11 @@ export function SofrRate({ isMobile }) {
     <>
       {/* Key Metrics */}
       <div className="responsive-grid" style={{ marginTop: '16px', marginBottom: '20px' }}>
-        <div className="stat-card" style={{ borderTop: `3px solid var(--bb-cyan)` }}>
+        <div className="stat-card" style={{ borderTop: `3px solid var(--bb-royal)` }}>
           <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
             SOFR RATE ({latest?.date})
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-cyan)' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-royal)' }}>
             {latest?.rate?.toFixed(2)}%
           </div>
         </div>
@@ -194,8 +194,8 @@ export function SofrRate({ isMobile }) {
             <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="sofrGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--bb-royal)" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="var(--bb-royal)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
@@ -365,9 +365,9 @@ export function SofrRate({ isMobile }) {
       </div>
 
       {/* About Card */}
-      <div className="glass-card animate-in" style={{ padding: '16px 20px', borderLeft: '3px solid var(--bb-cyan)', animationDelay: '400ms' }}>
+      <div className="glass-card animate-in" style={{ padding: '16px 20px', borderLeft: '3px solid var(--bb-royal)', animationDelay: '400ms' }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-cyan)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-royal)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
             ABOUT SOFR
           </div>
           <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-1)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>

@@ -246,9 +246,9 @@ export function PpiIndex({ isMobile }) {
             </ComposedChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)' }}>HOT (&gt;+0.5%)</div>
-            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.1)' }}>WARM (0–+0.5%)</div>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)' }}>COOLING (&lt;0%)</div>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)' }}>HOT (&gt;+0.5%)</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'var(--bb-yellow)', background: 'var(--bb-panel-alt)' }}>WARM (0–+0.5%)</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)' }}>COOLING (&lt;0%)</div>
           </div>
         </div>
       </div>
@@ -313,9 +313,9 @@ export function PpiIndex({ isMobile }) {
             </ComposedChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(239, 68, 68, 0.1)' }}>DANGER (&gt;4%)</div>
-            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.1)' }}>FED TARGET (~2%)</div>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(16, 185, 129, 0.3)', background: 'rgba(16, 185, 129, 0.1)' }}>DEFLATIONARY (&lt;0%)</div>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)' }}>DANGER (&gt;4%)</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'var(--bb-yellow)', background: 'var(--bb-panel-alt)' }}>FED TARGET (~2%)</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)' }}>DEFLATIONARY (&lt;0%)</div>
           </div>
         </div>
       </div>

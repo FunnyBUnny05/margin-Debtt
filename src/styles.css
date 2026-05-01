@@ -28,6 +28,7 @@ html {
   --bb-orange:  #F97316;   /* Warning / caution */
   --bb-yellow:  #EAB308;   /* Alert / caution */
   --bb-purple:  #A855F7;   /* Secondary accent */
+  --bb-royal:   var(--bb-blue);   /* alias — components merged from main */
 
   /* Dimmed variants for fill/background use */
   --bb-blue-dim:   rgba(59,  130, 246, 0.15);

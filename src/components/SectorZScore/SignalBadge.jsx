@@ -3,18 +3,18 @@ import { SIGNAL_THRESHOLDS } from './constants';
 
 const getSignal = (zScore) => {
   if (zScore === null || zScore === undefined) {
-    return { label: 'N/A', color: 'var(--bb-gray-2)', bg: 'rgba(0, 0, 0, 0.2)', border: 'var(--bb-border-light)' };
+    return { label: 'N/A', color: 'var(--bb-gray-2)', bg: 'var(--bb-border-light)', border: 'var(--bb-border-light)' };
   }
   if (zScore <= SIGNAL_THRESHOLDS.CYCLICAL_LOW) {
-    return { label: 'CYCLIC LOW', color: 'var(--bb-green)', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.3)' };
+    return { label: 'CYCLIC LOW', color: 'var(--bb-green)', bg: 'var(--bb-panel-alt)', border: 'var(--bb-green)' };
   }
   if (zScore <= SIGNAL_THRESHOLDS.CHEAP) {
-    return { label: 'CHEAP', color: 'var(--bb-cyan)', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.3)' };
+    return { label: 'CHEAP', color: 'var(--bb-royal)', bg: 'var(--bb-panel-alt)', border: 'var(--bb-royal)' };
   }
   if (zScore >= SIGNAL_THRESHOLDS.EXTENDED) {
-    return { label: 'EXTENDED', color: 'var(--bb-red)', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' };
+    return { label: 'EXTENDED', color: 'var(--bb-red)', bg: 'var(--bb-panel-alt)', border: 'var(--bb-red)' };
   }
-  return { label: 'NEUTRAL', color: 'var(--bb-gray-2)', bg: 'rgba(255, 255, 255, 0.05)', border: 'var(--bb-border-light)' };
+  return { label: 'NEUTRAL', color: 'var(--bb-gray-2)', bg: 'var(--bb-panel-alt)', border: 'var(--bb-border-light)' };
 };
 
 export const SignalBadge = ({ zScore }) => {

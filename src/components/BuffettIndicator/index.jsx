@@ -101,7 +101,7 @@ const CashTooltip = ({ active, payload, label }) => {
   return (
     <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
       <div style={{ fontWeight: '700', color: 'var(--bb-yellow)', marginBottom: '8px', fontSize: '13px' }}>{label}</div>
-      <div style={{ color: 'var(--bb-cyan)', fontSize: '12px' }}>
+      <div style={{ color: 'var(--bb-royal)', fontSize: '12px' }}>
         CASH &amp; T-BILLS: <strong style={{ color: 'var(--bb-white)' }}>${payload[0].value?.toFixed(1)}B</strong>
       </div>
     </div>
@@ -134,7 +134,7 @@ const BuffettTooltip = ({ active, payload, label }) => {
       <div style={{ color: 'var(--bb-yellow)', fontWeight: '700', marginBottom: '8px', fontSize: '13px' }}>
         {label ? new Date(label).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) : ''}
       </div>
-      {ratio && <div style={{ color: 'var(--bb-cyan)', fontSize: '12px', marginBottom: '2px' }}>RATIO: <strong style={{ color: 'var(--bb-white)' }}>{ratio.value?.toFixed(1)}%</strong></div>}
+      {ratio && <div style={{ color: 'var(--bb-royal)', fontSize: '12px', marginBottom: '2px' }}>RATIO: <strong style={{ color: 'var(--bb-white)' }}>{ratio.value?.toFixed(1)}%</strong></div>}
       {trend && <div style={{ color: 'var(--bb-gray-2)', fontSize: '11px', marginBottom: '2px' }}>TREND: {trend.value?.toFixed(1)}%</div>}
       {p2 && m2 && <div style={{ color: 'var(--bb-gray-3)', fontSize: '11px' }}>BAND: {m2.value?.toFixed(0)}% — {p2.value?.toFixed(0)}%</div>}
     </div>
@@ -298,7 +298,7 @@ export const BuffettIndicator = ({ isMobile }) => {
           )}
 
           {biStatus === 'loading' && (
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--bb-cyan)', padding: '24px 0', textAlign: 'center', letterSpacing: '1px' }} className="pulse-animation">
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--bb-royal)', padding: '24px 0', textAlign: 'center', letterSpacing: '1px' }} className="pulse-animation">
               LOADING DATA...
             </div>
           )}
@@ -440,7 +440,7 @@ export const BuffettIndicator = ({ isMobile }) => {
             <div style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', color: 'var(--bb-gray-2)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
               {label}
             </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: color === '#F59E0B' || color === '#FCD34D' ? 'var(--bb-yellow)' : color === '#10B981' ? 'var(--bb-green)' : color === '#EF4444' ? 'var(--bb-red)' : 'var(--bb-cyan)', lineHeight: 1 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: color === '#F59E0B' || color === '#FCD34D' ? 'var(--bb-yellow)' : color === '#10B981' ? 'var(--bb-green)' : color === '#EF4444' ? 'var(--bb-red)' : 'var(--bb-royal)', lineHeight: 1 }}>
               {value}
             </div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>
@@ -512,15 +512,15 @@ export const BuffettIndicator = ({ isMobile }) => {
                 tickLine={false}
                 width={52}
               />
-              <Tooltip content={<CashTooltip />} cursor={{ fill: 'rgba(34,211,238,0.06)' }} />
+              <Tooltip content={<CashTooltip />} cursor={{ fill: 'rgba(37,99,235,0.06)' }} />
               {cashMainType === 'line' ? (
-                <Line type="monotone" dataKey="cash" stroke="var(--bb-cyan)" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="cash" stroke="var(--bb-royal)" strokeWidth={3} dot={false} />
               ) : (
                 <Bar dataKey="cash" radius={[4, 4, 0, 0]} name="Cash & T-Bills">
                   {filtered.map((entry) => (
                     <Cell
                       key={entry.year}
-                      fill={entry.cash >= 200 ? 'var(--bb-cyan)' : entry.cash >= 100 ? 'rgba(34,211,238,0.8)' : entry.cash >= 50 ? 'rgba(34,211,238,0.6)' : 'rgba(34,211,238,0.4)'}
+                      fill={entry.cash >= 200 ? 'var(--bb-royal)' : entry.cash >= 100 ? 'rgba(37,99,235,0.8)' : entry.cash >= 50 ? 'rgba(37,99,235,0.6)' : 'rgba(37,99,235,0.4)'}
                     />
                   ))}
                 </Bar>
