@@ -54,16 +54,6 @@ def fetch_archive():
     return records
 
 
-def load_existing():
-    """Load existing JSON so we can keep data not returned by the API."""
-    try:
-        with open(OUTPUT_FILE) as f:
-            existing = json.load(f)
-        return {row["date"]: row["value"] for row in existing.get("historical", [])}
-    except Exception:
-        return {}
-
-
 def main():
     print("Fetching CNN Fear & Greed Index...")
 
@@ -99,8 +89,9 @@ def main():
     except Exception as e:
         print(f"  Archive fetch failed: {e}")
 
-    # 3. Merge: existing → archive → CNN (most authoritative wins)
-    merged = {**load_existing(), **archive, **cnn_historical}
+    # 3. Merge: archive (2011+) → CNN API (most recent ~1yr, most authoritative)
+    # No fallback to old reconstructed data — only real CNN-published values.
+    merged = {**archive, **cnn_historical}
     historical = [
         {"date": date, "value": val}
         for date, val in sorted(merged.items())
