@@ -22,80 +22,80 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install Python dependencies
         run: pip install pandas openpyxl requests beautifulsoup4 cloudscraper yfinance
 
-      - name: Fetch FINRA margin data
-        id: finra_fetch
-        run: python scripts/fetch_finra_data.py
-        continue-on-error: true
+      - name: Fetch all market data (parallel)
+        run: |
+          set +e
+          python scripts/fetch_finra_data.py      > /tmp/finra.log 2>&1 & PIDS[0]=$!
+          python scripts/fetch_aaii_allocation.py  > /tmp/aaii.log  2>&1 & PIDS[1]=$!
+          python scripts/fetch_cboe_putcall.py     > /tmp/cboe.log  2>&1 & PIDS[2]=$!
+          python scripts/fetch_fear_greed.py       > /tmp/fg.log    2>&1 & PIDS[3]=$!
+          python scripts/fetch_buffett_indicator.py > /tmp/buffett.log 2>&1 & PIDS[4]=$!
 
-      - name: Fetch AAII allocation data
-        id: aaii_fetch
-        run: python scripts/fetch_aaii_allocation.py
-        continue-on-error: true
+          wait "${PIDS[0]}"; R0=$?
+          wait "${PIDS[1]}"; R1=$?
+          wait "${PIDS[2]}"; R2=$?
+          wait "${PIDS[3]}"; R3=$?
+          wait "${PIDS[4]}"; R4=$?
 
-      - name: Fetch CBOE Put/Call ratio data
-        id: cboe_fetch
-        run: python scripts/fetch_cboe_putcall.py
-        continue-on-error: true
+          echo "=== FINRA ===" && cat /tmp/finra.log
+          echo "=== AAII ===" && cat /tmp/aaii.log
+          echo "=== CBOE ===" && cat /tmp/cboe.log
+          echo "=== Fear & Greed ===" && cat /tmp/fg.log
+          echo "=== Buffett ===" && cat /tmp/buffett.log
 
-      - name: Build Fear & Greed Index
-        id: fear_greed_fetch
-        run: python scripts/fear_greed_index.py
-        continue-on-error: true
-
-      - name: Fetch Buffett Indicator data
-        id: buffett_fetch
-        run: python scripts/fetch_buffett_indicator.py
-        continue-on-error: true
+          [ $R0 -ne 0 ] && echo "::warning::FINRA fetch failed — data may be stale"
+          [ $R1 -ne 0 ] && echo "::warning::AAII fetch failed — data may be stale"
+          [ $R2 -ne 0 ] && echo "::warning::CBOE put/call fetch failed — data may be stale"
+          [ $R3 -ne 0 ] && echo "::warning::Fear & Greed fetch failed — data may be stale"
+          [ $R4 -ne 0 ] && echo "::warning::Buffett Indicator fetch failed — data may be stale"
+          exit 0
 
       - name: Report data freshness
         if: always()
         run: |
-          python -c "
+          python - <<'EOF'
           import json, os
-          from datetime import datetime
-          for f in ['margin_data.json', 'aaii_allocation_data.json', 'put_call_data.json', 'buffett_indicator_data.json']:
-              path = f'public/{f}'
-              if os.path.exists(path):
-                  data = json.load(open(path))
-                  latest = data.get('data', [{}])[-1].get('date', 'unknown')
-                  updated = data.get('last_updated', 'unknown')[:10]
-                  print(f'{f}: latest_data={latest}, last_updated={updated}')
-              else:
-                  print(f'{f}: FILE MISSING')
-          "
-
-      - name: Warn on fetch failures
-        if: steps.finra_fetch.outcome == 'failure' || steps.aaii_fetch.outcome == 'failure' || steps.cboe_fetch.outcome == 'failure' || steps.buffett_fetch.outcome == 'failure' || steps.fear_greed_fetch.outcome == 'failure'
-        run: |
-          if [ "${{ steps.finra_fetch.outcome }}" = "failure" ]; then
-            echo "::warning::FINRA margin data fetch failed - data may be stale"
-          fi
-          if [ "${{ steps.aaii_fetch.outcome }}" = "failure" ]; then
-            echo "::warning::AAII allocation data fetch failed - data may be stale"
-          fi
-          if [ "${{ steps.cboe_fetch.outcome }}" = "failure" ]; then
-            echo "::warning::CBOE put/call data fetch failed - data may be stale"
-          fi
-          if [ "${{ steps.buffett_fetch.outcome }}" = "failure" ]; then
-            echo "::warning::Buffett Indicator data fetch failed - data may be stale"
-          fi
-          if [ "${{ steps.fear_greed_fetch.outcome }}" = "failure" ]; then
-            echo "::warning::Fear & Greed Index build failed - CSV may be stale"
-          fi
+          files = {
+            'margin_data.json':           ('data', 'date'),
+            'aaii_allocation_data.json':  ('data', 'date'),
+            'put_call_data.json':         ('data', 'date'),
+            'buffett_indicator_data.json':('data', 'date'),
+          }
+          for fname, (arr_key, date_key) in files.items():
+            path = f'public/{fname}'
+            if os.path.exists(path):
+              data = json.load(open(path))
+              latest = data.get(arr_key, [{}])[-1].get(date_key, 'unknown')
+              updated = data.get('last_updated', 'unknown')[:10]
+              print(f'{fname}: latest_data={latest}, last_updated={updated}')
+            else:
+              print(f'{fname}: FILE MISSING')
+          fg = 'public/fear_greed_index.json'
+          if os.path.exists(fg):
+            data = json.load(open(fg))
+            hist = data.get('historical', [])
+            latest = hist[-1]['date'] if hist else 'unknown'
+            updated = data.get('last_updated', 'unknown')[:10]
+            print(f'fear_greed_index.json: latest_data={latest}, last_updated={updated}')
+          else:
+            print('fear_greed_index.json: FILE MISSING')
+          EOF
 
       - name: Commit updated data
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add public/margin_data.json public/aaii_allocation_data.json public/put_call_data.json public/buffett_indicator_data.json
-          # Only stage fear & greed outputs if the build step actually wrote them
-          for f in public/fear_greed_index.csv public/fear_greed_meta.json; do
-            [ -f "$f" ] && git add "$f" || echo "Skipping $f (not present)"
-          done
+          git add \
+            public/margin_data.json \
+            public/aaii_allocation_data.json \
+            public/put_call_data.json \
+            public/buffett_indicator_data.json \
+            public/fear_greed_index.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
@@ -106,27 +106,27 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          
-      
+          cache: 'npm'
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Build
         run: npm run build
-      
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-      
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
-      
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
