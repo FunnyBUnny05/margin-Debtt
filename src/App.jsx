@@ -9,36 +9,18 @@ import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { FearGreedIndex } from './components/FearGreedIndex';
 import { SourceLink } from './components/SourceLink';
+import { ChartToggle } from './components/ChartToggle';
+import { formatDate } from './utils/formatDate';
+import { ChartTooltip } from './components/ChartTooltip';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
-const formatDate = (date) => {
-  if (!date) return '';
-  const [year, month] = date.split('-');
-  return `${month}/${year.slice(2)}`;
+const marginFormatValue = (p) => {
+  if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
+  if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
+  return p.value;
 };
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const formatValue = (p) => {
-      if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
-      if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
-      return p.value;
-    };
-
-    return (
-      <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-        <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>{label}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color, margin: '4px 0 0 0', fontSize: '13px', fontWeight: '500' }}>
-            {p.name}: {formatValue(p)}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const CustomTooltip = (props) => <ChartTooltip {...props} formatValue={marginFormatValue} />;
 
 const normalizeMonthKey = (dateStr) => {
   const parsed = new Date(dateStr);
@@ -89,30 +71,6 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
-const ChartToggle = ({ type, setType }) => (
-    <div style={{ display: 'flex', background: 'var(--bb-black)', border: '1px solid var(--bb-border)', overflow: 'hidden', borderRadius: '2px' }}>
-      <button
-        onClick={() => setType('line')}
-        style={{
-          background: type === 'line' ? 'var(--bb-border-light)' : 'transparent',
-          color: type === 'line' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
-          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-        }}
-      >
-        LINE
-      </button>
-      <button
-        onClick={() => setType('bar')}
-        style={{
-          background: type === 'bar' ? 'var(--bb-border-light)' : 'transparent',
-          color: type === 'bar' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
-          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-        }}
-      >
-        BAR
-      </button>
-    </div>
-);
 
 export default function App() {
   const [rawData, setRawData] = useState([]);
@@ -405,71 +363,88 @@ export default function App() {
 
   const thresholdStats = calculateThresholdStats(data);
 
+  const SECTION_LABELS = {
+    margin: 'FINRA Margin Debt',
+    aaii: 'AAII Asset Allocation',
+    sectors: 'Sector Z-Score',
+    buffett: 'Buffett Indicator',
+    sofr: 'SOFR Rate',
+    ppi: 'PPI Index',
+    fear_greed: 'Fear & Greed Index',
+  };
+
+  const updatedDate = dataSource === 'margin' ? metadata?.lastUpdated
+    : dataSource === 'aaii' ? aaiiMetadata?.lastUpdated
+    : null;
+
   return (
-    <div className="app-background" style={{ minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="bb-panel" style={{ margin: isMobile ? '8px' : '16px 0', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div className="bb-topbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '0%', background: 'var(--bb-royal)' }}></div>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '800', fontSize: '18px', color: 'var(--bb-navy)', letterSpacing: '1.5px' }}>STOCK</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '300', fontSize: '18px', color: 'var(--bb-royal)', letterSpacing: '1px' }}>SENTINEL</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '600', fontSize: '12px', color: 'var(--bb-gray-2)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : dataSource === 'aaii' ? 'AAII Asset Allocation Survey' : dataSource === 'sectors' ? 'Sector Z-Score Dashboard' : dataSource === 'sofr' ? 'Secured Overnight Financing Rate' : dataSource === 'ppi' ? 'Producer Price Index' : dataSource === 'fear_greed' ? 'Fear & Greed Index' : 'Buffett Indicator'}
-              </span>
-              {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-                <span className="bb-topbar-date" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bb-gray-3)' }}>
-                  UPDATED: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
-                </span>
-              )}
-            </div>
-          </div>
+    <div className="app-background">
+
+      {/* ── Top bar ── */}
+      <header className="trader-topbar">
+        <div className="trader-logo">
+          <div className="trader-logo-mark">SS</div>
+          <div className="trader-logo-name">STOCK <span>SENTINEL</span></div>
         </div>
 
-        <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          {[
-            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'MARGIN DEBT' },
-            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII SURVEY' },
-            { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
-            { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT IND' },
-            { key: 'sofr',    label: isMobile ? 'SOFR'    : 'SOFR RATE' },
-            { key: 'ppi',     label: isMobile ? 'PPI'     : 'PPI INDEX' },
-            { key: 'fear_greed', label: isMobile ? 'F&G' : 'FEAR & GREED' },
-          ].map(({ key, label }) => (
+        <div className="trader-topbar-meta">
+          <span className="trader-section-label">{SECTION_LABELS[dataSource]}</span>
+          {updatedDate && (
+            <span className="trader-updated bb-topbar-date">
+              {formatLastUpdated(updatedDate)}
+            </span>
+          )}
+          <div className="trader-live-badge">
+            <div className="trader-live-dot" />
+            LIVE
+          </div>
+        </div>
+      </header>
+
+      {/* ── Tab bar ── */}
+      <nav className="trader-tabbar">
+        {[
+          { key: 'margin',     label: isMobile ? 'MARGIN'  : 'MARGIN DEBT' },
+          { key: 'aaii',       label: isMobile ? 'AAII'    : 'AAII SURVEY' },
+          { key: 'sectors',    label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
+          { key: 'buffett',    label: isMobile ? 'BUFFETT' : 'BUFFETT IND' },
+          { key: 'sofr',       label: isMobile ? 'SOFR'    : 'SOFR RATE' },
+          { key: 'ppi',        label: isMobile ? 'PPI'     : 'PPI INDEX' },
+          { key: 'fear_greed', label: isMobile ? 'F&G'     : 'FEAR & GREED' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setDataSource(key)}
+            className={`bb-tab ${dataSource === key ? 'active' : ''}`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {/* ── Time range strip (margin / aaii only) ── */}
+      {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
+        <div className="trader-timestrip">
+          {['2y', '5y', '10y', 'all'].map(range => (
             <button
-              key={key}
-              onClick={() => setDataSource(key)}
-              className={`bb-tab ${dataSource === key ? 'active' : ''}`}
-              style={{ flexShrink: 0 }}
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`bb-tab ${timeRange === range ? 'active' : ''}`}
             >
-              {label}
+              {range.toUpperCase()}
             </button>
           ))}
         </div>
+      )}
 
-        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
-          <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {['2y', '5y', '10y', 'all'].map(range => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`bb-tab ${timeRange === range ? 'active' : ''}`}
-                style={{ padding: '6px 16px', fontSize: '12px', flexShrink: 0 }}
-              >
-                {range.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* ── Main content ── */}
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '12px 10px' : '16px 20px' }}>
 
         {dataSource === 'margin' && (
           <>
             <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
-              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-royal)' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   CURRENT ({currentDebt.date})
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
@@ -523,8 +498,8 @@ export default function App() {
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--bb-royal)" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="var(--bb-royal)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
@@ -549,13 +524,13 @@ export default function App() {
                     <Area
                       type="monotone"
                       dataKey="margin_debt_bn"
-                      stroke="var(--bb-royal)"
+                      stroke="var(--bb-cyan)"
                       strokeWidth={3}
                       fill="url(#marginGradient)"
                       name="Margin Debt"
                     />
                   ) : (
-                    <Bar dataKey="margin_debt_bn" fill="var(--bb-royal)" radius={[4, 4, 0, 0]} name="Margin Debt" />
+                    <Bar dataKey="margin_debt_bn" fill="var(--bb-cyan)" radius={[4, 4, 0, 0]} name="Margin Debt" />
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
@@ -761,8 +736,8 @@ export default function App() {
               return (
                 <>
                   <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-royal)' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         STOCKS ({currentAllocation?.date})
                       </div>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
@@ -829,8 +804,8 @@ export default function App() {
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--bb-royal)" stopOpacity={0.15}/>
-                            <stop offset="95%" stopColor="var(--bb-royal)" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="bondsGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="var(--bb-yellow)" stopOpacity={0.25}/>
@@ -862,13 +837,13 @@ export default function App() {
                         <Tooltip content={<CustomTooltip />} />
                         {aaiiAllocType === 'line' ? (
                           <>
-                            <Area type="monotone" dataKey="stocks" stroke="var(--bb-royal)" strokeWidth={3} fill="url(#stocksGradient)" name="Stocks" />
+                            <Area type="monotone" dataKey="stocks" stroke="var(--bb-cyan)" strokeWidth={3} fill="url(#stocksGradient)" name="Stocks" />
                             <Area type="monotone" dataKey="bonds" stroke="var(--bb-yellow)" strokeWidth={3} fill="url(#bondsGradient)" name="Bonds" />
                             <Area type="monotone" dataKey="cash" stroke="var(--bb-green)" strokeWidth={3} fill="url(#cashGradient)" name="Cash" />
                           </>
                         ) : (
                           <>
-                            <Bar dataKey="stocks" fill="var(--bb-royal)" name="Stocks" stackId="alloc" />
+                            <Bar dataKey="stocks" fill="var(--bb-cyan)" name="Stocks" stackId="alloc" />
                             <Bar dataKey="bonds" fill="var(--bb-yellow)" name="Bonds" stackId="alloc" />
                             <Bar dataKey="cash" fill="var(--bb-green)" name="Cash" stackId="alloc" />
                           </>
@@ -1011,25 +986,27 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        <div className="app-footer" style={{ borderTop: '1px solid var(--bb-border-light)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: 'var(--bb-black)' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', letterSpacing: '0.5px' }}>
-            © {new Date().getFullYear()} STOCK SENTINEL. ALL RIGHTS RESERVED.
-          </span>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-4)', fontSize: '10px' }}>v1.0.0</span>
-            <a 
-              href="https://github.com/FunnyBunny05" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--bb-yellow)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--bb-gray-3)'}
-            >
-              GITHUB
-            </a>
-          </div>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="app-footer" style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', letterSpacing: '0.5px' }}>
+          © {new Date().getFullYear()} STOCK SENTINEL — FOR INFORMATIONAL PURPOSES ONLY
+        </span>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-4)', fontSize: '10px' }}>v1.1.0</span>
+          <a
+            href="https://github.com/FunnyBunny05"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', textDecoration: 'none' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--bb-blue)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--bb-gray-3)'}
+          >
+            GITHUB
+          </a>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

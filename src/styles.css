@@ -1,349 +1,501 @@
-/* 
- * AAII-Style Corporate Design System
- * Light, clean, institutional aesthetics.
+/*
+ * Stock Sentinel — Trader Terminal Design System
+ * Inspired by TradingView / Bloomberg dark theme.
+ * Always dark — no light-mode overrides.
  */
 
-:root {
-  /* Core Palette - Light Mode */
-  --bb-black: #FFFFFF; /* Main Background */
-  --bb-panel: #FFFFFF; /* Data Panels */
-  --bb-panel-alt: #F8FAFC; /* Hover/Secondary Panels */
-  --bb-border: #E2E8F0; /* Structural borders */
-  --bb-border-light: #F1F5F9; /* Subtle borders */
-  --bb-bg-gradient: #F8FAFC; /* Light gray background block */
-
-  /* AAII Accents */
-  --bb-navy: #0F172A; /* Slate 900 for dark text/headers */
-  --bb-navy-light: #1E293B;
-  --bb-royal: #2563EB; /* Blue 600 for primary actions */
-  
-  /* Status Colors */
-  --bb-orange: #F59E0B;
-  --bb-orange-dim: #D97706;
-  --bb-green: #16A34A; /* Corporate Green */
-  --bb-red: #DC2626; /* Corporate Red */
-  --bb-yellow: #EAB308;
-  --bb-cyan: #0EA5E9; /* Light blue accent */
-  --bb-purple: #9333EA;
-
-  /* Text (Dark for Light Mode) */
-  --bb-white: #0F172A; /* Main Text Color (Dark) */
-  --bb-gray-1: #334155; /* Secondary Text */
-  --bb-gray-2: #475569; /* Tertiary Text */
-  --bb-gray-3: #64748B; /* Muted Text */
-  --bb-gray-4: #94A3B8; /* Disabled/Borders */
-
-  /* Typography */
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-
-  /* Legacy aliases for compatibility */
-  --text-primary: #0F172A;
-  --text-secondary: #334155;
-  --text-tertiary: #475569;
-  --text-muted: #64748B;
-  --background-primary: #FFFFFF;
-  --background-secondary: #F8FAFC;
-  --glass-bg: #FFFFFF;
-  --glass-border: #E2E8F0;
-  --glass-hover: #F8FAFC;
-  
-  /* Shadows & Radius (Clean Corporate) */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: none;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  
-  /* Transitions */
-  --transition-fast: 0.15s ease-in-out;
-  --transition-smooth: 0.2s ease-in-out;
-  --transition-slow: 0.3s ease-in-out;
+/* ─── Force dark color scheme ───────────────────────────── */
+html {
+  color-scheme: dark;
 }
 
-* {
+:root {
+  /* ── Background layers ── */
+  --bb-black:       #0D1117;   /* Deepest bg */
+  --bb-panel:       #161B27;   /* Card / panel surface */
+  --bb-panel-alt:   #1C2333;   /* Elevated / hover surface */
+  --bb-bg-gradient: #0D1117;
+
+  /* ── Borders ── */
+  --bb-border:       #21273A;  /* Default structural border */
+  --bb-border-light: #2D3748;  /* Lighter / visible border */
+
+  /* ── Accent colors ── */
+  --bb-blue:    #3B82F6;   /* Primary trader blue */
+  --bb-cyan:    #06B6D4;   /* Info / highlight */
+  --bb-green:   #22C55E;   /* Bullish / positive */
+  --bb-red:     #EF4444;   /* Bearish / negative */
+  --bb-orange:  #F97316;   /* Warning / caution */
+  --bb-yellow:  #EAB308;   /* Alert / caution */
+  --bb-purple:  #A855F7;   /* Secondary accent */
+  --bb-royal:   var(--bb-blue);   /* alias — components merged from main */
+
+  /* Dimmed variants for fill/background use */
+  --bb-blue-dim:   rgba(59,  130, 246, 0.15);
+  --bb-green-dim:  rgba(34,  197,  94, 0.12);
+  --bb-red-dim:    rgba(239,  68,  68, 0.12);
+  --bb-cyan-dim:   rgba(6,   182, 212, 0.12);
+  --bb-orange-dim: rgba(249, 115,  22, 0.15);
+
+  /* ── Text ── */
+  --bb-white:  #E2E8F0;   /* Primary text */
+  --bb-gray-1: #94A3B8;   /* Secondary text */
+  --bb-gray-2: #64748B;   /* Muted text */
+  --bb-gray-3: #475569;   /* Very muted */
+  --bb-gray-4: #334155;   /* Barely visible */
+
+  /* Legacy aliases used by some components */
+  --text-primary:         #E2E8F0;
+  --text-secondary:       #94A3B8;
+  --text-tertiary:        #64748B;
+  --text-muted:           #475569;
+  --background-primary:   #0D1117;
+  --background-secondary: #161B27;
+  --glass-bg:             #161B27;
+  --glass-border:         #21273A;
+  --glass-hover:          #1C2333;
+
+  /* ── Typography ── */
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-ui:   'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Shape ── */
+  --radius-sm: 0px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
+  /* ── Elevation / shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.7);
+
+  /* ── Motion ── */
+  --transition-fast:   0.08s ease;
+  --transition-smooth: 0.15s ease;
+  --transition-slow:   0.25s ease;
+}
+
+/* ─── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
+/* ─── Base ───────────────────────────────────────────────── */
+html, body {
+  height: 100%;
+  background-color: var(--bb-black);
+  color: var(--bb-white);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bb-border-light); /* Off-white page background */
-  color: var(--bb-white); /* Dark Navy Text */
-  min-height: 100vh;
+  line-height: 1.5;
 }
 
-/* App Background */
+/* ─── App background ─────────────────────────────────────── */
 .app-background {
   min-height: 100vh;
-  position: relative;
-  z-index: 1;
+  background: var(--bb-black);
 }
 
-/* Solid Panels */
+/* ─── Panels / Cards ─────────────────────────────────────── */
 .bb-panel,
 .glass-card {
   background: var(--bb-panel);
   border: 1px solid var(--bb-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
 .bb-panel:hover,
 .glass-card:hover {
-  border-color: var(--bb-gray-4);
-  box-shadow: var(--shadow-md);
+  background: var(--bb-panel-alt);
+  border-color: var(--bb-border-light);
 }
 
-/* Panel Header Bar */
+/* ─── Panel header bar ───────────────────────────────────── */
 .bb-panel-header {
-  background: var(--bb-panel-alt);
+  background: rgba(255,255,255,0.03);
   border-bottom: 1px solid var(--bb-border);
   color: var(--bb-gray-1);
   font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 12px 16px;
-  margin: 0;
+  padding: 7px 14px;
   border-top-left-radius: var(--radius-md);
   border-top-right-radius: var(--radius-md);
 }
 
-/* Buttons */
-.bb-btn,
-.btn-primary {
-  padding: 8px 16px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 14px;
-  border: 1px solid var(--bb-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+/* ─── Trader Top Bar ─────────────────────────────────────── */
+.trader-topbar {
   background: var(--bb-panel);
-  color: var(--bb-white);
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--bb-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.bb-btn:hover,
-.btn-primary:hover {
-  background: var(--bb-panel-alt);
-  border-color: var(--bb-gray-4);
-  color: var(--bb-royal);
+.trader-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
 }
 
-.bb-btn:active,
-.btn-primary:active {
-  transform: translateY(1px);
+.trader-logo-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--bb-blue);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -1px;
 }
 
-/* Navigation Tabs */
-.bb-tab {
-  padding: 10px 16px;
+.trader-logo-name {
   font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  color: var(--bb-white);
+}
+
+.trader-logo-name span {
+  color: var(--bb-blue);
+  font-weight: 400;
+}
+
+.trader-topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.trader-section-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bb-gray-2);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.trader-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bb-green-dim);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--bb-green);
+  letter-spacing: 1px;
+}
+
+.trader-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bb-green);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+.trader-updated {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--bb-gray-3);
+  letter-spacing: 0.3px;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ─── Tab Navigation ─────────────────────────────────────── */
+.trader-tabbar {
+  background: var(--bb-black);
+  border-bottom: 1px solid var(--bb-border);
+  display: flex;
+  align-items: stretch;
+  padding: 0 16px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  gap: 0;
+}
+
+.trader-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.bb-tab {
+  padding: 0 16px;
+  height: 40px;
+  font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   cursor: pointer;
   background: transparent;
-  color: var(--bb-gray-3);
+  color: var(--bb-gray-2);
   transition: color var(--transition-fast), border-color var(--transition-fast);
   position: relative;
+  white-space: nowrap;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .bb-tab:hover {
-  color: var(--bb-royal);
-  background: transparent;
+  color: var(--bb-gray-1);
+  background: rgba(255,255,255,0.03);
 }
 
-.bb-tab-active,
-.bb-tab.active {
-  color: var(--bb-royal);
-  border-bottom: 2px solid var(--bb-royal);
-  background: transparent;
-  font-weight: 700;
+.bb-tab.active,
+.bb-tab-active {
+  color: var(--bb-cyan);
+  border-bottom-color: var(--bb-cyan);
+  background: rgba(6, 182, 212, 0.05);
 }
 
-/* Data Typography */
-.bb-data {
-  font-family: var(--font-mono);
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: -0.5px;
+/* ─── Time range strip ───────────────────────────────────── */
+.trader-timestrip {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bb-black);
 }
 
-.bb-label {
+.trader-timestrip .bb-tab {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 10px;
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid transparent;
+}
+
+.trader-timestrip .bb-tab.active {
+  background: var(--bb-blue-dim);
+  color: var(--bb-blue);
+  border-bottom-color: var(--bb-blue);
+}
+
+/* ─── Stat Cards ─────────────────────────────────────────── */
+.stat-card {
+  padding: 18px 20px;
+  position: relative;
+}
+
+.stat-card-label {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--bb-gray-2);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Table Rows */
+.stat-card-value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--bb-white);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.bb-btn,
+.btn-primary {
+  padding: 5px 12px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--bb-border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--bb-panel);
+  color: var(--bb-gray-1);
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+}
+
+.bb-btn:hover,
+.btn-primary:hover {
+  background: var(--bb-panel-alt);
+  border-color: var(--bb-blue);
+  color: var(--bb-blue);
+}
+
+/* ─── Data rows ──────────────────────────────────────────── */
 .bb-row {
   border-bottom: 1px solid var(--bb-border);
-  padding: 12px 16px;
+  padding: 10px 16px;
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   transition: background var(--transition-fast);
 }
 
-.bb-row:last-child {
-  border-bottom: none;
-}
+.bb-row:last-child { border-bottom: none; }
 
-.bb-row:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
+.bb-row:hover { background: rgba(255,255,255,0.03); }
 
 .bb-row.selected {
-  background: rgba(34, 211, 238, 0.1);
-  border-left: 3px solid var(--bb-cyan);
+  background: var(--bb-blue-dim);
+  border-left: 2px solid var(--bb-blue);
 }
 
-/* Badges */
+/* ─── Badges ─────────────────────────────────────────────── */
 .bb-badge,
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-ui);
-  font-size: 11px;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
+  letter-spacing: 0.5px;
   border: 1px solid;
   text-transform: uppercase;
 }
 
 .badge-success {
-  background: rgba(52, 211, 153, 0.1);
+  background: var(--bb-green-dim);
   color: var(--bb-green);
-  border-color: rgba(52, 211, 153, 0.2);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 .badge-warning {
-  background: rgba(251, 113, 133, 0.1);
+  background: var(--bb-red-dim);
   color: var(--bb-red);
-  border-color: rgba(251, 113, 133, 0.2);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 .badge-info {
-  background: rgba(34, 211, 238, 0.1);
+  background: var(--bb-cyan-dim);
   color: var(--bb-cyan);
-  border-color: rgba(34, 211, 238, 0.2);
+  border-color: rgba(6, 182, 212, 0.25);
 }
 
-/* Stat Card specific overrides */
-.stat-card {
-  padding: 24px;
-}
-
-/* Tooltip (Light) */
+/* ─── Tooltips ───────────────────────────────────────────── */
 .custom-tooltip {
-  background: var(--bb-panel) !important;
-  border: 1px solid var(--bb-border) !important;
-  border-radius: var(--radius-sm) !important;
-  padding: 12px 16px !important;
-  font-family: var(--font-ui);
-  font-size: 13px;
-  color: var(--bb-white) !important; /* Will be Navy */
+  background: #0D1117 !important;
+  border: 1px solid var(--bb-border-light) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 10px 14px !important;
+  font-family: var(--font-mono);
+  font-size: 11px;
   box-shadow: var(--shadow-md) !important;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+/* ─── Scrollbars ─────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--bb-border-light); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bb-gray-3); }
 
-::-webkit-scrollbar-track {
-  background: var(--bb-border-light);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--bb-gray-3);
-  border-radius: var(--radius-xl);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--bb-gray-2);
-}
-
-/* Responsive grid */
+/* ─── Grid ───────────────────────────────────────────────── */
 .responsive-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 @media (max-width: 640px) {
-  .responsive-grid {
-    grid-template-columns: 1fr;
-  }
+  .responsive-grid { grid-template-columns: 1fr; }
 }
 
-/* Smooth fade-in for page load (flattened slightly) */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* ─── Animation ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-in {
-  animation: fadeInUp 0.2s ease-in forwards;
+  animation: fadeIn 0.2s ease forwards;
 }
 
+/* ─── Mobile helpers ─────────────────────────────────────── */
 .mobile-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.mobile-scroll::-webkit-scrollbar {
-  display: none;
+.mobile-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── Pulse (loading) ────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.pulse-animation { animation: pulse 1.4s ease-in-out infinite; }
+
+/* ─── Footer ─────────────────────────────────────────────── */
+.app-footer {
+  background: var(--bb-panel);
+  border-top: 1px solid var(--bb-border);
 }
 
+/* ─── Mobile overrides ───────────────────────────────────── */
 @media (max-width: 480px) {
-  .app-background {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  .bb-topbar-date {
-    display: none;
-  }
-  .bb-topbar-brand {
-    padding: 6px 10px !important;
-  }
-  .bb-topbar-brand span {
-    font-size: 14px !important;
-  }
-  .bb-tab {
-    min-height: 44px;
-    padding: 8px 16px !important;
-    font-size: 12px !important;
-  }
-  .stat-card {
-    padding: 16px !important;
-  }
-  .responsive-grid {
-    grid-template-columns: 1fr;
-  }
-  .app-footer {
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  }
+  .app-background  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .bb-topbar-date  { display: none; }
+  .trader-topbar   { padding: 0 12px; height: 48px; }
+  .stat-card       { padding: 14px !important; }
+  .stat-card-value { font-size: 24px !important; }
+  .responsive-grid { grid-template-columns: 1fr; }
+  .app-footer      { padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .bb-tab          { padding: 0 12px; font-size: 10px; }
 }
+
+/* ─── Chart container utility ────────────────────────────── */
+.chart-wrap {
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .chart-wrap { padding: 10px 6px; }
+}
+
+/* ─── Divider ────────────────────────────────────────────── */
+.t-divider {
+  height: 1px;
+  background: var(--bb-border);
+  margin: 0;
+}
+
+/* ─── Number utility ─────────────────────────────────────── */
+.num-up   { color: var(--bb-green) !important; }
+.num-down { color: var(--bb-red)   !important; }
+.num-flat { color: var(--bb-gray-1) !important; }

@@ -5,51 +5,11 @@ import {
 } from 'recharts';
 import { ExportCsvButton } from './ExportCsvButton';
 import { SourceLink } from './SourceLink';
+import { ChartToggle } from './ChartToggle';
+import { formatDate } from '../utils/formatDate';
+import { ChartTooltip } from './ChartTooltip';
 
-const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('area')}
-      style={{
-        background: type === 'area' ? '#4B5563' : 'transparent',
-        color: type === 'area' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      AREA
-    </button>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-  </div>
-);
-
-const formatDate = (d) => {
-  if (!d) return '';
-  const [y, m] = d.split('-');
-  return `${m}/${y.slice(2)}`;
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-      <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, marginBottom: 8, fontSize: 14 }}>{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color, margin: '4px 0 0', fontSize: 13, fontWeight: 500 }}>
-          {p.name}: {p.value?.toFixed(2)}
-        </p>
-      ))}
-    </div>
-  );
-};
+const CustomTooltip = (props) => <ChartTooltip {...props} />;
 
 const getStatus = (val) => {
   if (val < 25) return { label: 'EXTREME FEAR', color: 'var(--bb-red)' };
@@ -203,7 +163,7 @@ export function FearGreedIndex({ isMobile }) {
           <span>FEAR & GREED INDEX (0-100)</span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton data={filteredData} filename="fear_greed_index" />
-            <ChartToggle type={chartType} setType={setChartType} />
+            <ChartToggle type={chartType} setType={setChartType} options={['area', 'line']} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>

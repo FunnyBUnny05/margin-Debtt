@@ -5,32 +5,7 @@ import {
   ComposedChart, Line, Area,
 } from 'recharts';
 import { SourceLink } from '../SourceLink';
-
-
-const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-    <button
-      onClick={() => setType('bar')}
-      style={{
-        background: type === 'bar' ? '#4B5563' : 'transparent',
-        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      BAR
-    </button>
-  </div>
-);
+import { ChartToggle } from '../ChartToggle';
 import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 import { useFredBuffettData } from './useFredBuffettData';
 import { ExportCsvButton } from '../ExportCsvButton';

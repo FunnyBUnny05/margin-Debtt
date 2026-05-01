@@ -5,51 +5,13 @@ import {
 } from 'recharts';
 import { SourceLink } from './SourceLink';
 import { ExportCsvButton } from './ExportCsvButton';
+import { ChartToggle } from './ChartToggle';
+import { formatDate } from '../utils/formatDate';
+import { ChartTooltip } from './ChartTooltip';
 
-const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-    <button
-      onClick={() => setType('bar')}
-      style={{
-        background: type === 'bar' ? '#4B5563' : 'transparent',
-        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      BAR
-    </button>
-  </div>
-);
-
-const formatDate = (d) => {
-  if (!d) return '';
-  const [y, m] = d.split('-');
-  return `${m}/${y.slice(2)}`;
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-      <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, marginBottom: 8, fontSize: 14 }}>{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color, margin: '4px 0 0', fontSize: 13, fontWeight: 500 }}>
-          {p.name}: {typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value}
-        </p>
-      ))}
-    </div>
-  );
-};
+const sofrFormatValue = (p) =>
+  typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value;
+const CustomTooltip = (props) => <ChartTooltip {...props} formatValue={sofrFormatValue} />;
 
 export function SofrRate({ isMobile }) {
   const [rawData, setRawData] = useState([]);
@@ -150,7 +112,7 @@ export function SofrRate({ isMobile }) {
 
   const chartInterval = Math.floor((filtered.length || 1) / 8);
 
-  const rateColor = '#38BDF8'; // sky blue for SOFR
+  const rateColor = '#06B6D4'; // matches --bb-cyan
 
   return (
     <>
@@ -315,32 +277,32 @@ export function SofrRate({ isMobile }) {
               <Tooltip content={<CustomTooltip />} />
               {sofrBandType === 'line' ? (
                 <>
-                  <Line type="monotone" dataKey="p1"  stroke="#6B7280" strokeWidth={1} dot={false} name="P1"  strokeDasharray="3 3" />
-                  <Line type="monotone" dataKey="p25" stroke="#FCD34D" strokeWidth={1} dot={false} name="P25" />
-                  <Line type="monotone" dataKey="rate" stroke="#38BDF8" strokeWidth={2.5} dot={false} name="SOFR (Median)" />
-                  <Line type="monotone" dataKey="p75" stroke="#F59E0B" strokeWidth={1} dot={false} name="P75" />
-                  <Line type="monotone" dataKey="p99" stroke="#EF4444" strokeWidth={1} dot={false} name="P99" strokeDasharray="3 3" />
+                  <Line type="monotone" dataKey="p1"  stroke="var(--bb-gray-2)" strokeWidth={1} dot={false} name="P1"  strokeDasharray="3 3" />
+                  <Line type="monotone" dataKey="p25" stroke="var(--bb-yellow)" strokeWidth={1} dot={false} name="P25" />
+                  <Line type="monotone" dataKey="rate" stroke="var(--bb-cyan)" strokeWidth={2.5} dot={false} name="SOFR (Median)" />
+                  <Line type="monotone" dataKey="p75" stroke="var(--bb-orange)" strokeWidth={1} dot={false} name="P75" />
+                  <Line type="monotone" dataKey="p99" stroke="var(--bb-red)" strokeWidth={1} dot={false} name="P99" strokeDasharray="3 3" />
                 </>
               ) : (
                 <>
-                  <Bar dataKey="p1" fill="#6B7280" name="P1" stackId="a" />
-                  <Bar dataKey="p25" fill="#FCD34D" name="P25" stackId="a" />
-                  <Bar dataKey="rate" fill="#38BDF8" name="SOFR (Median)" stackId="a" />
-                  <Bar dataKey="p75" fill="#F59E0B" name="P75" stackId="a" />
-                  <Bar dataKey="p99" fill="#EF4444" name="P99" stackId="a" />
+                  <Bar dataKey="p1" fill="var(--bb-gray-2)" name="P1" stackId="a" />
+                  <Bar dataKey="p25" fill="var(--bb-yellow)" name="P25" stackId="a" />
+                  <Bar dataKey="rate" fill="var(--bb-cyan)" name="SOFR (Median)" stackId="a" />
+                  <Bar dataKey="p75" fill="var(--bb-orange)" name="P75" stackId="a" />
+                  <Bar dataKey="p99" fill="var(--bb-red)" name="P99" stackId="a" />
                 </>
               )}
             </ComposedChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', fontFamily: 'JetBrains Mono', fontSize: 10 }}>
             {[
-              { label: 'P99', color: '#EF4444' }, { label: 'P75', color: '#F59E0B' },
-              { label: 'SOFR', color: '#38BDF8' }, { label: 'P25', color: '#FCD34D' },
-              { label: 'P1',  color: '#6B7280' },
+              { label: 'P99', color: 'var(--bb-red)' }, { label: 'P75', color: 'var(--bb-orange)' },
+              { label: 'SOFR', color: 'var(--bb-cyan)' }, { label: 'P25', color: 'var(--bb-yellow)' },
+              { label: 'P1',  color: 'var(--bb-gray-2)' },
             ].map(({ label, color }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 20, height: 2, background: color }} />
-                <span style={{ color: '#9CA3AF' }}>{label}</span>
+                <span style={{ color: 'var(--bb-gray-1)' }}>{label}</span>
               </div>
             ))}
           </div>
