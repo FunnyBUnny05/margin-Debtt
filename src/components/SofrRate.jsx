@@ -5,51 +5,13 @@ import {
 } from 'recharts';
 import { SourceLink } from './SourceLink';
 import { ExportCsvButton } from './ExportCsvButton';
+import { ChartToggle } from './ChartToggle';
+import { formatDate } from '../utils/formatDate';
+import { ChartTooltip } from './ChartTooltip';
 
-const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-    <button
-      onClick={() => setType('bar')}
-      style={{
-        background: type === 'bar' ? '#4B5563' : 'transparent',
-        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      BAR
-    </button>
-  </div>
-);
-
-const formatDate = (d) => {
-  if (!d) return '';
-  const [y, m] = d.split('-');
-  return `${m}/${y.slice(2)}`;
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-      <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, marginBottom: 8, fontSize: 14 }}>{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color, margin: '4px 0 0', fontSize: 13, fontWeight: 500 }}>
-          {p.name}: {typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value}
-        </p>
-      ))}
-    </div>
-  );
-};
+const sofrFormatValue = (p) =>
+  typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value;
+const CustomTooltip = (props) => <ChartTooltip {...props} formatValue={sofrFormatValue} />;
 
 export function SofrRate({ isMobile }) {
   const [rawData, setRawData] = useState([]);

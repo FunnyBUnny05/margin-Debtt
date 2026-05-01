@@ -9,36 +9,18 @@ import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { FearGreedIndex } from './components/FearGreedIndex';
 import { SourceLink } from './components/SourceLink';
+import { ChartToggle } from './components/ChartToggle';
+import { formatDate } from './utils/formatDate';
+import { ChartTooltip } from './components/ChartTooltip';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
-const formatDate = (date) => {
-  if (!date) return '';
-  const [year, month] = date.split('-');
-  return `${month}/${year.slice(2)}`;
+const marginFormatValue = (p) => {
+  if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
+  if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
+  return p.value;
 };
-
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const formatValue = (p) => {
-      if (p.name === 'YoY Growth') return `${p.value?.toFixed(1)}%`;
-      if (p.dataKey === 'margin_debt_bn') return `$${p.value?.toFixed(0)}B`;
-      return p.value;
-    };
-
-    return (
-      <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-        <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>{label}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color, margin: '4px 0 0 0', fontSize: '13px', fontWeight: '500' }}>
-            {p.name}: {formatValue(p)}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const CustomTooltip = (props) => <ChartTooltip {...props} formatValue={marginFormatValue} />;
 
 const normalizeMonthKey = (dateStr) => {
   const parsed = new Date(dateStr);
@@ -89,30 +71,6 @@ const parseFinraMarginCsv = (text) => {
   });
 };
 
-const ChartToggle = ({ type, setType }) => (
-    <div style={{ display: 'flex', background: 'var(--bb-black)', border: '1px solid var(--bb-border)', overflow: 'hidden', borderRadius: '2px' }}>
-      <button
-        onClick={() => setType('line')}
-        style={{
-          background: type === 'line' ? 'var(--bb-border-light)' : 'transparent',
-          color: type === 'line' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
-          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-        }}
-      >
-        LINE
-      </button>
-      <button
-        onClick={() => setType('bar')}
-        style={{
-          background: type === 'bar' ? 'var(--bb-border-light)' : 'transparent',
-          color: type === 'bar' ? 'var(--bb-white)' : 'var(--bb-gray-2)',
-          border: 'none', padding: '4px 10px', fontSize: '10px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-        }}
-      >
-        BAR
-      </button>
-    </div>
-);
 
 export default function App() {
   const [rawData, setRawData] = useState([]);

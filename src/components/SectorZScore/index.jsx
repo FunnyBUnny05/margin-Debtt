@@ -4,36 +4,12 @@ import { useYahooFinance } from './hooks/useYahooFinance';
 import { useZScoreCalculation } from './hooks/useZScoreCalculation';
 import { ControlPanel } from './ControlPanel';
 import { SourceLink } from '../SourceLink';
+import { ChartToggle } from '../ChartToggle';
 import { SectorList } from './SectorList';
 import { SectorChart } from './SectorChart';
 import { PriceChart } from './PriceChart';
 import { SignalBadge } from './SignalBadge';
 import { ExportCsvButton } from '../ExportCsvButton';
-
-const ChartToggle = ({ type, setType }) => (
-  <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
-    <button
-      onClick={() => setType('line')}
-      style={{
-        background: type === 'line' ? '#4B5563' : 'transparent',
-        color: type === 'line' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      LINE
-    </button>
-    <button
-      onClick={() => setType('bar')}
-      style={{
-        background: type === 'bar' ? '#4B5563' : 'transparent',
-        color: type === 'bar' ? '#F9FAFB' : '#6B7280',
-        border: 'none', padding: '2px 8px', fontSize: '9px', fontFamily: 'var(--font-mono)', cursor: 'pointer', fontWeight: '700'
-      }}
-    >
-      BAR
-    </button>
-  </div>
-);
 
 const LoadingState = ({ progress }) => (
   <div className="glass-card" style={{
