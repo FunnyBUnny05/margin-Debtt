@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Bar
 } from 'recharts';
+import { SourceLink } from './SourceLink';
 import { ExportCsvButton } from './ExportCsvButton';
 
 const ChartToggle = ({ type, setType }) => (
@@ -415,6 +416,11 @@ export function SofrRate({ isMobile }) {
           </p>
         </div>
       </div>
+
+      <SourceLink
+        href="https://www.newyorkfed.org/markets/reference-rates/sofr"
+        label="NY Fed — SOFR Reference Rate"
+      />
     </>
   );
 }

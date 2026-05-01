@@ -4,6 +4,7 @@ import {
   CartesianGrid, Tooltip, ReferenceLine, Line
 } from 'recharts';
 import { ExportCsvButton } from './ExportCsvButton';
+import { SourceLink } from './SourceLink';
 
 const ChartToggle = ({ type, setType }) => (
   <div style={{ display: 'flex', background: '#0B0F19', border: '1px solid #1F2937', overflow: 'hidden' }}>
@@ -244,6 +245,12 @@ export function FearGreedIndex({ isMobile }) {
           </div>
         </div>
       </div>
+
+      <SourceLink
+        href="https://money.cnn.com/data/fear-and-greed/"
+        label="CNN Fear &amp; Greed Index"
+        note="Custom proxy — methodology inspired by CNN's composite sentiment indicator"
+      />
     </>
   );
 }

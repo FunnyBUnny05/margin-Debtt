@@ -3,6 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Area
 } from 'recharts';
+import { SourceLink } from './SourceLink';
 import { ExportCsvButton } from './ExportCsvButton';
 
 const ChartToggle = ({ type, setType }) => (
@@ -432,6 +433,11 @@ export function PpiIndex({ isMobile }) {
           </p>
         </div>
       </div>
+
+      <SourceLink
+        href="https://www.bls.gov/ppi/"
+        label="Bureau of Labor Statistics (BLS) — Producer Price Index"
+      />
     </>
   );
 }

@@ -8,6 +8,7 @@ import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { FearGreedIndex } from './components/FearGreedIndex';
+import { SourceLink } from './components/SourceLink';
 
 const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
@@ -734,6 +735,11 @@ export default function App() {
               </div>
               </div>
             </div>
+
+            <SourceLink
+              href={metadata?.sourceUrl || 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics'}
+              label="FINRA Margin Statistics"
+            />
           </>
         )}
 
@@ -952,6 +958,11 @@ export default function App() {
                       </p>
                     </div>
                   </div>
+
+                  <SourceLink
+                    href={aaiiMetadata?.sourceUrl || 'https://www.aaii.com/'}
+                    label="AAII Asset Allocation Survey"
+                  />
                 </>
               );
             })()}
