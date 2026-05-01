@@ -3,6 +3,7 @@ import { SECTOR_ETFS, RETURN_PERIODS, Z_WINDOWS } from './constants';
 import { useYahooFinance } from './hooks/useYahooFinance';
 import { useZScoreCalculation } from './hooks/useZScoreCalculation';
 import { ControlPanel } from './ControlPanel';
+import { SourceLink } from '../SourceLink';
 import { SectorList } from './SectorList';
 import { SectorChart } from './SectorChart';
 import { PriceChart } from './PriceChart';
@@ -384,6 +385,12 @@ export const SectorZScore = ({ isMobile }) => {
           </div>
         </div>
       </div>
+
+      <SourceLink
+        href="https://finance.yahoo.com"
+        label="Yahoo Finance"
+        note="Sector ETF price data (SPDR ETFs)"
+      />
     </>
   );
 };

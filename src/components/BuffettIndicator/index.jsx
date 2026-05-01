@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, ReferenceLine, Cell,
   ComposedChart, Line, Area,
 } from 'recharts';
+import { SourceLink } from '../SourceLink';
 
 
 const ChartToggle = ({ type, setType }) => (
@@ -624,6 +625,12 @@ export const BuffettIndicator = ({ isMobile }) => {
           Sources: Berkshire Hathaway annual reports, Yahoo Finance.
         </div>
       </div>
+
+      <SourceLink
+        href="https://fred.stlouisfed.org/"
+        label="FRED (St. Louis Fed)"
+        note="Wilshire 5000 Full Cap Index (WILL5000INDFC) &amp; GDP"
+      />
     </div>
   );
 };
