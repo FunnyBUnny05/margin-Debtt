@@ -363,65 +363,82 @@ export default function App() {
 
   const thresholdStats = calculateThresholdStats(data);
 
+  const SECTION_LABELS = {
+    margin: 'FINRA Margin Debt',
+    aaii: 'AAII Asset Allocation',
+    sectors: 'Sector Z-Score',
+    buffett: 'Buffett Indicator',
+    sofr: 'SOFR Rate',
+    ppi: 'PPI Index',
+    fear_greed: 'Fear & Greed Index',
+  };
+
+  const updatedDate = dataSource === 'margin' ? metadata?.lastUpdated
+    : dataSource === 'aaii' ? aaiiMetadata?.lastUpdated
+    : null;
+
   return (
-    <div className="app-background" style={{ minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div className="bb-panel" style={{ margin: isMobile ? '8px' : '16px 0', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div className="bb-topbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '0%', background: 'var(--bb-cyan)' }}></div>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '800', fontSize: '18px', color: 'var(--bb-white)', letterSpacing: '1.5px' }}>STOCK</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '300', fontSize: '18px', color: 'var(--bb-cyan)', letterSpacing: '1px' }}>SENTINEL</span>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '600', fontSize: '12px', color: 'var(--bb-gray-2)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : dataSource === 'aaii' ? 'AAII Asset Allocation Survey' : dataSource === 'sectors' ? 'Sector Z-Score Dashboard' : dataSource === 'sofr' ? 'Secured Overnight Financing Rate' : dataSource === 'ppi' ? 'Producer Price Index' : dataSource === 'fear_greed' ? 'Fear & Greed Index' : 'Buffett Indicator'}
-              </span>
-              {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-                <span className="bb-topbar-date" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bb-cyan)' }}>
-                  UPDATED: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
-                </span>
-              )}
-            </div>
-          </div>
+    <div className="app-background">
+
+      {/* ── Top bar ── */}
+      <header className="trader-topbar">
+        <div className="trader-logo">
+          <div className="trader-logo-mark">SS</div>
+          <div className="trader-logo-name">STOCK <span>SENTINEL</span></div>
         </div>
 
-        <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          {[
-            { key: 'margin',  label: isMobile ? 'MARGIN'  : 'MARGIN DEBT' },
-            { key: 'aaii',    label: isMobile ? 'AAII'    : 'AAII SURVEY' },
-            { key: 'sectors', label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
-            { key: 'buffett', label: isMobile ? 'BUFFETT' : 'BUFFETT IND' },
-            { key: 'sofr',    label: isMobile ? 'SOFR'    : 'SOFR RATE' },
-            { key: 'ppi',     label: isMobile ? 'PPI'     : 'PPI INDEX' },
-            { key: 'fear_greed', label: isMobile ? 'F&G' : 'FEAR & GREED' },
-          ].map(({ key, label }) => (
+        <div className="trader-topbar-meta">
+          <span className="trader-section-label">{SECTION_LABELS[dataSource]}</span>
+          {updatedDate && (
+            <span className="trader-updated bb-topbar-date">
+              {formatLastUpdated(updatedDate)}
+            </span>
+          )}
+          <div className="trader-live-badge">
+            <div className="trader-live-dot" />
+            LIVE
+          </div>
+        </div>
+      </header>
+
+      {/* ── Tab bar ── */}
+      <nav className="trader-tabbar">
+        {[
+          { key: 'margin',     label: isMobile ? 'MARGIN'  : 'MARGIN DEBT' },
+          { key: 'aaii',       label: isMobile ? 'AAII'    : 'AAII SURVEY' },
+          { key: 'sectors',    label: isMobile ? 'SECTORS' : 'SECTOR Z-SCORE' },
+          { key: 'buffett',    label: isMobile ? 'BUFFETT' : 'BUFFETT IND' },
+          { key: 'sofr',       label: isMobile ? 'SOFR'    : 'SOFR RATE' },
+          { key: 'ppi',        label: isMobile ? 'PPI'     : 'PPI INDEX' },
+          { key: 'fear_greed', label: isMobile ? 'F&G'     : 'FEAR & GREED' },
+        ].map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setDataSource(key)}
+            className={`bb-tab ${dataSource === key ? 'active' : ''}`}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {/* ── Time range strip (margin / aaii only) ── */}
+      {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
+        <div className="trader-timestrip">
+          {['2y', '5y', '10y', 'all'].map(range => (
             <button
-              key={key}
-              onClick={() => setDataSource(key)}
-              className={`bb-tab ${dataSource === key ? 'active' : ''}`}
-              style={{ flexShrink: 0 }}
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`bb-tab ${timeRange === range ? 'active' : ''}`}
             >
-              {label}
+              {range.toUpperCase()}
             </button>
           ))}
         </div>
+      )}
 
-        {dataSource !== 'sectors' && dataSource !== 'buffett' && dataSource !== 'sofr' && dataSource !== 'ppi' && dataSource !== 'fear_greed' && (
-          <div className="mobile-scroll" style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: isMobile ? '0 8px' : '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {['2y', '5y', '10y', 'all'].map(range => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`bb-tab ${timeRange === range ? 'active' : ''}`}
-                style={{ padding: '6px 16px', fontSize: '12px', flexShrink: 0 }}
-              >
-                {range.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        )}
+      {/* ── Main content ── */}
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '12px 10px' : '16px 20px' }}>
 
         {dataSource === 'margin' && (
           <>
@@ -969,25 +986,27 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        <div className="app-footer" style={{ borderTop: '1px solid var(--bb-border-light)', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', background: 'var(--bb-black)' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', letterSpacing: '0.5px' }}>
-            © {new Date().getFullYear()} STOCK SENTINEL. ALL RIGHTS RESERVED.
-          </span>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-4)', fontSize: '10px' }}>v1.0.0</span>
-            <a 
-              href="https://github.com/FunnyBunny05" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--bb-yellow)'}
-              onMouseLeave={(e) => e.target.style.color = 'var(--bb-gray-3)'}
-            >
-              GITHUB
-            </a>
-          </div>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="app-footer" style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', letterSpacing: '0.5px' }}>
+          © {new Date().getFullYear()} STOCK SENTINEL — FOR INFORMATIONAL PURPOSES ONLY
+        </span>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-4)', fontSize: '10px' }}>v1.1.0</span>
+          <a
+            href="https://github.com/FunnyBunny05"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-3)', fontSize: '10px', textDecoration: 'none' }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--bb-blue)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--bb-gray-3)'}
+          >
+            GITHUB
+          </a>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
