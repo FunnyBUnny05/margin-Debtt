@@ -410,9 +410,9 @@ export default function App() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div className="bb-panel" style={{ margin: isMobile ? '8px' : '16px 0', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div className="bb-topbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '0%', background: 'var(--bb-cyan)' }}></div>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '800', fontSize: '18px', color: 'var(--bb-white)', letterSpacing: '1.5px' }}>STOCK</span>
-            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '300', fontSize: '18px', color: 'var(--bb-cyan)', letterSpacing: '1px' }}>SENTINEL</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '0%', background: 'var(--bb-royal)' }}></div>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '800', fontSize: '18px', color: 'var(--bb-navy)', letterSpacing: '1.5px' }}>STOCK</span>
+            <span style={{ fontFamily: 'var(--font-ui)', fontWeight: '300', fontSize: '18px', color: 'var(--bb-royal)', letterSpacing: '1px' }}>SENTINEL</span>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -421,7 +421,7 @@ export default function App() {
                 {dataSource === 'margin' ? 'FINRA Margin Debt Tracker' : dataSource === 'aaii' ? 'AAII Asset Allocation Survey' : dataSource === 'sectors' ? 'Sector Z-Score Dashboard' : dataSource === 'sofr' ? 'Secured Overnight Financing Rate' : dataSource === 'ppi' ? 'Producer Price Index' : dataSource === 'fear_greed' ? 'Fear & Greed Index' : 'Buffett Indicator'}
               </span>
               {((dataSource === 'margin' && metadata) || (dataSource === 'aaii' && aaiiMetadata)) && (
-                <span className="bb-topbar-date" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bb-cyan)' }}>
+                <span className="bb-topbar-date" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bb-gray-3)' }}>
                   UPDATED: {formatLastUpdated(dataSource === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
                 </span>
               )}
@@ -468,8 +468,8 @@ export default function App() {
         {dataSource === 'margin' && (
           <>
             <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
-              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
-                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div className="stat-card" style={{ borderTop: '3px solid var(--bb-royal)' }}>
+                <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   CURRENT ({currentDebt.date})
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
@@ -523,8 +523,8 @@ export default function App() {
                 <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="marginGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--bb-royal)" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="var(--bb-royal)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="1 3" stroke="var(--bb-border-light)" vertical={false} />
@@ -549,13 +549,13 @@ export default function App() {
                     <Area
                       type="monotone"
                       dataKey="margin_debt_bn"
-                      stroke="var(--bb-cyan)"
+                      stroke="var(--bb-royal)"
                       strokeWidth={3}
                       fill="url(#marginGradient)"
                       name="Margin Debt"
                     />
                   ) : (
-                    <Bar dataKey="margin_debt_bn" fill="var(--bb-cyan)" radius={[4, 4, 0, 0]} name="Margin Debt" />
+                    <Bar dataKey="margin_debt_bn" fill="var(--bb-royal)" radius={[4, 4, 0, 0]} name="Margin Debt" />
                   )}
                 </ComposedChart>
               </ResponsiveContainer>
@@ -761,8 +761,8 @@ export default function App() {
               return (
                 <>
                   <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '8px' }}>
-                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
-                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-cyan)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <div className="stat-card" style={{ borderTop: '3px solid var(--bb-royal)' }}>
+                      <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         STOCKS ({currentAllocation?.date})
                       </div>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '600', color: 'var(--bb-white)' }}>
@@ -829,8 +829,8 @@ export default function App() {
                       <ComposedChart data={aaiiFilteredData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="stocksGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--bb-cyan)" stopOpacity={0.25}/>
-                            <stop offset="95%" stopColor="var(--bb-cyan)" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="var(--bb-royal)" stopOpacity={0.15}/>
+                            <stop offset="95%" stopColor="var(--bb-royal)" stopOpacity={0}/>
                           </linearGradient>
                           <linearGradient id="bondsGradient" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="var(--bb-yellow)" stopOpacity={0.25}/>
@@ -862,13 +862,13 @@ export default function App() {
                         <Tooltip content={<CustomTooltip />} />
                         {aaiiAllocType === 'line' ? (
                           <>
-                            <Area type="monotone" dataKey="stocks" stroke="var(--bb-cyan)" strokeWidth={3} fill="url(#stocksGradient)" name="Stocks" />
+                            <Area type="monotone" dataKey="stocks" stroke="var(--bb-royal)" strokeWidth={3} fill="url(#stocksGradient)" name="Stocks" />
                             <Area type="monotone" dataKey="bonds" stroke="var(--bb-yellow)" strokeWidth={3} fill="url(#bondsGradient)" name="Bonds" />
                             <Area type="monotone" dataKey="cash" stroke="var(--bb-green)" strokeWidth={3} fill="url(#cashGradient)" name="Cash" />
                           </>
                         ) : (
                           <>
-                            <Bar dataKey="stocks" fill="var(--bb-cyan)" name="Stocks" stackId="alloc" />
+                            <Bar dataKey="stocks" fill="var(--bb-royal)" name="Stocks" stackId="alloc" />
                             <Bar dataKey="bonds" fill="var(--bb-yellow)" name="Bonds" stackId="alloc" />
                             <Bar dataKey="cash" fill="var(--bb-green)" name="Cash" stackId="alloc" />
                           </>

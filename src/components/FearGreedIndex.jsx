@@ -56,7 +56,7 @@ const getStatus = (val) => {
   if (val < 45) return { label: 'FEAR', color: 'var(--bb-yellow)' };
   if (val <= 55) return { label: 'NEUTRAL', color: 'var(--bb-gray-2)' };
   if (val <= 75) return { label: 'GREED', color: 'var(--bb-green)' };
-  return { label: 'EXTREME GREED', color: 'var(--bb-cyan)' };
+  return { label: 'EXTREME GREED', color: 'var(--bb-royal)' };
 };
 
 export function FearGreedIndex({ isMobile }) {
@@ -107,7 +107,7 @@ export function FearGreedIndex({ isMobile }) {
   if (loading) {
     return (
       <div className="glass-card" style={{ padding: '40px 24px', textAlign: 'center', marginTop: '20px' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-cyan)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">LOADING...</div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-royal)', marginBottom: '16px', letterSpacing: '2px' }} className="pulse-animation">LOADING...</div>
         <div style={{ fontFamily: 'var(--font-ui)', fontSize: '16px', fontWeight: '700', color: 'var(--bb-white)', textTransform: 'uppercase', letterSpacing: '1px' }}>Loading Fear & Greed Index</div>
       </div>
     );
@@ -237,11 +237,11 @@ export function FearGreedIndex({ isMobile }) {
           </ResponsiveContainer>
           
           <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '10px', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'rgba(251, 113, 133, 0.3)', background: 'rgba(251, 113, 133, 0.1)' }}>0-25 EXTREME FEAR</div>
-            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'rgba(252, 211, 77, 0.3)', background: 'rgba(252, 211, 77, 0.1)' }}>25-45 FEAR</div>
-            <div className="badge" style={{ color: 'var(--bb-gray-2)', borderColor: 'rgba(148, 163, 184, 0.3)', background: 'rgba(148, 163, 184, 0.1)' }}>45-55 NEUTRAL</div>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'rgba(52, 211, 153, 0.3)', background: 'rgba(52, 211, 153, 0.1)' }}>55-75 GREED</div>
-            <div className="badge" style={{ color: 'var(--bb-cyan)', borderColor: 'rgba(34, 211, 238, 0.3)', background: 'rgba(34, 211, 238, 0.1)' }}>75-100 EXTREME GREED</div>
+            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)' }}>0-25 EXTREME FEAR</div>
+            <div className="badge" style={{ color: 'var(--bb-yellow)', borderColor: 'var(--bb-yellow)', background: 'var(--bb-panel-alt)' }}>25-45 FEAR</div>
+            <div className="badge" style={{ color: 'var(--bb-gray-2)', borderColor: 'var(--bb-border-light)', background: 'var(--bb-panel-alt)' }}>45-55 NEUTRAL</div>
+            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)' }}>55-75 GREED</div>
+            <div className="badge" style={{ color: 'var(--bb-royal)', borderColor: 'var(--bb-royal)', background: 'var(--bb-panel-alt)' }}>75-100 EXTREME GREED</div>
           </div>
         </div>
       </div>
