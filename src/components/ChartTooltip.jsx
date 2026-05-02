@@ -1,19 +1,26 @@
 import React from 'react';
 
-const defaultFormat = (p) =>
-  typeof p.value === 'number' ? p.value.toFixed(2) : p.value;
-
-export const ChartTooltip = ({ active, payload, label, formatValue = defaultFormat }) => {
+export const ChartTooltip = ({ active, payload, label, formatValue }) => {
   if (!active || !payload?.length) return null;
+  const fmt = formatValue ?? (p => typeof p.value === 'number' ? p.value.toFixed(2) : p.value);
   return (
-    <div className="custom-tooltip glass-card" style={{ padding: '12px 16px' }}>
-      <p style={{ color: 'var(--text-primary)', margin: 0, fontWeight: 600, marginBottom: 8, fontSize: 14 }}>
+    <div style={{
+      background: 'var(--bg-raised)',
+      border: '1px solid var(--rule-strong)',
+      padding: '10px 14px',
+    }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--text-dim)', marginBottom: '6px' }}>
         {label}
-      </p>
+      </div>
       {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color, margin: '4px 0 0', fontSize: 13, fontWeight: 500 }}>
-          {p.name}: {formatValue(p)}
-        </p>
+        <div key={i} style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: '400', letterSpacing: '-0.02em', color: p.color || 'var(--text)', lineHeight: 1.2 }}>
+          {fmt(p)}
+          {payload.length > 1 && (
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.1em', color: 'var(--text-dim)', marginLeft: '6px', verticalAlign: 'middle' }}>
+              {p.name}
+            </span>
+          )}
+        </div>
       ))}
     </div>
   );

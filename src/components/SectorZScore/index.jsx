@@ -20,23 +20,20 @@ const LoadingState = ({ progress }) => (
     padding: '40px 20px',
     marginTop: '1px'
   }}>
-    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-orange)', marginBottom: '12px', letterSpacing: '2px' }} className="pulse-animation">
-      LOADING...
-    </div>
-    <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-      Loading Sector Analysis
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-mid)', marginBottom: '12px', letterSpacing: '0.2em', textTransform: 'uppercase' }} className="pulse-animation">
+      LOADING SECTOR ANALYSIS...
     </div>
     {progress.total > 0 && (
       <>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-2)', marginBottom: '14px' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)', marginBottom: '14px', letterSpacing: '0.14em' }}>
           FETCHING {progress.current} OF {progress.total} SYMBOLS
         </div>
-        <div style={{ width: '200px', height: '2px', background: 'var(--bb-border)', overflow: 'hidden' }}>
+        <div style={{ width: '200px', height: '1px', background: 'var(--rule)', overflow: 'hidden' }}>
           <div
             style={{
               width: `${(progress.current / progress.total) * 100}%`,
               height: '100%',
-              background: 'var(--bb-orange)',
+              background: 'var(--accent)',
               transition: 'width 0.3s ease',
             }}
           />
@@ -54,24 +51,14 @@ const ErrorState = ({ error, onRetry }) => (
     justifyContent: 'center',
     padding: '40px 20px',
     marginTop: '1px',
-    borderLeft: '3px solid var(--bb-red)'
   }}>
-    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--bb-red)', marginBottom: '12px', letterSpacing: '2px', fontWeight: '700' }}>
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--neg)', marginBottom: '12px', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
       ERROR
     </div>
-    <div style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '700', color: 'var(--bb-white)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-      Couldn't Load Sector Data
-    </div>
-    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--bb-gray-2)', marginBottom: '20px', textAlign: 'center', maxWidth: '400px' }}>
+    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-mid)', marginBottom: '20px', textAlign: 'center', maxWidth: '400px' }}>
       {error}
     </div>
-    <button
-      onClick={onRetry}
-      className="btn-primary"
-      style={{ background: 'var(--bb-orange)', color: '#fff', border: 'none' }}
-    >
-      RETRY
-    </button>
+    <button onClick={onRetry} className="bb-btn">RETRY</button>
   </div>
 );
 
@@ -84,84 +71,50 @@ const StatCards = memo(function StatCards({ sectors, isMobile }) {
   const mostExtended = sorted[sorted.length - 1];
 
   const avgZScore = validSectors.reduce((sum, s) => sum + s.currentZScore, 0) / validSectors.length;
-
   const cyclicalLowCount = validSectors.filter((s) => s.currentZScore <= -2).length;
   const extendedCount = validSectors.filter((s) => s.currentZScore >= 2).length;
 
   return (
-    <div
-      className="responsive-grid"
-      style={{ marginBottom: '20px', marginTop: '16px' }}
-    >
-      {/* Cheapest Sector Card */}
-      <div className="stat-card" style={{ borderTop: '3px solid var(--bb-green)' }}>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          CHEAPEST SECTOR
+    <div className="responsive-grid" style={{ marginBottom: '20px', marginTop: '16px' }}>
+      <div className="stat-card">
+        <div className="stat-block-label">Cheapest Sector</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ width: '6px', height: '6px', background: cheapest.color, flexShrink: 0 }} />
+          <span className="stat-block-value pos">{cheapest.symbol}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-          <div style={{ width: '8px', height: '8px', background: cheapest.color, flexShrink: 0, borderRadius: '0%' }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-green)' }}>
-            {cheapest.symbol}
-          </span>
-        </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--bb-gray-3)' }}>
-          Z: <span style={{ color: 'var(--bb-white)', fontWeight: '700' }}>{cheapest.currentZScore.toFixed(2)}</span>
-        </div>
+        <div className="stat-block-sub">Z: {cheapest.currentZScore.toFixed(2)}</div>
       </div>
 
-      {/* Most Extended Card */}
-      <div className="stat-card" style={{ borderTop: '3px solid var(--bb-red)' }}>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          MOST EXTENDED
+      <div className="stat-card">
+        <div className="stat-block-label">Most Extended</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ width: '6px', height: '6px', background: mostExtended.color, flexShrink: 0 }} />
+          <span className="stat-block-value neg">{mostExtended.symbol}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-          <div style={{ width: '8px', height: '8px', background: mostExtended.color, flexShrink: 0, borderRadius: '0%' }} />
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-red)' }}>
-            {mostExtended.symbol}
-          </span>
-        </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--bb-gray-3)' }}>
-          Z: <span style={{ color: 'var(--bb-white)', fontWeight: '700' }}>{mostExtended.currentZScore.toFixed(2)}</span>
-        </div>
+        <div className="stat-block-sub">Z: {mostExtended.currentZScore.toFixed(2)}</div>
       </div>
 
-      {/* Average Z-Score Card */}
-      <div className="stat-card" style={{ borderTop: '3px solid var(--bb-yellow)' }}>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          AVG Z-SCORE
-        </div>
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: isMobile ? '28px' : '32px',
-          fontWeight: '700',
-          color: avgZScore < -1 ? 'var(--bb-green)' : avgZScore > 1 ? 'var(--bb-red)' : 'var(--bb-cyan)',
-          marginBottom: '4px'
-        }}>
+      <div className="stat-card">
+        <div className="stat-block-label">Avg Z-Score</div>
+        <div className={`stat-block-value ${avgZScore < -1 ? 'pos' : avgZScore > 1 ? 'neg' : 'neutral'}`}>
           {avgZScore >= 0 ? '+' : ''}{avgZScore.toFixed(2)}
         </div>
-        <div style={{ marginTop: '4px' }}>
+        <div style={{ marginTop: '6px' }}>
           <SignalBadge zScore={avgZScore} />
         </div>
       </div>
 
-      {/* Signal Count Card */}
-      <div className="stat-card" style={{ borderTop: '3px solid var(--bb-cyan)' }}>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--bb-gray-2)', fontSize: '11px', fontWeight: '700', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          SIGNAL COUNT
-        </div>
+      <div className="stat-card">
+        <div className="stat-block-label" style={{ marginBottom: '10px' }}>Signal Count</div>
         <div style={{ display: 'flex', gap: '16px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--bb-green)' }}>
-              {cyclicalLowCount}
-            </div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', color: 'var(--bb-gray-3)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>CYLIC LOW</div>
+            <div className="stat-block-value sm pos">{cyclicalLowCount}</div>
+            <div className="stat-block-sub" style={{ marginTop: '2px' }}>CYCLIC LOW</div>
           </div>
-          <div style={{ width: '1px', background: 'var(--bb-border-light)' }} />
+          <div style={{ width: '1px', background: 'var(--rule)' }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '24px' : '28px', fontWeight: '700', color: 'var(--bb-red)' }}>
-              {extendedCount}
-            </div>
-            <div style={{ fontFamily: 'var(--font-ui)', fontSize: '10px', color: 'var(--bb-gray-3)', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>EXTENDED</div>
+            <div className="stat-block-value sm neg">{extendedCount}</div>
+            <div className="stat-block-sub" style={{ marginTop: '2px' }}>EXTENDED</div>
           </div>
         </div>
       </div>
@@ -171,8 +124,8 @@ const StatCards = memo(function StatCards({ sectors, isMobile }) {
 
 export const SectorZScore = ({ isMobile }) => {
   const [benchmark, setBenchmark] = useState('SPY');
-  const [returnPeriod, setReturnPeriod] = useState(RETURN_PERIODS[2].value); // 5Y default
-  const [zWindow, setZWindow] = useState(Z_WINDOWS[2].value); // 3Y default
+  const [returnPeriod, setReturnPeriod] = useState(RETURN_PERIODS[2].value);
+  const [zWindow, setZWindow] = useState(Z_WINDOWS[2].value);
   const [selectedSector, setSelectedSector] = useState(null);
 
   const [zScoreType, setZScoreType] = useState('line');
@@ -191,7 +144,6 @@ export const SectorZScore = ({ isMobile }) => {
     zWindow
   );
 
-  // Auto-select cheapest sector when data loads
   useEffect(() => {
     if (!selectedSector && sectors.length > 0) {
       const validSectors = sectors.filter((s) => s.currentZScore !== null);
@@ -202,13 +154,8 @@ export const SectorZScore = ({ isMobile }) => {
     }
   }, [sectors, selectedSector]);
 
-  if (loading) {
-    return <LoadingState progress={progress} />;
-  }
-
-  if (error) {
-    return <ErrorState error={error} onRetry={refetch} />;
-  }
+  if (loading) return <LoadingState progress={progress} />;
+  if (error)   return <ErrorState error={error} onRetry={refetch} />;
 
   const selectedSectorData = sectors.find((s) => s.symbol === selectedSector);
 
@@ -233,7 +180,7 @@ export const SectorZScore = ({ isMobile }) => {
           gridTemplateColumns: isMobile ? '1fr' : '1fr 300px',
           gap: '1px',
           marginBottom: '1px',
-          background: '#111827'
+          background: 'var(--rule)'
         }}
       >
         {/* Z-Score Chart */}
@@ -248,8 +195,8 @@ export const SectorZScore = ({ isMobile }) => {
                 }
                 filename="sector_z_scores"
                 columns={[
-                  { key: 'symbol',         label: 'Sector ETF' },
-                  { key: 'name',           label: 'Sector Name' },
+                  { key: 'symbol',          label: 'Sector ETF' },
+                  { key: 'name',            label: 'Sector Name' },
                   { key: 'current_z_score', label: 'Current Z-Score' },
                 ]}
               />
@@ -257,13 +204,13 @@ export const SectorZScore = ({ isMobile }) => {
             </div>
           </div>
           <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-          <div style={{ height: isMobile ? '280px' : '360px' }}>
-            <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} />
-          </div>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div className="badge" style={{ color: 'var(--bb-green)', borderColor: 'var(--bb-green)', background: 'var(--bb-panel-alt)', fontSize: '10px' }}>CYCLICAL LOW (-2)</div>
-            <div className="badge" style={{ color: 'var(--bb-red)', borderColor: 'var(--bb-red)', background: 'var(--bb-panel-alt)', fontSize: '10px' }}>EXTENDED (+2)</div>
-          </div>
+            <div style={{ height: isMobile ? '280px' : '360px' }}>
+              <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="badge" style={{ color: 'var(--pos)', borderColor: 'oklch(74% 0.16 148 / 0.3)', fontSize: '9px' }}>CYCLICAL LOW (−2)</div>
+              <div className="badge" style={{ color: 'var(--neg)', borderColor: 'oklch(64% 0.18 28 / 0.3)',  fontSize: '9px' }}>EXTENDED (+2)</div>
+            </div>
           </div>
         </div>
 
@@ -282,7 +229,7 @@ export const SectorZScore = ({ isMobile }) => {
           <div>
             <span>PRICE PERFORMANCE VS {benchmark}</span>
             {selectedSectorData && (
-              <span style={{ marginLeft: '12px', fontWeight: '400', opacity: 0.8 }}>
+              <span style={{ marginLeft: '12px', fontWeight: '400', opacity: 0.6 }}>
                 — {selectedSectorData.symbol} ({selectedSectorData.name})
               </span>
             )}
@@ -300,63 +247,62 @@ export const SectorZScore = ({ isMobile }) => {
               })()}
               filename={`price_performance_${selectedSector || 'all'}_vs_${benchmark}`}
               columns={[
-                { key: 'date',                  label: 'Date' },
-                { key: 'price',                 label: `${selectedSector || ''} Price (USD)` },
-                { key: 'pct_change_from_start',  label: 'Return from Start (%)' },
+                { key: 'date',                 label: 'Date' },
+                { key: 'price',                label: `${selectedSector || ''} Price (USD)` },
+                { key: 'pct_change_from_start', label: 'Return from Start (%)' },
               ]}
             />
             <ChartToggle type={priceType} setType={setPriceType} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-        {selectedSectorData && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '8px 12px', background: 'var(--bb-black)', border: '1px solid var(--bb-border-light)', borderRadius: '2px', width: 'fit-content' }}>
-            <div style={{ width: '10px', height: '10px', background: selectedSectorData.color, flexShrink: 0, borderRadius: '50%' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: '700', color: 'var(--bb-white)', fontSize: '13px' }}>
-              {selectedSectorData.symbol}
-            </span>
-            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-2)', fontSize: '12px' }}>{selectedSectorData.name}</span>
+          {selectedSectorData && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '6px 10px', background: 'var(--bg-wash)', border: '1px solid var(--rule)', width: 'fit-content' }}>
+              <div style={{ width: '8px', height: '8px', background: selectedSectorData.color, flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)', fontSize: '12px' }}>
+                {selectedSectorData.symbol}
+              </span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-mid)', fontSize: '11px' }}>{selectedSectorData.name}</span>
+            </div>
+          )}
+          <div style={{ height: isMobile ? '260px' : '320px' }}>
+            <PriceChart
+              sectors={sectors}
+              selectedSector={selectedSector}
+              benchmarkData={benchmarkData}
+              benchmark={benchmark}
+              isMobile={isMobile}
+              chartType={priceType}
+            />
           </div>
-        )}
-        <div style={{ height: isMobile ? '260px' : '320px' }}>
-          <PriceChart
-            sectors={sectors}
-            selectedSector={selectedSector}
-            benchmarkData={benchmarkData}
-            benchmark={benchmark}
-            isMobile={isMobile}
-            chartType={priceType}
-          />
-        </div>
         </div>
       </div>
 
       {/* About Section */}
-      <div className="glass-card animate-in" style={{ padding: '16px 20px', borderLeft: '3px solid var(--bb-yellow)', animationDelay: '300ms' }}>
+      <div className="glass-card animate-in" style={{ padding: '16px 20px', animationDelay: '300ms' }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>ABOUT Z-SCORES (IMPROVED METHODOLOGY)</div>
-          <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-gray-1)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
+          <div className="stat-block-label" style={{ marginBottom: '8px' }}>About Z-Scores (Improved Methodology)</div>
+          <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-mid)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
             The Z-score measures how many standard deviations a sector's excess performance is from its historical pattern.
             This calculation accounts for each sector's structural relationship with the benchmark.
           </p>
           <div style={{
-            background: 'var(--bb-border-light)',
+            background: 'var(--bg-wash)',
             padding: '12px 16px',
-            borderLeft: '2px solid var(--bb-yellow)',
+            borderLeft: '1px solid var(--rule-strong)',
             fontFamily: 'var(--font-mono)',
             fontSize: '12px',
             lineHeight: '1.8',
-            borderRadius: '0 4px 4px 0'
           }}>
-            <div style={{ color: 'var(--bb-yellow)', fontWeight: '700', marginBottom: '8px', fontFamily: 'var(--font-ui)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>HOW IT WORKS</div>
-            <div style={{ color: 'var(--bb-gray-2)' }}>
-              1. <span style={{ color: 'var(--bb-white)' }}>STRUCTURAL BASELINE:</span> Calculate each sector's 10-year avg return vs {benchmark}<br/>
-              2. <span style={{ color: 'var(--bb-white)' }}>EXCESS RETURN:</span> Current return minus the structural baseline<br/>
-              3. <span style={{ color: 'var(--bb-white)' }}>Z-SCORE:</span> How many std deviations the excess return is from its mean
+            <div className="stat-block-label" style={{ marginBottom: '8px' }}>How It Works</div>
+            <div style={{ color: 'var(--text-mid)' }}>
+              1. <span style={{ color: 'var(--text)' }}>STRUCTURAL BASELINE:</span> Calculate each sector's 10-year avg return vs {benchmark}<br/>
+              2. <span style={{ color: 'var(--text)' }}>EXCESS RETURN:</span> Current return minus the structural baseline<br/>
+              3. <span style={{ color: 'var(--text)' }}>Z-SCORE:</span> How many std deviations the excess return is from its mean
             </div>
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--bb-border-light)', color: 'var(--bb-gray-3)', fontSize: '11px' }}>
-              <span style={{ color: 'var(--bb-green)' }}>Z ≤ -2:</span> Sector underperforming more than structural norm (CHEAP){' '}
-              | <span style={{ color: 'var(--bb-red)' }}>Z ≥ +2:</span> Sector outperforming more than structural norm (EXTENDED)
+            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--rule)', color: 'var(--text-dim)', fontSize: '11px' }}>
+              <span style={{ color: 'var(--pos)' }}>Z ≤ −2:</span> Sector underperforming more than structural norm (CHEAP){' '}
+              | <span style={{ color: 'var(--neg)' }}>Z ≥ +2:</span> Sector outperforming more than structural norm (EXTENDED)
             </div>
           </div>
         </div>
