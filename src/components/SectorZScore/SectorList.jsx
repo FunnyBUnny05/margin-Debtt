@@ -4,7 +4,6 @@ import { SignalBadge } from './SignalBadge';
 export const SectorList = memo(function SectorList({ sectors, selectedSector, onSelect, isMobile }) {
   const [expandedSector, setExpandedSector] = useState(null);
 
-  // Filter out sectors without valid z-scores and sort by z-score ascending
   const sorted = [...sectors]
     .filter(s => s.currentZScore !== null)
     .sort((a, b) => a.currentZScore - b.currentZScore);
@@ -33,21 +32,21 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
         }}
       >
         {sorted.map((sector) => (
-          <div key={sector.symbol} style={{ borderBottom: '1px solid var(--bb-border-light)' }}>
+          <div key={sector.symbol} style={{ borderBottom: '1px solid var(--rule)' }}>
             <div
               onClick={() => onSelect(sector.symbol)}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '12px 16px',
+                padding: '10px 16px',
                 cursor: 'pointer',
-                background: selectedSector === sector.symbol ? 'var(--bb-panel-alt)' : 'transparent',
-                borderLeft: selectedSector === sector.symbol ? '3px solid var(--bb-yellow)' : '3px solid transparent',
+                background: selectedSector === sector.symbol ? 'var(--bg-wash)' : 'transparent',
+                borderLeft: selectedSector === sector.symbol ? '2px solid var(--accent)' : '2px solid transparent',
               }}
               onMouseEnter={(e) => {
                 if (selectedSector !== sector.symbol) {
-                  e.currentTarget.style.background = 'var(--bb-panel-alt)';
+                  e.currentTarget.style.background = 'var(--bg-wash)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -57,20 +56,20 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                <div style={{ width: '8px', height: '8px', background: sector.color, flexShrink: 0, borderRadius: '50%' }} />
-                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--bb-white)', fontSize: '13px', fontWeight: '700' }}>
+                <div style={{ width: '6px', height: '6px', background: sector.color, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)', fontSize: '12px' }}>
                   {sector.symbol}
                 </span>
                 {!isMobile && (
                   <span style={{
-                    fontFamily: 'var(--font-ui)',
-                    color: 'var(--bb-gray-2)',
-                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-dim)',
+                    fontSize: '10px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.3px'
+                    letterSpacing: '0.1em',
                   }}>
                     {sector.name}
                   </span>
@@ -82,10 +81,10 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: 'var(--bb-gray-2)',
+                    color: 'var(--text-dim)',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     padding: '2px 4px',
                   }}
                 >
@@ -93,9 +92,8 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                 </button>
                 <span style={{
                   fontFamily: 'var(--font-mono)',
-                  color: sector.currentZScore < 0 ? 'var(--bb-green)' : 'var(--bb-red)',
-                  fontWeight: '700',
-                  fontSize: '13px',
+                  color: sector.currentZScore < 0 ? 'var(--pos)' : 'var(--neg)',
+                  fontSize: '12px',
                   minWidth: '46px',
                   textAlign: 'right'
                 }}>
@@ -105,39 +103,36 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
               </div>
             </div>
 
-            {/* Expanded Details */}
             {expandedSector === sector.symbol && sector.structuralBaseline !== null && (
               <div className="animate-in" style={{
                 padding: '12px 16px',
-                background: 'var(--bb-border-light)',
-                borderLeft: '3px solid var(--bb-border-light)',
+                background: 'var(--bg-wash)',
+                borderLeft: '2px solid var(--rule-strong)',
                 fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
                 lineHeight: '1.6'
               }}>
-                <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  CURRENT BREAKDOWN
-                </div>
+                <div className="stat-block-label" style={{ marginBottom: '8px' }}>Current Breakdown</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--bb-gray-2)' }}>STRUCT BASELINE:</span>
-                    <span style={{ color: sector.structuralBaseline < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
+                    <span style={{ color: 'var(--text-dim)' }}>STRUCT BASELINE:</span>
+                    <span style={{ color: sector.structuralBaseline < 0 ? 'var(--neg)' : 'var(--pos)' }}>
                       {sector.structuralBaseline >= 0 ? '+' : ''}{sector.structuralBaseline.toFixed(2)}%
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--bb-gray-2)' }}>REL RETURN:</span>
-                    <span style={{ color: sector.relativeReturn < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
+                    <span style={{ color: 'var(--text-dim)' }}>REL RETURN:</span>
+                    <span style={{ color: sector.relativeReturn < 0 ? 'var(--neg)' : 'var(--pos)' }}>
                       {sector.relativeReturn >= 0 ? '+' : ''}{sector.relativeReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', marginTop: '6px', borderTop: '1px solid var(--bb-border-light)' }}>
-                    <span style={{ color: 'var(--bb-gray-1)', fontWeight: '700' }}>EXCESS RETURN:</span>
-                    <span style={{ color: sector.excessReturn < 0 ? 'var(--bb-red)' : 'var(--bb-green)', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '6px', marginTop: '6px', borderTop: '1px solid var(--rule)' }}>
+                    <span style={{ color: 'var(--text-mid)' }}>EXCESS RETURN:</span>
+                    <span style={{ color: sector.excessReturn < 0 ? 'var(--neg)' : 'var(--pos)' }}>
                       {sector.excessReturn >= 0 ? '+' : ''}{sector.excessReturn.toFixed(2)}%
                     </span>
                   </div>
-                  <div style={{ marginTop: '8px', padding: '6px 8px', background: 'var(--bb-panel-alt)', fontSize: '11px', color: 'var(--bb-gray-2)', fontFamily: 'var(--font-ui)' }}>
+                  <div style={{ marginTop: '8px', padding: '6px 8px', background: 'var(--bg-raised)', fontSize: '11px', color: 'var(--text-mid)' }}>
                     {sector.excessReturn !== null && sector.excessReturn !== undefined && (
                       <>
                         {sector.excessReturn < -5
@@ -153,58 +148,47 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                     )}
                   </div>
 
-                  {/* Limited history warning for young ETFs */}
                   {sector.dataPoints != null && sector.dataPoints < 700 && (
-                    <div style={{ marginTop: '8px', padding: '6px 8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', fontSize: '11px', color: 'var(--bb-yellow)', fontFamily: 'var(--font-ui)' }}>
+                    <div style={{ marginTop: '8px', padding: '6px 8px', background: 'var(--accent-dim)', border: '1px solid oklch(72% 0.14 42 / 0.2)', fontSize: '11px', color: 'var(--accent)' }}>
                       Limited history ({sector.dataPoints} wks) — signals may be less reliable
                     </div>
                   )}
 
-                  {/* Time Spent in Zones */}
                   {sector.zScores && sector.zScores.length > 0 && (() => {
                     const totalPoints = sector.zScores.length;
-                    // Single-pass aggregation instead of 5 separate filter calls
                     let cyclicalLowCount = 0, cheapCount = 0, neutralCount = 0, extendedLightCount = 0, extendedCount = 0;
                     for (const z of sector.zScores) {
                       const s = z.zScore;
                       if (s <= -2) cyclicalLowCount++;
                       else if (s <= -1) cheapCount++;
-                      else if (s <= 1) neutralCount++;  // z=1.0 is neutral (matches SignalBadge + chart tooltip)
+                      else if (s <= 1) neutralCount++;
                       else if (s < 2) extendedLightCount++;
                       else extendedCount++;
                     }
 
-                    const cyclicalLowPct = (cyclicalLowCount / totalPoints) * 100;
-                    const cheapPct = (cheapCount / totalPoints) * 100;
-                    const neutralPct = (neutralCount / totalPoints) * 100;
-                    const extendedLightPct = (extendedLightCount / totalPoints) * 100;
-                    const extendedPct = (extendedCount / totalPoints) * 100;
-
                     return (
-                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--bb-border-light)' }}>
-                        <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: 'var(--bb-yellow)', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
-                          HISTORICAL TIME SPENT
-                        </div>
+                      <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--rule)' }}>
+                        <div className="stat-block-label" style={{ marginBottom: '8px' }}>Historical Time Spent</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--bb-gray-2)' }}>CYCLIC LOW (&le;-2):</span>
-                            <span style={{ color: 'var(--bb-green)', fontWeight: '700' }}>{cyclicalLowPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--text-dim)' }}>CYCLIC LOW (≤−2):</span>
+                            <span style={{ color: 'var(--pos)' }}>{((cyclicalLowCount / totalPoints) * 100).toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--bb-gray-2)' }}>CHEAP (-2 TO -1):</span>
-                            <span style={{ color: 'var(--bb-cyan)', fontWeight: '700' }}>{cheapPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--text-dim)' }}>CHEAP (−2 TO −1):</span>
+                            <span style={{ color: 'var(--accent)' }}>{((cheapCount / totalPoints) * 100).toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--bb-gray-2)' }}>NEUTRAL (-1 TO +1]:</span>
-                            <span style={{ color: 'var(--bb-gray-2)', fontWeight: '700' }}>{neutralPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--text-dim)' }}>NEUTRAL (−1 TO +1]:</span>
+                            <span style={{ color: 'var(--text-mid)' }}>{((neutralCount / totalPoints) * 100).toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--bb-gray-2)' }}>SOMEWHAT EXT (+1 TO +2):</span>
-                            <span style={{ color: 'var(--bb-yellow)', fontWeight: '700' }}>{extendedLightPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--text-dim)' }}>SOMEWHAT EXT (+1 TO +2):</span>
+                            <span style={{ color: 'var(--bb-orange)' }}>{((extendedLightCount / totalPoints) * 100).toFixed(1)}%</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span style={{ color: 'var(--bb-gray-2)' }}>EXTENDED (&ge;+2):</span>
-                            <span style={{ color: 'var(--bb-red)', fontWeight: '700' }}>{extendedPct.toFixed(1)}%</span>
+                            <span style={{ color: 'var(--text-dim)' }}>EXTENDED (≥+2):</span>
+                            <span style={{ color: 'var(--neg)' }}>{((extendedCount / totalPoints) * 100).toFixed(1)}%</span>
                           </div>
                         </div>
                       </div>
@@ -218,10 +202,12 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
         {sorted.length === 0 && (
           <div style={{
             fontFamily: 'var(--font-mono)',
-            color: 'var(--bb-gray-2)',
+            color: 'var(--text-dim)',
             textAlign: 'center',
             padding: '32px 20px',
-            fontSize: '12px'
+            fontSize: '11px',
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
           }} className="pulse-animation">
             LOADING SECTOR DATA...
           </div>
