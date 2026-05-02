@@ -10,6 +10,7 @@ import { SectorChart } from './SectorChart';
 import { PriceChart } from './PriceChart';
 import { SignalBadge } from './SignalBadge';
 import { ExportCsvButton } from '../ExportCsvButton';
+import { useChartAnim, ChartWave } from '../ChartWave';
 
 const LoadingState = ({ progress }) => (
   <div className="glass-card" style={{
@@ -131,6 +132,11 @@ export const SectorZScore = ({ isMobile }) => {
   const [zScoreType, setZScoreType] = useState('line');
   const [priceType, setPriceType] = useState('line');
 
+  const [zTrigger, replayZ] = useChartAnim();
+  const [pTrigger, replayP] = useChartAnim();
+  const handleZType = (t) => { setZScoreType(t); replayZ(); };
+  const handlePType = (t) => { setPriceType(t);  replayP(); };
+
   const { data: sectorData, benchmarkData, loading, error, progress, refetch } = useYahooFinance(
     SECTOR_ETFS,
     benchmark
@@ -188,6 +194,7 @@ export const SectorZScore = ({ isMobile }) => {
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Z-SCORE OVER TIME</span>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button onClick={replayZ} className="chart-btn" title="Replay animation">↺</button>
               <ExportCsvButton
                 data={sectors
                   .filter(s => s.currentZScore !== null)
@@ -200,12 +207,13 @@ export const SectorZScore = ({ isMobile }) => {
                   { key: 'current_z_score', label: 'Current Z-Score' },
                 ]}
               />
-              <ChartToggle type={zScoreType} setType={setZScoreType} />
+              <ChartToggle type={zScoreType} setType={handleZType} />
             </div>
           </div>
           <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-            <div style={{ height: isMobile ? '280px' : '360px' }}>
-              <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} />
+            <div style={{ height: isMobile ? '280px' : '360px', position: 'relative' }}>
+              <SectorChart sectors={sectors} selectedSector={selectedSector} isMobile={isMobile} chartType={zScoreType} animTrigger={zTrigger} />
+              <ChartWave trigger={zTrigger} leftPct={8} />
             </div>
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <div className="badge" style={{ color: 'var(--pos)', borderColor: 'oklch(74% 0.16 148 / 0.3)', fontSize: '9px' }}>CYCLICAL LOW (−2)</div>
@@ -235,6 +243,7 @@ export const SectorZScore = ({ isMobile }) => {
             )}
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button onClick={replayP} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton
               data={(() => {
                 if (!selectedSectorData?.prices?.length) return [];
@@ -252,7 +261,7 @@ export const SectorZScore = ({ isMobile }) => {
                 { key: 'pct_change_from_start', label: 'Return from Start (%)' },
               ]}
             />
-            <ChartToggle type={priceType} setType={setPriceType} />
+            <ChartToggle type={priceType} setType={handlePType} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
@@ -265,7 +274,7 @@ export const SectorZScore = ({ isMobile }) => {
               <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-mid)', fontSize: '11px' }}>{selectedSectorData.name}</span>
             </div>
           )}
-          <div style={{ height: isMobile ? '260px' : '320px' }}>
+          <div style={{ height: isMobile ? '260px' : '320px', position: 'relative' }}>
             <PriceChart
               sectors={sectors}
               selectedSector={selectedSector}
@@ -273,7 +282,9 @@ export const SectorZScore = ({ isMobile }) => {
               benchmark={benchmark}
               isMobile={isMobile}
               chartType={priceType}
+              animTrigger={pTrigger}
             />
+            <ChartWave trigger={pTrigger} leftPct={8} />
           </div>
         </div>
       </div>

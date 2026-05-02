@@ -8,6 +8,7 @@ import { ExportCsvButton } from './ExportCsvButton';
 import { ChartToggle } from './ChartToggle';
 import { formatDate } from '../utils/formatDate';
 import { ChartTooltip } from './ChartTooltip';
+import { useChartAnim, ChartWave } from './ChartWave';
 
 const sofrFormatValue = (p) =>
   typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value;
@@ -23,6 +24,14 @@ export function SofrRate({ isMobile }) {
   const [sofrMainType, setSofrMainType] = useState('line');
   const [sofrBandType, setSofrBandType] = useState('line');
   const [sofrVolType, setSofrVolType] = useState('line');
+
+  const [mainTrigger, replayMain] = useChartAnim();
+  const [bandTrigger, replayBand] = useChartAnim();
+  const [volTrigger,  replayVol]  = useChartAnim();
+
+  const handleMainType = (t) => { setSofrMainType(t); replayMain(); };
+  const handleBandType = (t) => { setSofrBandType(t); replayBand(); };
+  const handleVolType  = (t) => { setSofrVolType(t);  replayVol();  };
 
   useEffect(() => {
     let cancelled = false;
@@ -150,11 +159,12 @@ export function SofrRate({ isMobile }) {
         ))}
       </div>
 
-      {/* Main SOFR Line Chart */}
+      {/* Main SOFR Chart */}
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '100ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SOFR RATE OVER TIME</span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button onClick={replayMain} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton
               data={filtered}
               filename="sofr_rate"
@@ -164,49 +174,33 @@ export function SofrRate({ isMobile }) {
                 { key: 'volume', label: 'Volume (Billions USD)' },
               ]}
             />
-            <ChartToggle type={sofrMainType} setType={setSofrMainType} />
+            <ChartToggle type={sofrMainType} setType={handleMainType} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-          <ResponsiveContainer width="100%" height={isMobile ? 240 : 340}>
-            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="sofrGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={formatDate}
-                interval={chartInterval}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={v => `${v.toFixed(1)}%`}
-                domain={['auto', 'auto']}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={0.07} stroke="var(--rule-strong)" strokeDasharray="4 4"
-                label={{ value: 'ZIRP era', fill: 'var(--text-dim)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
-              {sofrMainType === 'line' ? (
-                <Area
-                  type="monotone" dataKey="rate" stroke="var(--accent)" strokeWidth={1.5}
-                  fill="url(#sofrGradient)" name="SOFR Rate"
-                />
-              ) : (
-                <Bar dataKey="rate" fill="var(--accent)" name="SOFR Rate" />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div style={{ position: 'relative' }}>
+            <ResponsiveContainer key={mainTrigger} width="100%" height={isMobile ? 240 : 340}>
+              <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="sofrGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                <XAxis dataKey="date" stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
+                <YAxis stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={v => `${v.toFixed(1)}%`} domain={['auto', 'auto']} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <ReferenceLine y={0.07} stroke="var(--rule-strong)" strokeDasharray="4 4" label={{ value: 'ZIRP era', fill: 'var(--text-dim)', fontSize: 9, fontFamily: 'var(--font-mono)' }} />
+                {sofrMainType === 'line' ? (
+                  <Area type="monotone" dataKey="rate" stroke="var(--accent)" strokeWidth={1.5} fill="url(#sofrGradient)" name="SOFR Rate" isAnimationActive animationDuration={900} animationBegin={0} />
+                ) : (
+                  <Bar dataKey="rate" fill="var(--accent)" name="SOFR Rate" isAnimationActive animationDuration={900} animationBegin={0} />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+            <ChartWave trigger={mainTrigger} />
+          </div>
         </div>
       </div>
 
@@ -214,63 +208,49 @@ export function SofrRate({ isMobile }) {
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>SOFR PERCENTILE BANDS (P1 / P25 / P75 / P99)</span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button onClick={replayBand} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton
               data={filtered}
               filename="sofr_percentile_bands"
               columns={[
-                { key: 'date', label: 'Date' },
-                { key: 'p1',   label: 'P1 (%)' },
-                { key: 'p25',  label: 'P25 (%)' },
-                { key: 'rate', label: 'Median SOFR (%)' },
-                { key: 'p75',  label: 'P75 (%)' },
-                { key: 'p99',  label: 'P99 (%)' },
+                { key: 'date', label: 'Date' }, { key: 'p1', label: 'P1 (%)' },
+                { key: 'p25', label: 'P25 (%)' }, { key: 'rate', label: 'Median SOFR (%)' },
+                { key: 'p75', label: 'P75 (%)' }, { key: 'p99', label: 'P99 (%)' },
               ]}
             />
-            <ChartToggle type={sofrBandType} setType={setSofrBandType} />
+            <ChartToggle type={sofrBandType} setType={handleBandType} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-          <ResponsiveContainer width="100%" height={isMobile ? 200 : 280}>
-            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={formatDate}
-                interval={chartInterval}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={v => `${v.toFixed(1)}%`}
-                domain={['auto', 'auto']}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              {sofrBandType === 'line' ? (
-                <>
-                  <Line type="monotone" dataKey="p1"  stroke="var(--text-dim)" strokeWidth={1} dot={false} name="P1"  strokeDasharray="3 3" />
-                  <Line type="monotone" dataKey="p25" stroke="var(--bb-orange)" strokeWidth={1} dot={false} name="P25" />
-                  <Line type="monotone" dataKey="rate" stroke="var(--accent)" strokeWidth={2} dot={false} name="SOFR (Median)" />
-                  <Line type="monotone" dataKey="p75" stroke="var(--bb-orange)" strokeWidth={1} dot={false} name="P75" />
-                  <Line type="monotone" dataKey="p99" stroke="var(--neg)" strokeWidth={1} dot={false} name="P99" strokeDasharray="3 3" />
-                </>
-              ) : (
-                <>
-                  <Bar dataKey="p1" fill="var(--text-dim)" name="P1" stackId="a" />
-                  <Bar dataKey="p25" fill="var(--bb-orange)" name="P25" stackId="a" />
-                  <Bar dataKey="rate" fill="var(--accent)" name="SOFR (Median)" stackId="a" />
-                  <Bar dataKey="p75" fill="var(--bb-orange)" name="P75" stackId="a" />
-                  <Bar dataKey="p99" fill="var(--neg)" name="P99" stackId="a" />
-                </>
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div style={{ position: 'relative' }}>
+            <ResponsiveContainer key={bandTrigger} width="100%" height={isMobile ? 200 : 280}>
+              <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                <XAxis dataKey="date" stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
+                <YAxis stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={v => `${v.toFixed(1)}%`} domain={['auto', 'auto']} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                {sofrBandType === 'line' ? (
+                  <>
+                    <Line type="monotone" dataKey="p1"   stroke="var(--text-dim)"   strokeWidth={1} dot={false} name="P1"  strokeDasharray="3 3" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line type="monotone" dataKey="p25"  stroke="var(--bb-orange)"  strokeWidth={1} dot={false} name="P25" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line type="monotone" dataKey="rate" stroke="var(--accent)"     strokeWidth={2} dot={false} name="SOFR (Median)" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line type="monotone" dataKey="p75"  stroke="var(--bb-orange)"  strokeWidth={1} dot={false} name="P75" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line type="monotone" dataKey="p99"  stroke="var(--neg)"        strokeWidth={1} dot={false} name="P99" strokeDasharray="3 3" isAnimationActive animationDuration={900} animationBegin={0} />
+                  </>
+                ) : (
+                  <>
+                    <Bar dataKey="p1"   fill="var(--text-dim)"  name="P1"            stackId="a" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Bar dataKey="p25"  fill="var(--bb-orange)" name="P25"           stackId="a" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Bar dataKey="rate" fill="var(--accent)"    name="SOFR (Median)" stackId="a" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Bar dataKey="p75"  fill="var(--bb-orange)" name="P75"           stackId="a" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Bar dataKey="p99"  fill="var(--neg)"       name="P99"           stackId="a" isAnimationActive animationDuration={900} animationBegin={0} />
+                  </>
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+            <ChartWave trigger={bandTrigger} />
+          </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: 10 }}>
             {[
               { label: 'P99', color: 'var(--neg)' },
@@ -292,74 +272,56 @@ export function SofrRate({ isMobile }) {
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '300ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>DAILY TRANSACTION VOLUME (USD BILLIONS)</span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button onClick={replayVol} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton
               data={filtered}
               filename="sofr_volume"
               columns={[
-                { key: 'date',   label: 'Date' },
-                { key: 'volume', label: 'Volume (Billions USD)' },
-                { key: 'rate',   label: 'SOFR Rate (%)' },
+                { key: 'date', label: 'Date' }, { key: 'volume', label: 'Volume (Billions USD)' }, { key: 'rate', label: 'SOFR Rate (%)' },
               ]}
             />
-            <ChartToggle type={sofrVolType} setType={setSofrVolType} />
+            <ChartToggle type={sofrVolType} setType={handleVolType} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-          <ResponsiveContainer width="100%" height={isMobile ? 160 : 220}>
-            <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="volGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--pos)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--pos)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={formatDate}
-                interval={chartInterval}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                stroke="var(--rule)"
-                tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={v => `$${v}B`}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              {sofrVolType === 'line' ? (
-                <Area type="monotone" dataKey="volume" stroke="var(--pos)" strokeWidth={1.5}
-                  fill="url(#volGradient)" name="Volume ($B)" />
-              ) : (
-                <Bar dataKey="volume" fill="var(--pos)" name="Volume ($B)" />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div style={{ position: 'relative' }}>
+            <ResponsiveContainer key={volTrigger} width="100%" height={isMobile ? 160 : 220}>
+              <ComposedChart data={filtered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="volGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--pos)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--pos)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                <XAxis dataKey="date" stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
+                <YAxis stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={v => `$${v}B`} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                {sofrVolType === 'line' ? (
+                  <Area type="monotone" dataKey="volume" stroke="var(--pos)" strokeWidth={1.5} fill="url(#volGradient)" name="Volume ($B)" isAnimationActive animationDuration={900} animationBegin={0} />
+                ) : (
+                  <Bar dataKey="volume" fill="var(--pos)" name="Volume ($B)" isAnimationActive animationDuration={900} animationBegin={0} />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+            <ChartWave trigger={volTrigger} />
+          </div>
         </div>
       </div>
 
       {/* About Card */}
       <div className="glass-card animate-in" style={{ padding: '16px 20px', animationDelay: '400ms' }}>
-        <div>
-          <div className="stat-block-label" style={{ marginBottom: '8px' }}>About SOFR</div>
-          <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-mid)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
-            The Secured Overnight Financing Rate (SOFR) is a broad measure of the cost of borrowing cash
-            overnight collateralized by U.S. Treasury securities. Published by the NY Fed each business day,
-            SOFR replaced LIBOR as the primary USD benchmark rate in June 2023. Rising SOFR signals
-            tightening financial conditions; falling SOFR reflects easing or excess liquidity.
-          </p>
-        </div>
+        <div className="stat-block-label" style={{ marginBottom: '8px' }}>About SOFR</div>
+        <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--text-mid)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>
+          The Secured Overnight Financing Rate (SOFR) is a broad measure of the cost of borrowing cash
+          overnight collateralized by U.S. Treasury securities. Published by the NY Fed each business day,
+          SOFR replaced LIBOR as the primary USD benchmark rate in June 2023. Rising SOFR signals
+          tightening financial conditions; falling SOFR reflects easing or excess liquidity.
+        </p>
       </div>
 
-      <SourceLink
-        href="https://www.newyorkfed.org/markets/reference-rates/sofr"
-        label="NY Fed — SOFR Reference Rate"
-      />
+      <SourceLink href="https://www.newyorkfed.org/markets/reference-rates/sofr" label="NY Fed — SOFR Reference Rate" />
     </>
   );
 }

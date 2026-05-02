@@ -9,6 +9,7 @@ import { ChartToggle } from '../ChartToggle';
 import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 import { useFredBuffettData } from './useFredBuffettData';
 import { ExportCsvButton } from '../ExportCsvButton';
+import { useChartAnim, ChartWave } from '../ChartWave';
 
 const HISTORICAL_DATA = [
   { year: 1995, cash: 2.7 },
@@ -144,6 +145,12 @@ export const BuffettIndicator = ({ isMobile }) => {
   const [cashMainType, setCashMainType] = useState('bar');
   const [cashYoyType, setCashYoyType] = useState('bar');
 
+  const [biTrigger, replayBi] = useChartAnim();
+  const [bkTrigger, replayBk] = useChartAnim();
+  const handleBuffettType = (t) => { setBuffettMainType(t); replayBi(); };
+  const handleCashType    = (t) => { setCashMainType(t);   replayBk(); };
+  const handleYoyType     = (t) => { setCashYoyType(t);    replayBk(); };
+
   const { biData, biStatus: rawBiStatus } = useFredBuffettData();
   const biStatus = rawBiStatus === 'live' || rawBiStatus === 'fallback' ? 'loaded' : rawBiStatus;
 
@@ -215,6 +222,7 @@ export const BuffettIndicator = ({ isMobile }) => {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button onClick={replayBi} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton data={biChartData} filename="buffett_indicator"
               columns={[
                 { key: 'date', label: 'Date' }, { key: 'ratio_pct', label: 'Ratio (%)' },
@@ -222,7 +230,7 @@ export const BuffettIndicator = ({ isMobile }) => {
                 { key: 'band_minus2', label: '-2σ (%)' },
               ]}
             />
-            <ChartToggle type={buffettMainType} setType={setBuffettMainType} />
+            <ChartToggle type={buffettMainType} setType={handleBuffettType} />
           </div>
         </div>
 
@@ -285,30 +293,33 @@ export const BuffettIndicator = ({ isMobile }) => {
                 ))}
               </div>
 
-              <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                <ComposedChart data={biChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="1 4" stroke={gridStroke} vertical={false} />
-                  <XAxis dataKey="date" tick={axTick} axisLine={false} tickLine={false}
-                    tickFormatter={d => new Date(d).getFullYear()}
-                    interval={isMobile ? 'preserveStartEnd' : Math.floor(biChartData.length / 8)}
-                  />
-                  <YAxis tickFormatter={v => `${v.toFixed(0)}%`} tick={axTick} axisLine={false} tickLine={false} width={48} />
-                  <Tooltip content={<BuffettTooltip />} cursor={{ stroke: 'var(--rule-strong)', strokeWidth: 1 }} />
-                  <Area dataKey="band_plus2"  stroke="none" fill="oklch(64% 0.18 28 / 0.07)"  fillOpacity={1} dot={false} legendType="none" />
-                  <Area dataKey="band_minus2" stroke="none" fill="var(--bg)"                   fillOpacity={1} dot={false} legendType="none" />
-                  <Line dataKey="band_plus1"  stroke="oklch(64% 0.18 28 / 0.5)"  strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" />
-                  <Line dataKey="band_plus2"  stroke="var(--neg)"                strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" />
-                  <Line dataKey="band_minus1" stroke="oklch(74% 0.16 148 / 0.5)" strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" />
-                  <Line dataKey="band_minus2" stroke="var(--pos)"                strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" />
-                  <Line dataKey="trend_pct"   stroke="var(--text-dim)"           strokeWidth={1} strokeDasharray="6 3" dot={false} legendType="none" />
-                  {buffettMainType === 'line' ? (
-                    <Line dataKey="ratio_pct" stroke="var(--accent)" strokeWidth={2} dot={false} legendType="none" />
-                  ) : (
-                    <Bar dataKey="ratio_pct" fill="var(--accent)" name="Ratio" />
-                  )}
-                  <ReferenceLine y={100} stroke="var(--rule-strong)" strokeWidth={1} strokeDasharray="2 4" />
-                </ComposedChart>
-              </ResponsiveContainer>
+              <div style={{ position: 'relative' }}>
+                <ResponsiveContainer key={biTrigger} width="100%" height={isMobile ? 220 : 300}>
+                  <ComposedChart data={biChartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="1 4" stroke={gridStroke} vertical={false} />
+                    <XAxis dataKey="date" tick={axTick} axisLine={false} tickLine={false}
+                      tickFormatter={d => new Date(d).getFullYear()}
+                      interval={isMobile ? 'preserveStartEnd' : Math.floor(biChartData.length / 8)}
+                    />
+                    <YAxis tickFormatter={v => `${v.toFixed(0)}%`} tick={axTick} axisLine={false} tickLine={false} width={48} />
+                    <Tooltip content={<BuffettTooltip />} cursor={{ stroke: 'var(--rule-strong)', strokeWidth: 1 }} />
+                    <Area dataKey="band_plus2"  stroke="none" fill="oklch(64% 0.18 28 / 0.07)"  fillOpacity={1} dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Area dataKey="band_minus2" stroke="none" fill="var(--bg)"                   fillOpacity={1} dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line dataKey="band_plus1"  stroke="oklch(64% 0.18 28 / 0.5)"  strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line dataKey="band_plus2"  stroke="var(--neg)"                strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line dataKey="band_minus1" stroke="oklch(74% 0.16 148 / 0.5)" strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line dataKey="band_minus2" stroke="var(--pos)"                strokeWidth={1} strokeDasharray="3 3" dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    <Line dataKey="trend_pct"   stroke="var(--text-dim)"           strokeWidth={1} strokeDasharray="6 3" dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    {buffettMainType === 'line' ? (
+                      <Line dataKey="ratio_pct" stroke="var(--accent)" strokeWidth={2} dot={false} legendType="none" isAnimationActive animationDuration={900} animationBegin={0} />
+                    ) : (
+                      <Bar dataKey="ratio_pct" fill="var(--accent)" name="Ratio" isAnimationActive animationDuration={900} animationBegin={0} />
+                    )}
+                    <ReferenceLine y={100} stroke="var(--rule-strong)" strokeWidth={1} strokeDasharray="2 4" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+                <ChartWave trigger={biTrigger} leftPct={10} />
+              </div>
 
               <div style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.12em', color: 'var(--text-dim)', lineHeight: '1.7', borderTop: '1px solid var(--rule)', paddingTop: '10px' }}>
                 <span style={{ color: 'var(--text-mid)' }}>FORMULA:</span> Total US Market Cap (Wilshire 5000 Full Cap) ÷ Nominal GDP × 100.
@@ -371,35 +382,39 @@ export const BuffettIndicator = ({ isMobile }) => {
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Cash &amp; T-Bill Holdings</span>
             <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={replayBk} className="chart-btn" title="Replay animation">↺</button>
               <ExportCsvButton data={filtered} filename="berkshire_cash_holdings"
                 columns={[{ key: 'year', label: 'Year' }, { key: 'cash', label: 'Cash + T-Bills ($B)' }, { key: 'yoy', label: 'YoY (%)' }]}
               />
-              <ChartToggle type={cashMainType} setType={setCashMainType} />
+              <ChartToggle type={cashMainType} setType={handleCashType} />
             </div>
           </div>
           <div style={{ padding: isMobile ? '12px 8px' : '16px' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--text-dim)', marginBottom: '12px' }}>
               Annual cash + short-term U.S. Treasury holdings ($B)
             </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart data={filtered} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="1 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={axTick} axisLine={false} tickLine={false} interval={isMobile ? 4 : 2} />
-                <YAxis tickFormatter={v => `$${v}B`} tick={axTick} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={<CashTooltip />} cursor={{ fill: 'oklch(72% 0.14 42 / 0.04)' }} />
-                {cashMainType === 'line' ? (
-                  <Line type="monotone" dataKey="cash" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                ) : (
-                  <Bar dataKey="cash" name="Cash & T-Bills">
-                    {filtered.map(entry => (
-                      <Cell key={entry.year}
-                        fill={entry.cash >= 200 ? 'var(--accent)' : `oklch(72% 0.14 42 / ${entry.cash >= 100 ? 0.7 : entry.cash >= 50 ? 0.5 : 0.3})`}
-                      />
-                    ))}
-                  </Bar>
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
+            <div style={{ position: 'relative' }}>
+              <ResponsiveContainer key={bkTrigger} width="100%" height={260}>
+                <ComposedChart data={filtered} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="1 3" stroke={gridStroke} vertical={false} />
+                  <XAxis dataKey="year" tick={axTick} axisLine={false} tickLine={false} interval={isMobile ? 4 : 2} />
+                  <YAxis tickFormatter={v => `$${v}B`} tick={axTick} axisLine={false} tickLine={false} width={48} />
+                  <Tooltip content={<CashTooltip />} cursor={{ fill: 'oklch(72% 0.14 42 / 0.04)' }} />
+                  {cashMainType === 'line' ? (
+                    <Line type="monotone" dataKey="cash" stroke="var(--accent)" strokeWidth={2} dot={false} isAnimationActive animationDuration={900} animationBegin={0} />
+                  ) : (
+                    <Bar dataKey="cash" name="Cash & T-Bills" isAnimationActive animationDuration={900} animationBegin={0}>
+                      {filtered.map(entry => (
+                        <Cell key={entry.year}
+                          fill={entry.cash >= 200 ? 'var(--accent)' : `oklch(72% 0.14 42 / ${entry.cash >= 100 ? 0.7 : entry.cash >= 50 ? 0.5 : 0.3})`}
+                        />
+                      ))}
+                    </Bar>
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
+              <ChartWave trigger={bkTrigger} leftPct={10} />
+            </div>
           </div>
         </div>
 
@@ -408,34 +423,38 @@ export const BuffettIndicator = ({ isMobile }) => {
           <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Year-over-Year Growth</span>
             <div style={{ display: 'flex', gap: '6px' }}>
+              <button onClick={replayBk} className="chart-btn" title="Replay animation">↺</button>
               <ExportCsvButton data={filtered.filter(d => d.yoy !== null)} filename="berkshire_cash_yoy"
                 columns={[{ key: 'year', label: 'Year' }, { key: 'yoy', label: 'YoY (%)' }, { key: 'cash', label: 'Cash ($B)' }]}
               />
-              <ChartToggle type={cashYoyType} setType={setCashYoyType} />
+              <ChartToggle type={cashYoyType} setType={handleYoyType} />
             </div>
           </div>
           <div style={{ padding: isMobile ? '12px 8px' : '16px' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--text-dim)', marginBottom: '12px' }}>
               Annual change in cash holdings (%)
             </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart data={filtered.filter(d => d.yoy !== null)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="1 3" stroke={gridStroke} vertical={false} />
-                <XAxis dataKey="year" tick={axTick} axisLine={false} tickLine={false} interval={isMobile ? 4 : 2} />
-                <YAxis tickFormatter={v => `${v}%`} tick={axTick} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={<YoyTooltip />} cursor={{ fill: 'oklch(72% 0.14 42 / 0.04)' }} />
-                <ReferenceLine y={0} stroke="var(--rule-strong)" strokeWidth={1} />
-                {cashYoyType === 'line' ? (
-                  <Line type="monotone" dataKey="yoy" stroke="var(--accent)" strokeWidth={2} dot={false} />
-                ) : (
-                  <Bar dataKey="yoy" name="YoY Growth">
-                    {filtered.filter(d => d.yoy !== null).map(entry => (
-                      <Cell key={entry.year} fill={entry.yoy >= 0 ? 'var(--pos)' : 'var(--neg)'} />
-                    ))}
-                  </Bar>
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
+            <div style={{ position: 'relative' }}>
+              <ResponsiveContainer key={`yoy-${bkTrigger}`} width="100%" height={260}>
+                <ComposedChart data={filtered.filter(d => d.yoy !== null)} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="1 3" stroke={gridStroke} vertical={false} />
+                  <XAxis dataKey="year" tick={axTick} axisLine={false} tickLine={false} interval={isMobile ? 4 : 2} />
+                  <YAxis tickFormatter={v => `${v}%`} tick={axTick} axisLine={false} tickLine={false} width={48} />
+                  <Tooltip content={<YoyTooltip />} cursor={{ fill: 'oklch(72% 0.14 42 / 0.04)' }} />
+                  <ReferenceLine y={0} stroke="var(--rule-strong)" strokeWidth={1} />
+                  {cashYoyType === 'line' ? (
+                    <Line type="monotone" dataKey="yoy" stroke="var(--accent)" strokeWidth={2} dot={false} isAnimationActive animationDuration={900} animationBegin={0} />
+                  ) : (
+                    <Bar dataKey="yoy" name="YoY Growth" isAnimationActive animationDuration={900} animationBegin={0}>
+                      {filtered.filter(d => d.yoy !== null).map(entry => (
+                        <Cell key={entry.year} fill={entry.yoy >= 0 ? 'var(--pos)' : 'var(--neg)'} />
+                      ))}
+                    </Bar>
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
+              <ChartWave trigger={bkTrigger} leftPct={10} />
+            </div>
           </div>
         </div>
       </div>

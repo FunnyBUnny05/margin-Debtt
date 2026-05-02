@@ -8,6 +8,7 @@ import { SourceLink } from './SourceLink';
 import { ChartToggle } from './ChartToggle';
 import { formatDate } from '../utils/formatDate';
 import { ChartTooltip } from './ChartTooltip';
+import { useChartAnim, ChartWave } from './ChartWave';
 
 const CustomTooltip = (props) => <ChartTooltip {...props} />;
 
@@ -43,6 +44,9 @@ export function FearGreedIndex({ isMobile }) {
   const [timeRange, setTimeRange] = useState('5y');
   const [chartType, setChartType] = useState('area');
 
+  const [fgTrigger, replayFg] = useChartAnim();
+  const handleChartType = (t) => { setChartType(t); replayFg(); };
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -51,12 +55,8 @@ export function FearGreedIndex({ isMobile }) {
         const r = await fetch('./fear_greed_index.json');
         if (!r.ok) throw new Error('Failed to load Fear & Greed data');
         const json = await r.json();
-
         if (!cancelled) {
-          const hist = (json.historical || []).map(d => ({
-            date: d.date,
-            fear_greed_index: d.value,
-          }));
+          const hist = (json.historical || []).map(d => ({ date: d.date, fear_greed_index: d.value }));
           setHistorical(hist);
           setCurrent(json.current || null);
         }
@@ -107,11 +107,8 @@ export function FearGreedIndex({ isMobile }) {
       {/* Time Range */}
       <div className="mobile-scroll" style={{ display: 'flex', gap: '4px', marginBottom: '20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {['3m', '1y', '2y', '5y', '10y', 'all'].map(range => (
-          <button
-            key={range}
-            onClick={() => setTimeRange(range)}
-            className={`period-btn ${timeRange === range ? 'active' : ''}`}
-          >
+          <button key={range} onClick={() => setTimeRange(range)}
+            className={`period-btn ${timeRange === range ? 'active' : ''}`}>
             {range.toUpperCase()}
           </button>
         ))}
@@ -126,16 +123,16 @@ export function FearGreedIndex({ isMobile }) {
           <div className={`stat-block-value ${scoreColorClass(score)}`} style={{ color: mainColor }}>
             {score.toFixed(1)}<span style={{ fontFamily: 'var(--font-mono)', fontSize: '14px', color: 'var(--text-dim)', marginLeft: '6px' }}>/ 100</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: '400', color: mainColor, marginTop: '8px', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: mainColor, marginTop: '8px', letterSpacing: '0.18em', textTransform: 'uppercase' }}>
             {rating}
           </div>
           {current && (
             <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
               {[
-                { label: 'PREV CLOSE',   val: current.previous_close },
-                { label: '1 WEEK AGO',   val: current.previous_1_week },
-                { label: '1 MONTH AGO',  val: current.previous_1_month },
-                { label: '1 YEAR AGO',   val: current.previous_1_year },
+                { label: 'PREV CLOSE',  val: current.previous_close },
+                { label: '1 WEEK AGO',  val: current.previous_1_week },
+                { label: '1 MONTH AGO', val: current.previous_1_month },
+                { label: '1 YEAR AGO',  val: current.previous_1_year },
               ].filter(x => x.val).map(({ label, val }) => (
                 <div key={label} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
                   <span style={{ color: 'var(--text-dim)', fontSize: '8px', display: 'block', letterSpacing: '0.16em', textTransform: 'uppercase' }}>{label}</span>
@@ -171,40 +168,42 @@ export function FearGreedIndex({ isMobile }) {
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '200ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>FEAR &amp; GREED INDEX (0–100)</span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button onClick={replayFg} className="chart-btn" title="Replay animation">↺</button>
             <ExportCsvButton data={filteredData} filename="fear_greed_index" />
-            <ChartToggle type={chartType} setType={setChartType} options={['area', 'line']} />
+            <ChartToggle type={chartType} setType={handleChartType} options={['area', 'line']} />
           </div>
         </div>
         <div style={{ padding: isMobile ? '16px 8px' : '24px 16px' }}>
-          <ResponsiveContainer width="100%" height={isMobile ? 240 : 360}>
-            <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="var(--bb-blue)"  stopOpacity={0.4}/>
-                  <stop offset="25%"  stopColor="var(--pos)"      stopOpacity={0.25}/>
-                  <stop offset="50%"  stopColor="var(--text-mid)" stopOpacity={0.06}/>
-                  <stop offset="75%"  stopColor="var(--bb-orange)"stopOpacity={0.2}/>
-                  <stop offset="100%" stopColor="var(--neg)"      stopOpacity={0.4}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
-              <XAxis dataKey="date" stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 100]} stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-
-              <ReferenceLine y={25} stroke="var(--neg)" strokeDasharray="3 3" label={{ value: '25 — Extreme Fear', fill: 'var(--neg)', fontSize: 9, fontFamily: 'var(--font-mono)', position: 'insideTopLeft' }} />
-              <ReferenceLine y={45} stroke="var(--bb-orange)" strokeDasharray="3 3" />
-              <ReferenceLine y={55} stroke="var(--rule-strong)" strokeDasharray="3 3" />
-              <ReferenceLine y={75} stroke="var(--pos)" strokeDasharray="3 3" label={{ value: '75 — Extreme Greed', fill: 'var(--pos)', fontSize: 9, fontFamily: 'var(--font-mono)', position: 'insideBottomLeft' }} />
-
-              {chartType === 'area' ? (
-                <Area type="monotone" dataKey="fear_greed_index" stroke="var(--text)" strokeWidth={1.5} fill="url(#fgGradient)" name="Index" dot={false} />
-              ) : (
-                <Line type="monotone" dataKey="fear_greed_index" stroke="var(--text)" strokeWidth={1.5} dot={false} name="Index" />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
+          <div style={{ position: 'relative' }}>
+            <ResponsiveContainer key={fgTrigger} width="100%" height={isMobile ? 240 : 360}>
+              <ComposedChart data={filteredData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="fgGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stopColor="var(--bb-blue)"  stopOpacity={0.4}/>
+                    <stop offset="25%"  stopColor="var(--pos)"      stopOpacity={0.25}/>
+                    <stop offset="50%"  stopColor="var(--text-mid)" stopOpacity={0.06}/>
+                    <stop offset="75%"  stopColor="var(--bb-orange)"stopOpacity={0.2}/>
+                    <stop offset="100%" stopColor="var(--neg)"      stopOpacity={0.4}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                <XAxis dataKey="date" stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} tickFormatter={formatDate} interval={chartInterval} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} stroke="var(--rule)" tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <ReferenceLine y={25} stroke="var(--neg)"        strokeDasharray="3 3" label={{ value: '25 — Extreme Fear', fill: 'var(--neg)',  fontSize: 9, fontFamily: 'var(--font-mono)', position: 'insideTopLeft' }} />
+                <ReferenceLine y={45} stroke="var(--bb-orange)"  strokeDasharray="3 3" />
+                <ReferenceLine y={55} stroke="var(--rule-strong)"strokeDasharray="3 3" />
+                <ReferenceLine y={75} stroke="var(--pos)"        strokeDasharray="3 3" label={{ value: '75 — Extreme Greed', fill: 'var(--pos)', fontSize: 9, fontFamily: 'var(--font-mono)', position: 'insideBottomLeft' }} />
+                {chartType === 'area' ? (
+                  <Area type="monotone" dataKey="fear_greed_index" stroke="var(--text)" strokeWidth={1.5} fill="url(#fgGradient)" name="Index" dot={false} isAnimationActive animationDuration={900} animationBegin={0} />
+                ) : (
+                  <Line type="monotone" dataKey="fear_greed_index" stroke="var(--text)" strokeWidth={1.5} dot={false} name="Index" isAnimationActive animationDuration={900} animationBegin={0} />
+                )}
+              </ComposedChart>
+            </ResponsiveContainer>
+            <ChartWave trigger={fgTrigger} leftPct={3} />
+          </div>
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '9px', justifyContent: 'center', letterSpacing: '0.1em' }}>
             <div className="badge" style={{ color: 'var(--neg)',      borderColor: 'oklch(64% 0.18 28 / 0.3)' }}>0–25 EXTREME FEAR</div>
@@ -216,11 +215,7 @@ export function FearGreedIndex({ isMobile }) {
         </div>
       </div>
 
-      <SourceLink
-        href="https://www.cnn.com/markets/fear-and-greed"
-        label="CNN Fear & Greed Index"
-        note="Live data via CNN API — updated daily"
-      />
+      <SourceLink href="https://www.cnn.com/markets/fear-and-greed" label="CNN Fear & Greed Index" note="Live data via CNN API — updated daily" />
     </>
   );
 }

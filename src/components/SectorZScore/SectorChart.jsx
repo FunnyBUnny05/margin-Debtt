@@ -15,41 +15,30 @@ import {
 import 'chartjs-adapter-date-fns';
 
 Chart.register(
-  LineController,
-  LineElement,
-  PointElement,
-  BarController,
-  BarElement,
-  LinearScale,
-  TimeScale,
-  Tooltip,
-  Legend,
-  Filler
+  LineController, LineElement, PointElement,
+  BarController, BarElement,
+  LinearScale, TimeScale,
+  Tooltip, Legend, Filler
 );
 
 const buildOptions = (isMobile) => ({
   responsive: true,
   maintainAspectRatio: false,
-  interaction: {
-    mode: 'nearest',
-    intersect: false,
-    axis: 'x'
-  },
+  interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+  animation: { duration: 900, easing: 'easeOutQuart' },
   plugins: {
-    legend: {
-      display: false
-    },
+    legend: { display: false },
     tooltip: {
       enabled: true,
-      backgroundColor: 'var(--bb-black)',
-      titleColor: '#F59E0B', // var(--bb-yellow)
-      bodyColor: '#D1D5DB', // var(--bb-gray-1)
-      borderColor: '#1F2937', // var(--bb-border)
+      backgroundColor: 'var(--bg-raised)',
+      titleColor: 'var(--accent)',
+      bodyColor: 'var(--text-mid)',
+      borderColor: 'var(--rule-strong)',
       borderWidth: 1,
       padding: 10,
       cornerRadius: 0,
-      bodyFont: { size: 11, family: 'JetBrains Mono, monospace' },
-      titleFont: { size: 11, weight: '700', family: 'JetBrains Mono, monospace' },
+      bodyFont: { size: 11, family: 'DM Mono, monospace' },
+      titleFont: { size: 11, weight: '700', family: 'DM Mono, monospace' },
       bodySpacing: 4,
       displayColors: false,
       callbacks: {
@@ -65,24 +54,18 @@ const buildOptions = (isMobile) => ({
           const dataPoint = context.raw;
           const lines = [];
           lines.push(`Z-SCORE: ${context.parsed.y.toFixed(2)}`);
-          if (dataPoint.structuralBaseline !== undefined) {
-            lines.push(`BASELINE: ${dataPoint.structuralBaseline >= 0 ? '+' : ''}${dataPoint.structuralBaseline.toFixed(2)}%`);
-          }
-          if (dataPoint.relativeReturn !== undefined) {
-            lines.push(`RELATIVE: ${dataPoint.relativeReturn >= 0 ? '+' : ''}${dataPoint.relativeReturn.toFixed(2)}%`);
-          }
-          if (dataPoint.excessReturn !== undefined) {
-            lines.push(`EXCESS: ${dataPoint.excessReturn >= 0 ? '+' : ''}${dataPoint.excessReturn.toFixed(2)}%`);
-          }
+          if (dataPoint.structuralBaseline !== undefined) lines.push(`BASELINE: ${dataPoint.structuralBaseline >= 0 ? '+' : ''}${dataPoint.structuralBaseline.toFixed(2)}%`);
+          if (dataPoint.relativeReturn !== undefined)    lines.push(`RELATIVE: ${dataPoint.relativeReturn >= 0 ? '+' : ''}${dataPoint.relativeReturn.toFixed(2)}%`);
+          if (dataPoint.excessReturn !== undefined)      lines.push(`EXCESS: ${dataPoint.excessReturn >= 0 ? '+' : ''}${dataPoint.excessReturn.toFixed(2)}%`);
           return lines;
         },
-        labelTextColor: () => '#D1D5DB',
+        labelTextColor: () => 'var(--text-mid)',
         afterLabel: (context) => {
-          const zScore = context.parsed.y;
-          if (zScore <= -2) return 'SIGNAL: CYCLICAL LOW';
-          if (zScore >= 2) return 'SIGNAL: EXTENDED';
-          if (zScore < -1) return 'SIGNAL: CHEAP';
-          if (zScore > 1) return 'SIGNAL: SOMEWHAT EXTENDED';
+          const z = context.parsed.y;
+          if (z <= -2) return 'SIGNAL: CYCLICAL LOW';
+          if (z >= 2)  return 'SIGNAL: EXTENDED';
+          if (z < -1)  return 'SIGNAL: CHEAP';
+          if (z > 1)   return 'SIGNAL: SOMEWHAT EXTENDED';
           return 'SIGNAL: NEUTRAL';
         }
       }
@@ -92,22 +75,13 @@ const buildOptions = (isMobile) => ({
     x: {
       type: 'time',
       time: { unit: 'year', displayFormats: { year: 'yyyy' } },
-      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false }, // var(--bb-border-light)
-      ticks: {
-        color: '#9CA3AF', // var(--bb-gray-2)
-        font: { size: 10, family: 'JetBrains Mono, monospace' },
-        maxTicksLimit: isMobile ? 5 : 10
-      }
+      grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+      ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10, family: 'DM Mono, monospace' }, maxTicksLimit: isMobile ? 5 : 10 }
     },
     y: {
-      min: -6,
-      max: 6,
-      grid: { color: 'rgba(55, 65, 81, 0.3)', drawBorder: false },
-      ticks: {
-        color: '#9CA3AF',
-        font: { size: 10, family: 'JetBrains Mono, monospace' },
-        stepSize: 2
-      }
+      min: -6, max: 6,
+      grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+      ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10, family: 'DM Mono, monospace' }, stepSize: 2 }
     }
   }
 });
@@ -119,16 +93,16 @@ const REFERENCE_LINE_PLUGIN = {
     const yAxis = chart.scales.y;
     const xAxis = chart.scales.x;
     const lines = [
-      { y: 2, color: '#EF444466' }, // var(--bb-red) w/ opacity
-      { y: 0, color: '#4B5563' },   // var(--bb-gray-3)
-      { y: -2, color: '#10B98166' } // var(--bb-green) w/ opacity
+      { y: 2,  color: 'oklch(64% 0.18 28 / 0.4)' },
+      { y: 0,  color: 'rgba(255,255,255,0.15)' },
+      { y: -2, color: 'oklch(74% 0.16 148 / 0.4)' }
     ];
     lines.forEach((line) => {
       const yPixel = yAxis.getPixelForValue(line.y);
       ctx.save();
       ctx.beginPath();
       ctx.strokeStyle = line.color;
-      ctx.lineWidth = line.y === 0 ? 2 : 1;
+      ctx.lineWidth = line.y === 0 ? 1.5 : 1;
       ctx.setLineDash(line.y === 0 ? [] : [5, 5]);
       ctx.moveTo(xAxis.left, yPixel);
       ctx.lineTo(xAxis.right, yPixel);
@@ -138,18 +112,20 @@ const REFERENCE_LINE_PLUGIN = {
   }
 };
 
-export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'line' }) => {
+export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'line', animTrigger = 0 }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const prevIsMobile = useRef(isMobile);
   const prevChartType = useRef(chartType);
+  const prevAnimTrigger = useRef(animTrigger);
 
-  // Rebuild chart when isMobile changes (axis tick count changes)
   useEffect(() => {
-    const mobileChanged = prevIsMobile.current !== isMobile;
-    const typeChanged = prevChartType.current !== chartType;
-    prevIsMobile.current = isMobile;
-    prevChartType.current = chartType;
+    const mobileChanged   = prevIsMobile.current !== isMobile;
+    const typeChanged     = prevChartType.current !== chartType;
+    const animTriggered   = prevAnimTrigger.current !== animTrigger;
+    prevIsMobile.current    = isMobile;
+    prevChartType.current   = chartType;
+    prevAnimTrigger.current = animTrigger;
 
     const validSectors = sectors.filter(s => s.zScores && s.zScores.length > 0);
     const sectorsToShow = selectedSector
@@ -158,33 +134,19 @@ export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'li
 
     if (!chartRef.current) return;
 
-    if (chartInstance.current && !mobileChanged && !typeChanged) {
-      // Update data in place — avoids destroying and recreating the canvas
+    if (chartInstance.current && !mobileChanged && !typeChanged && !animTriggered) {
       const chart = chartInstance.current;
-      const newDatasets = sectorsToShow.map((sector) => ({
+      chart.data.datasets = sectorsToShow.map((sector) => ({
         label: sector.symbol,
-        data: sector.zScores.map((d) => ({
-          x: d.date,
-          y: d.zScore,
-          excessReturn: d.excessReturn,
-          relativeReturn: d.relativeReturn,
-          structuralBaseline: d.structuralBaseline
-        })),
+        data: sector.zScores.map((d) => ({ x: d.date, y: d.zScore, excessReturn: d.excessReturn, relativeReturn: d.relativeReturn, structuralBaseline: d.structuralBaseline })),
         borderColor: sector.color,
         backgroundColor: sector.color + '20',
-        borderWidth: 3,
-        pointRadius: 0,
-        pointHoverRadius: 6,
-        pointHitRadius: 15,
-        tension: 0.3,
-        fill: false
+        borderWidth: 3, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 15, tension: 0.3, fill: false
       }));
-      chart.data.datasets = newDatasets;
-      chart.update('none'); // 'none' skips animation for instant update
+      chart.update('none');
       return;
     }
 
-    // Destroy existing chart (either first render or isMobile changed)
     if (chartInstance.current) {
       chartInstance.current.destroy();
       chartInstance.current = null;
@@ -195,21 +157,10 @@ export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'li
     const ctx = chartRef.current.getContext('2d');
     const datasets = sectorsToShow.map((sector) => ({
       label: sector.symbol,
-      data: sector.zScores.map((d) => ({
-        x: d.date,
-        y: d.zScore,
-        excessReturn: d.excessReturn,
-        relativeReturn: d.relativeReturn,
-        structuralBaseline: d.structuralBaseline
-      })),
+      data: sector.zScores.map((d) => ({ x: d.date, y: d.zScore, excessReturn: d.excessReturn, relativeReturn: d.relativeReturn, structuralBaseline: d.structuralBaseline })),
       borderColor: sector.color,
       backgroundColor: sector.color + '20',
-      borderWidth: 3,
-      pointRadius: 0,
-      pointHoverRadius: 6,
-      pointHitRadius: 15,
-      tension: 0.3,
-      fill: false
+      borderWidth: 3, pointRadius: 0, pointHoverRadius: 6, pointHitRadius: 15, tension: 0.3, fill: false
     }));
 
     chartInstance.current = new Chart(ctx, {
@@ -225,7 +176,7 @@ export const SectorChart = ({ sectors, selectedSector, isMobile, chartType = 'li
         chartInstance.current = null;
       }
     };
-  }, [sectors, selectedSector, isMobile, chartType]);
+  }, [sectors, selectedSector, isMobile, chartType, animTrigger]);
 
   return (
     <div style={{ height: '100%', position: 'relative' }}>
