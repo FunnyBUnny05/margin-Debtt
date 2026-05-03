@@ -397,12 +397,12 @@ export default function App() {
                       <div className="bb-panel-header">Threshold Duration Statistics</div>
                       <div style={{ padding: '16px 20px' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
-                          <div className="glass-card" style={{ padding: '14px 18px', borderTop: '2px solid var(--neg)' }}>
+                          <div className="glass-card" style={{ padding: '14px 18px' }}>
                             <div className="stat-block-label" style={{ marginBottom: '8px' }}>Above +30% (Euphoria)</div>
                             <div className="stat-block-value neutral sm">{formatDuration(thresholdStats.above30.avgMonths)} avg</div>
                             <div className="stat-block-sub">{thresholdStats.above30.occurrences} occurrences</div>
                           </div>
-                          <div className="glass-card" style={{ padding: '14px 18px', borderTop: '2px solid var(--pos)' }}>
+                          <div className="glass-card" style={{ padding: '14px 18px' }}>
                             <div className="stat-block-label" style={{ marginBottom: '8px' }}>Below -30% (Capitulation)</div>
                             <div className="stat-block-value neutral sm">{formatDuration(thresholdStats.belowNeg30.avgMonths)} avg</div>
                             <div className="stat-block-sub">{thresholdStats.belowNeg30.occurrences} occurrences</div>

@@ -118,7 +118,7 @@ export function FearGreedIndex({ isMobile }) {
       </div>
 
       {/* Current reading */}
-      <div className="responsive-grid" style={{ marginBottom: '16px', marginTop: '16px' }}>
+      <div className="responsive-grid" style={{ marginBottom: '16px' }}>
         <div className="stat-card">
           <div className="stat-block-label">
             CNN Fear &amp; Greed {current?.timestamp ? `· ${current.timestamp.slice(0, 10)}` : ''}

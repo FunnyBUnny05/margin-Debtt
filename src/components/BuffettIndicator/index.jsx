@@ -321,7 +321,16 @@ export const BuffettIndicator = ({ isMobile }) => {
       </div>
 
       {/* ── BERKSHIRE CASH HOARD ── */}
-      <div className="bb-panel-header" style={{ marginBottom: '1px' }}>Berkshire Hathaway — Cash &amp; T-Bill Holdings</div>
+      <div style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: '9px',
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color: 'var(--text-mid)',
+        padding: '14px 0 10px',
+        borderTop: '1px solid var(--rule)',
+        marginTop: '8px',
+      }}>Berkshire Hathaway — Cash &amp; T-Bill Holdings</div>
 
       {/* Stat blocks */}
       <div className="responsive-grid" style={{ marginBottom: '16px', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
