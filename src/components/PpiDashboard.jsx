@@ -1,5 +1,37 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, ReferenceLine, Cell,
+} from 'recharts';
 import { ExportCsvButton } from './ExportCsvButton';
+import { ChartToggle } from './ChartToggle';
+import { ChartTooltip } from './ChartTooltip';
+import { formatDate } from '../utils/formatDate';
+
+// ── Colour helpers ────────────────────────────────────────
+const momColor = v => {
+  if (v == null) return 'var(--text-dim)';
+  if (v > 0.5)  return 'var(--neg)';
+  if (v > 0)    return 'var(--accent)';
+  if (v < 0)    return 'var(--pos)';
+  return 'var(--text-dim)';
+};
+
+const yoyColor = v => {
+  if (v == null) return 'var(--text-dim)';
+  if (v > 4)  return 'var(--neg)';
+  if (v > 2)  return 'var(--accent)';
+  if (v < 0)  return 'var(--pos)';
+  return 'var(--accent)';
+};
+
+const ppiFormat = p =>
+  p.name === 'Index'
+    ? p.value?.toFixed(2)
+    : typeof p.value === 'number'
+      ? `${p.value > 0 ? '+' : ''}${p.value.toFixed(3)}%`
+      : p.value;
+const PpiTooltip = props => <ChartTooltip {...props} formatValue={ppiFormat} />;
 
 // ── Seismic animation hook ────────────────────────────────
 function useSeismic(dataLen, trigger) {
@@ -62,7 +94,7 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
   }, []);
 
   const { w, h } = dims;
-  const P = { top: 20, right: 12, bottom: 28, left: 48 };
+  const P = { top: 20, right: 24, bottom: 28, left: 48 };
   const cW = w - P.left - P.right;
   const cH = h - P.top - P.bottom;
 
@@ -70,10 +102,12 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
   const maxV = Math.max(...vals);
   const minV = Math.min(...vals);
   const span = Math.max(maxV - minV, 0.01);
-  const yMin = minV - span * 0.14;
-  const yMax = maxV + span * 0.14;
+  // ensure +0.5 and -0.5 are always visible in the chart range
+  const yMin = Math.min(minV - span * 0.12, -0.6);
+  const yMax = Math.max(maxV + span * 0.12,  0.6);
 
-  const toX = i => P.left + (i / Math.max(data.length - 1, 1)) * cW;
+  // Slot-centre positioning — prevents first/last bars from being half-clipped
+  const toX = i => P.left + ((i + 0.5) / data.length) * cW;
   const toY = v => P.top + cH - ((v - yMin) / (yMax - yMin)) * cH;
   const zeroY = toY(0);
   const barW = Math.max(1, cW / data.length - 1.5);
@@ -95,7 +129,7 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
   });
 
   const covidIdx = data.findIndex(d => d.d === '2020-04');
-  const inflIdx = data.findIndex(d => d.d === '2022-03');
+  const inflIdx  = data.findIndex(d => d.d === '2022-03');
 
   const onMove = useCallback(e => {
     const svg = svgRef.current;
@@ -108,6 +142,8 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
 
   const posColor = 'oklch(74% 0.16 148)';
   const negColor = 'oklch(64% 0.18 28)';
+  const hotY   = toY(0.5);
+  const coolY  = toY(-0.5);
 
   return (
     <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -142,6 +178,40 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
             stroke="rgba(255,255,255,0.04)" strokeWidth={0.5}
           />
         ))}
+
+        {/* ── Threshold bands ── */}
+        {/* HOT zone fill (+0.5% → top) */}
+        <rect
+          x={P.left} y={P.top} width={cW} height={Math.max(0, hotY - P.top)}
+          fill="oklch(64% 0.18 28 / 0.05)"
+        />
+        {/* COOL zone fill (bottom → -0.5%) */}
+        <rect
+          x={P.left} y={coolY} width={cW} height={Math.max(0, P.top + cH - coolY)}
+          fill="oklch(74% 0.16 148 / 0.05)"
+        />
+
+        {/* +0.5% threshold line (hot) */}
+        <line
+          x1={P.left} x2={P.left + cW}
+          y1={hotY} y2={hotY}
+          stroke="oklch(64% 0.18 28)" strokeWidth={1}
+          strokeDasharray="4 4" opacity={0.55}
+        />
+        <text x={P.left + 4} y={hotY - 4}
+          fill="oklch(64% 0.18 28)" fontSize={8} opacity={0.7}
+          fontFamily="'DM Mono', monospace">+0.5% HOT</text>
+
+        {/* -0.5% threshold line (cool) */}
+        <line
+          x1={P.left} x2={P.left + cW}
+          y1={coolY} y2={coolY}
+          stroke="oklch(74% 0.16 148)" strokeWidth={1}
+          strokeDasharray="4 4" opacity={0.55}
+        />
+        <text x={P.left + 4} y={coolY + 11}
+          fill="oklch(74% 0.16 148)" fontSize={8} opacity={0.7}
+          fontFamily="'DM Mono', monospace">-0.5% COOL</text>
 
         {/* Y-axis labels */}
         {yTicks.map(t => (
@@ -191,7 +261,7 @@ function SeismicChart({ data, chartType, showAnnotations, animTrigger }) {
               const fullH = Math.abs(toY(d.v) - zeroY);
               const animH = fullH * settled[i];
               const by = isPos ? zeroY - animH : zeroY;
-              const barNorm = i / (data.length - 1);
+              const barNorm = (i + 0.5) / data.length;
               const distFromWave = Math.abs(barNorm - wavePos);
               const boost = Math.max(0, 1 - distFromWave / 0.08) * 0.35;
               const baseOpacity = hover ? (hover.idx === i ? 1 : 0.35) : 0.75;
@@ -317,19 +387,18 @@ function PpiSidebar({ data, period, onPeriodChange }) {
   );
 
   const latest = data[data.length - 1];
-  const prev = data[data.length - 2];
-  const yearAgo = data[data.length - 13];
-  const mom = latest?.mom;
-  const yoy = latest?.yoy;
-  const idx = latest?.index;
+  const prev   = data[data.length - 2];
+  const mom    = latest?.mom;
+  const yoy    = latest?.yoy;
+  const idx    = latest?.index;
 
-  const yoyValues = data.filter(d => d.yoy !== null).map(d => d.yoy);
-  const maxYoy = Math.max(...yoyValues);
-  const minYoy = Math.min(...yoyValues);
-  const avgYoy = yoyValues.length
+  const yoyValues  = data.filter(d => d.yoy !== null).map(d => d.yoy);
+  const maxYoy     = Math.max(...yoyValues);
+  const minYoy     = Math.min(...yoyValues);
+  const avgYoy     = yoyValues.length
     ? (yoyValues.reduce((a, b) => a + b, 0) / yoyValues.length).toFixed(2)
     : null;
-  const yoyRange = maxYoy - minYoy;
+  const yoyRange   = maxYoy - minYoy;
   const yoyFillPct = yoyRange > 0
     ? Math.min(100, Math.max(0, ((yoy - minYoy) / yoyRange) * 100))
     : 50;
@@ -408,14 +477,32 @@ function PpiSidebar({ data, period, onPeriodChange }) {
   );
 }
 
+// ── Sub-chart section wrapper ─────────────────────────────
+function SubSection({ title, children, exportBtn, toggle }) {
+  return (
+    <div style={{ borderTop: '1px solid var(--rule)', flexShrink: 0 }}>
+      <div className="chart-topbar" style={{ padding: '8px 20px' }}>
+        <div className="chart-headline" style={{ fontSize: '11px' }}>{title}</div>
+        <div className="chart-btn-group">
+          {exportBtn}
+          {toggle}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 // ── Main PpiDashboard export ──────────────────────────────
 export function PpiDashboard() {
-  const [rawData, setRawData] = useState({ unadj: [], adj: [] });
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('ALL');
-  const [chartType, setChartType] = useState('bar');
+  const [rawData, setRawData]   = useState({ unadj: [], adj: [] });
+  const [loading, setLoading]   = useState(true);
+  const [period, setPeriod]     = useState('ALL');
+  const [chartType, setChartType]         = useState('bar');
+  const [yoyType, setYoyType]             = useState('line');
+  const [indexType, setIndexType]         = useState('line');
   const [showAnnotations, setShowAnnotations] = useState(true);
-  const [animTrigger, setAnimTrigger] = useState(0);
+  const [animTrigger, setAnimTrigger]     = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -424,8 +511,8 @@ export function PpiDashboard() {
       .then(json => {
         if (cancelled) return;
         setRawData({
-          unadj: json.series?.WPUFD4?.data || [],
-          adj: json.series?.WPUFD49104?.data || [],
+          unadj: json.series?.WPUFD4?.data     || [],
+          adj:   json.series?.WPUFD49104?.data || [],
         });
       })
       .catch(() => {})
@@ -433,7 +520,7 @@ export function PpiDashboard() {
     return () => { cancelled = true; };
   }, []);
 
-  const isSA = period === 'SA';
+  const isSA   = period === 'SA';
   const source = isSA ? rawData.adj : rawData.unadj;
 
   const filtered = (() => {
@@ -444,8 +531,9 @@ export function PpiDashboard() {
     return source;
   })();
 
-  // Map to chart format { d, v }
-  const chartData = filtered.map(d => ({ d: d.date, v: d.mom ?? 0 }));
+  const chartData  = filtered.map(d => ({ d: d.date, v: d.mom ?? 0 }));
+  const yoyData    = filtered.filter(d => d.yoy != null);
+  const chartInterval = Math.max(1, Math.floor((filtered.length || 1) / 8));
 
   return (
     <>
@@ -455,7 +543,10 @@ export function PpiDashboard() {
         onPeriodChange={p => setPeriod(p)}
       />
 
-      <main className="chart-panel">
+      {/* chart-panel made scrollable so sub-charts are reachable */}
+      <main className="chart-panel" style={{ overflowY: 'auto' }}>
+
+        {/* ── Topbar ── */}
         <div className="chart-topbar">
           <div className="chart-headline">
             PPI Final Demand — Month-over-Month % Change
@@ -470,28 +561,16 @@ export function PpiDashboard() {
                 { key: 'index', label: 'Index Level' },
               ]}
             />
-            <button
-              className="chart-btn outline"
-              onClick={() => setAnimTrigger(n => n + 1)}
-            >↺ Replay</button>
-            <button
-              className={`chart-btn ${chartType === 'bar' ? 'active' : ''}`}
-              onClick={() => setChartType('bar')}
-            >Bar</button>
-            <button
-              className={`chart-btn ${chartType === 'line' ? 'active' : ''}`}
-              onClick={() => setChartType('line')}
-            >Line</button>
+            <button className="chart-btn outline" onClick={() => setAnimTrigger(n => n + 1)}>↺ Replay</button>
+            <button className={`chart-btn ${chartType === 'bar'  ? 'active' : ''}`} onClick={() => setChartType('bar')}>Bar</button>
+            <button className={`chart-btn ${chartType === 'line' ? 'active' : ''}`} onClick={() => setChartType('line')}>Line</button>
           </div>
         </div>
 
-        <div className="chart-area">
+        {/* ── Seismic MoM chart — fixed height so sub-charts are visible ── */}
+        <div className="chart-area" style={{ height: 'min(420px, 50vh)', minHeight: 260, flex: 'none' }}>
           {loading ? (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              height: '100%', fontFamily: 'var(--font-mono)', fontSize: '9px',
-              letterSpacing: '0.2em', color: 'var(--text-dim)',
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.2em', color: 'var(--text-dim)' }}>
               LOADING PPI DATA...
             </div>
           ) : chartData.length > 0 ? (
@@ -502,15 +581,161 @@ export function PpiDashboard() {
               animTrigger={animTrigger}
             />
           ) : (
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              height: '100%', fontFamily: 'var(--font-mono)', fontSize: '9px',
-              letterSpacing: '0.2em', color: 'var(--neg)',
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.2em', color: 'var(--neg)' }}>
               NO DATA AVAILABLE
             </div>
           )}
         </div>
+
+        {/* Legend for MoM */}
+        {!loading && chartData.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', padding: '8px 20px 12px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '9px', borderBottom: '1px solid var(--rule)' }}>
+            <span style={{ color: 'var(--neg)',    letterSpacing: '0.12em' }}>▪ HOT (&gt;+0.5%)</span>
+            <span style={{ color: 'var(--accent)', letterSpacing: '0.12em' }}>▪ WARM (0–+0.5%)</span>
+            <span style={{ color: 'var(--pos)',    letterSpacing: '0.12em' }}>▪ COOLING (&lt;0%)</span>
+          </div>
+        )}
+
+        {/* ── YoY chart ── */}
+        {!loading && yoyData.length > 0 && (
+          <SubSection
+            title="PPI Final Demand — Year-over-Year % Change"
+            exportBtn={
+              <ExportCsvButton
+                data={yoyData}
+                filename="ppi_yoy"
+                columns={[
+                  { key: 'date', label: 'Date' },
+                  { key: 'yoy',  label: 'YoY Change (%)' },
+                  { key: 'index', label: 'Index Level' },
+                ]}
+              />
+            }
+            toggle={<ChartToggle type={yoyType} setType={setYoyType} />}
+          >
+            <div style={{ padding: '4px 20px 8px' }}>
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={yoyData} margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="var(--text-dim)"
+                    tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={formatDate}
+                    interval={chartInterval}
+                    axisLine={false} tickLine={false}
+                  />
+                  <YAxis
+                    stroke="var(--text-dim)"
+                    tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={v => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
+                    axisLine={false} tickLine={false}
+                  />
+                  <Tooltip content={<PpiTooltip />} cursor={{ fill: 'rgba(245,158,11,0.05)' }} />
+
+                  {/* Zero baseline */}
+                  <ReferenceLine y={0} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+
+                  {/* Fed target 2% */}
+                  <ReferenceLine
+                    y={2}
+                    stroke="var(--accent)" strokeDasharray="4 4" strokeOpacity={0.7}
+                    label={{ value: 'Fed target ~2%', fill: 'var(--accent)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+                  />
+
+                  {/* Danger 4% */}
+                  <ReferenceLine
+                    y={4}
+                    stroke="var(--neg)" strokeDasharray="4 4" strokeOpacity={0.6}
+                    label={{ value: '+4% Danger', fill: 'var(--neg)', fontSize: 9, fontFamily: 'var(--font-mono)' }}
+                  />
+
+                  {/* Deflation 0% already covered by zero baseline */}
+
+                  {yoyType === 'line' ? (
+                    <Line
+                      type="monotone" dataKey="yoy" name="YoY %"
+                      stroke="var(--accent)" strokeWidth={2.5} dot={false}
+                    />
+                  ) : (
+                    <Bar dataKey="yoy" name="YoY %" radius={[3, 3, 0, 0]}>
+                      {yoyData.map((d, i) => (
+                        <Cell key={i} fill={yoyColor(d.yoy)} />
+                      ))}
+                    </Bar>
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
+
+              {/* YoY legend */}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                <span style={{ color: 'var(--neg)',    letterSpacing: '0.12em' }}>▪ DANGER (&gt;4%)</span>
+                <span style={{ color: 'var(--accent)', letterSpacing: '0.12em' }}>▪ FED TARGET (~2%)</span>
+                <span style={{ color: 'var(--pos)',    letterSpacing: '0.12em' }}>▪ DEFLATIONARY (&lt;0%)</span>
+              </div>
+            </div>
+          </SubSection>
+        )}
+
+        {/* ── Index Level chart ── */}
+        {!loading && filtered.length > 0 && (
+          <SubSection
+            title="PPI Final Demand — Index Level (Base: Nov 2009 = 100)"
+            exportBtn={
+              <ExportCsvButton
+                data={filtered}
+                filename="ppi_index_level"
+                columns={[
+                  { key: 'date',  label: 'Date' },
+                  { key: 'index', label: 'PPI Index Level' },
+                  { key: 'mom',   label: 'MoM Change (%)' },
+                  { key: 'yoy',   label: 'YoY Change (%)' },
+                ]}
+              />
+            }
+            toggle={<ChartToggle type={indexType} setType={setIndexType} />}
+          >
+            <div style={{ padding: '4px 20px 20px' }}>
+              <ResponsiveContainer width="100%" height={220}>
+                <ComposedChart data={filtered} margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="ppiIdxGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="var(--accent)" stopOpacity={0.22} />
+                      <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="1 3" stroke="var(--rule)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    stroke="var(--text-dim)"
+                    tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={formatDate}
+                    interval={chartInterval}
+                    axisLine={false} tickLine={false}
+                  />
+                  <YAxis
+                    stroke="var(--text-dim)"
+                    tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={v => v.toFixed(0)}
+                    domain={['auto', 'auto']}
+                    axisLine={false} tickLine={false}
+                  />
+                  <Tooltip content={<PpiTooltip />} cursor={{ fill: 'rgba(245,158,11,0.05)' }} />
+                  {indexType === 'line' ? (
+                    <Line
+                      type="monotone" dataKey="index" name="Index"
+                      stroke="var(--accent)" strokeWidth={2} dot={false}
+                      fill="url(#ppiIdxGrad)"
+                    />
+                  ) : (
+                    <Bar dataKey="index" name="Index" fill="var(--accent)" radius={[3, 3, 0, 0]} />
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </SubSection>
+        )}
+
       </main>
     </>
   );
