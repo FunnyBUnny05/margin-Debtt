@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, Cell,
@@ -6,77 +6,29 @@ import {
 } from 'recharts';
 import { SourceLink } from '../SourceLink';
 import { ChartToggle } from '../ChartToggle';
-import { CORS_PROXIES } from '../SectorZScore/utils/corsProxies';
 import { useFredBuffettData } from './useFredBuffettData';
 import { ExportCsvButton } from '../ExportCsvButton';
 
-const HISTORICAL_DATA = [
-  { year: 1995, cash: 2.7 },
-  { year: 1996, cash: 1.3 },
-  { year: 1997, cash: 1.1 },
-  { year: 1998, cash: 13.6 },
-  { year: 1999, cash: 3.8 },
-  { year: 2000, cash: 3.4 },
-  { year: 2001, cash: 4.5 },
-  { year: 2002, cash: 10.3 },
-  { year: 2003, cash: 24.4 },
-  { year: 2004, cash: 43.0 },
-  { year: 2005, cash: 44.7 },
-  { year: 2006, cash: 43.7 },
-  { year: 2007, cash: 44.3 },
-  { year: 2008, cash: 25.5 },
-  { year: 2009, cash: 66.3 },
-  { year: 2010, cash: 38.2 },
-  { year: 2011, cash: 68.5 },
-  { year: 2012, cash: 83.7 },
-  { year: 2013, cash: 77.0 },
-  { year: 2014, cash: 90.7 },
-  { year: 2015, cash: 97.7 },
-  { year: 2016, cash: 86.4 },
-  { year: 2017, cash: 116.0 },
-  { year: 2018, cash: 111.9 },
-  { year: 2019, cash: 128.0 },
-  { year: 2020, cash: 138.3 },
+// ── Berkshire historical fallback (if JSON's berkshire_cash is missing) ──────
+// Sourced from Berkshire Hathaway Annual Reports (10-K filings).
+const BRK_STATIC = [
+  {year:1995,cash:2.7},{year:1996,cash:1.3},{year:1997,cash:1.1},
+  {year:1998,cash:13.6},{year:1999,cash:3.8},{year:2000,cash:3.4},
+  {year:2001,cash:4.5},{year:2002,cash:10.3},{year:2003,cash:24.4},
+  {year:2004,cash:43.0},{year:2005,cash:44.7},{year:2006,cash:43.7},
+  {year:2007,cash:44.3},{year:2008,cash:25.5},{year:2009,cash:66.3},
+  {year:2010,cash:38.2},{year:2011,cash:68.5},{year:2012,cash:83.7},
+  {year:2013,cash:77.0},{year:2014,cash:90.7},{year:2015,cash:97.7},
+  {year:2016,cash:86.4},{year:2017,cash:116.0},{year:2018,cash:111.9},
+  {year:2019,cash:128.0},{year:2020,cash:138.3},{year:2021,cash:146.7},
+  {year:2022,cash:128.6},{year:2023,cash:167.6},{year:2024,cash:334.2},
 ];
-
-const RECENT_DATA_FALLBACK = [
-  { year: 2021, cash: 146.7 },
-  { year: 2022, cash: 128.6 },
-  { year: 2023, cash: 167.6 },
-  { year: 2024, cash: 334.2 },
-];
-
-const YF_URL = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/BRK-B?modules=balanceSheetHistory';
-
-const fetchBerkshireBalanceSheet = async () => {
-  for (const proxyFn of CORS_PROXIES) {
-    try {
-      const res = await fetch(proxyFn(YF_URL), { signal: AbortSignal.timeout(12000) });
-      if (!res.ok) continue;
-      const json = await res.json();
-      const statements = json?.quoteSummary?.result?.[0]?.balanceSheetHistory?.balanceSheetStatements;
-      if (!statements?.length) continue;
-      const parsed = statements
-        .map(s => {
-          const endDateStr = s.endDate?.fmt;
-          const cashRaw = s.cashAndShortTermInvestments?.raw ?? s.cash?.raw;
-          if (!endDateStr || cashRaw == null) return null;
-          return { year: parseInt(endDateStr.slice(0, 4), 10), cash: parseFloat((cashRaw / 1e9).toFixed(1)) };
-        })
-        .filter(Boolean)
-        .sort((a, b) => a.year - b.year);
-      if (parsed.length > 0) return parsed;
-    } catch { /* try next */ }
-  }
-  return null;
-};
 
 const enrichWithYoY = (data) =>
-  data.map((d, i) => {
-    if (i === 0) return { ...d, yoy: null };
-    const prev = data[i - 1].cash;
-    return { ...d, yoy: parseFloat((((d.cash - prev) / prev) * 100).toFixed(1)) };
-  });
+  data.map((d, i) => ({
+    ...d,
+    yoy: i === 0 ? null : parseFloat((((d.cash - data[i-1].cash) / data[i-1].cash) * 100).toFixed(1)),
+  }));
 
 const TIME_RANGE_OPTIONS = [
   { label: '10Y', value: '10y' },
@@ -99,7 +51,7 @@ const CashTooltip = ({ active, payload, label }) => {
 const YoyTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   const val = payload[0].value;
-  if (val === null || val === undefined) return null;
+  if (val == null) return null;
   return (
     <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--rule-strong)', padding: '10px 14px' }}>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--text-dim)', marginBottom: '4px' }}>{label}</div>
@@ -114,8 +66,8 @@ const BuffettTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   const ratio = payload.find(p => p.dataKey === 'ratio_pct');
   const trend = payload.find(p => p.dataKey === 'trend_pct');
-  const p2 = payload.find(p => p.dataKey === 'band_plus2');
-  const m2 = payload.find(p => p.dataKey === 'band_minus2');
+  const p2    = payload.find(p => p.dataKey === 'band_plus2');
+  const m2    = payload.find(p => p.dataKey === 'band_minus2');
   return (
     <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--rule-strong)', padding: '10px 14px' }}>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.14em', color: 'var(--text-dim)', marginBottom: '6px' }}>
@@ -128,40 +80,28 @@ const BuffettTooltip = ({ active, payload, label }) => {
   );
 };
 
-const valuationColorFor = (stdDevs) => {
-  if (!stdDevs && stdDevs !== 0) return 'var(--text-mid)';
-  if (stdDevs > 2)  return 'var(--neg)';
-  if (stdDevs > 1)  return 'var(--accent)';
-  if (stdDevs > -1) return 'var(--text)';
+const valuationColorFor = (sd) => {
+  if (sd == null) return 'var(--text-mid)';
+  if (sd > 2)  return 'var(--neg)';
+  if (sd > 1)  return 'var(--accent)';
+  if (sd > -1) return 'var(--text)';
   return 'var(--pos)';
 };
 
 export const BuffettIndicator = ({ isMobile }) => {
-  const [timeRange, setTimeRange] = useState('all');
-  const [liveData, setLiveData] = useState(null);
-  const [fetchStatus, setFetchStatus] = useState('loading');
-  const [buffettMainType, setBuffettMainType] = useState('line');
-  const [cashMainType, setCashMainType] = useState('bar');
-  const [cashYoyType, setCashYoyType] = useState('bar');
+  const [timeRange, setTimeRange]         = useState('all');
+  const [buffettMainType, setBuffettMain] = useState('line');
+  const [cashMainType, setCashMain]       = useState('bar');
+  const [cashYoyType, setCashYoy]         = useState('bar');
 
   const { biData, biStatus: rawBiStatus } = useFredBuffettData();
   const biStatus = rawBiStatus === 'live' || rawBiStatus === 'fallback' ? 'loaded' : rawBiStatus;
 
-  useEffect(() => {
-    let cancelled = false;
-    fetchBerkshireBalanceSheet().then(result => {
-      if (cancelled) return;
-      setLiveData(result ?? null);
-      setFetchStatus(result ? 'live' : 'fallback');
-    });
-    return () => { cancelled = true; };
-  }, []);
-
+  // ── Berkshire cash series (from embedded JSON; BRK_STATIC as fallback) ─────
   const ENRICHED = useMemo(() => {
-    const recentRows = liveData ?? RECENT_DATA_FALLBACK;
-    const cutoffYear = HISTORICAL_DATA[HISTORICAL_DATA.length - 1].year;
-    return enrichWithYoY([...HISTORICAL_DATA, ...recentRows.filter(d => d.year > cutoffYear)]);
-  }, [liveData]);
+    const series = biData?.berkshire_cash?.data ?? BRK_STATIC;
+    return enrichWithYoY(series);
+  }, [biData]);
 
   const filtered = useMemo(() => {
     const latestYear = ENRICHED[ENRICHED.length - 1]?.year ?? new Date().getFullYear();
@@ -171,7 +111,7 @@ export const BuffettIndicator = ({ isMobile }) => {
   }, [timeRange, ENRICHED]);
 
   const latest = ENRICHED[ENRICHED.length - 1];
-  const prev = ENRICHED[ENRICHED.length - 2];
+  const prev   = ENRICHED[ENRICHED.length - 2];
 
   const { allTimeHigh, athYear, avgCash, spanYears } = useMemo(() => {
     let high = -Infinity, highYear = null, sum = 0;
@@ -197,10 +137,8 @@ export const BuffettIndicator = ({ isMobile }) => {
   }, [biData, timeRange]);
 
   const biCurrent = biData?.current;
-  const valColor = valuationColorFor(biCurrent?.std_devs);
-
-  // ── Axis / grid style helpers ──────────────────────────
-  const axTick = { fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' };
+  const valColor  = valuationColorFor(biCurrent?.std_devs);
+  const axTick    = { fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' };
   const gridStroke = 'var(--rule)';
 
   return (
@@ -209,9 +147,10 @@ export const BuffettIndicator = ({ isMobile }) => {
       <div className="glass-card animate-in" style={{ padding: 0, marginBottom: '16px' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span>Buffett Indicator — {rawBiStatus === 'live' ? 'Wilshire / GDP' : 'Market Cap / GDP'}</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.18em', color: rawBiStatus === 'live' ? 'var(--pos)' : 'var(--text-mid)' }}>
-              ● {rawBiStatus === 'live' ? 'LIVE / FRED' : 'STATIC / CACHED'}
+            <span>Buffett Indicator — Wilshire 5000 / GDP</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.18em',
+              color: rawBiStatus === 'live' ? 'var(--pos)' : 'var(--text-mid)' }}>
+              ● {rawBiStatus === 'live' ? 'CURRENT' : rawBiStatus === 'fallback' ? 'CACHED' : rawBiStatus.toUpperCase()}
             </span>
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -222,7 +161,7 @@ export const BuffettIndicator = ({ isMobile }) => {
                 { key: 'band_minus2', label: '-2σ (%)' },
               ]}
             />
-            <ChartToggle type={buffettMainType} setType={setBuffettMainType} />
+            <ChartToggle type={buffettMainType} setType={setBuffettMain} />
           </div>
         </div>
 
@@ -240,12 +179,11 @@ export const BuffettIndicator = ({ isMobile }) => {
 
           {biStatus === 'loaded' && biCurrent && (
             <>
-              {/* Stat blocks */}
               <div className="responsive-grid" style={{ marginBottom: '20px', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
                 <div className="stat-card">
                   <div className="stat-block-label">Current Ratio</div>
                   <div className="stat-block-value accent">{biCurrent.ratio_pct.toFixed(1)}%</div>
-                  <div className="stat-block-sub">{rawBiStatus === 'live' ? 'Wilshire / GDP' : 'Mkt Cap / GDP'}</div>
+                  <div className="stat-block-sub">Wilshire / GDP</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-block-label">vs Trend</div>
@@ -270,13 +208,12 @@ export const BuffettIndicator = ({ isMobile }) => {
                 </div>
               </div>
 
-              {/* Legend */}
               <div style={{ display: 'flex', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
                 {[
                   { label: 'RATIO', color: 'var(--accent)', dash: false },
                   { label: 'TREND', color: 'var(--text-dim)', dash: true },
-                  { label: '+2σ', color: 'var(--neg)', dash: true },
-                  { label: '-2σ', color: 'var(--pos)', dash: true },
+                  { label: '+2σ',  color: 'var(--neg)',      dash: true },
+                  { label: '-2σ',  color: 'var(--pos)',      dash: true },
                 ].map(({ label, color, dash }) => (
                   <span key={label} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', color, display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ width: 18, height: 1, background: color, display: 'inline-block', borderTop: dash ? `1px dashed ${color}` : undefined }} />
@@ -311,9 +248,9 @@ export const BuffettIndicator = ({ isMobile }) => {
               </ResponsiveContainer>
 
               <div style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.12em', color: 'var(--text-dim)', lineHeight: '1.7', borderTop: '1px solid var(--rule)', paddingTop: '10px' }}>
-                <span style={{ color: 'var(--text-mid)' }}>FORMULA:</span> Total US Market Cap (Wilshire 5000 Full Cap) ÷ Nominal GDP × 100.
-                Bands show ±1σ and ±2σ from a log-linear trend fit over the full history.
-                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — updated weekly.</span>
+                <span style={{ color: 'var(--text-mid)' }}>FORMULA:</span> Wilshire 5000 Full Cap Index ÷ Nominal GDP × 100.
+                Bands show ±1σ and ±2σ from a log-linear trend fit over the full history (1971–present).
+                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — pre-built weekly by CI.</span>
               </div>
             </>
           )}
@@ -321,18 +258,12 @@ export const BuffettIndicator = ({ isMobile }) => {
       </div>
 
       {/* ── BERKSHIRE CASH HOARD ── */}
-      <div style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '9px',
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        color: 'var(--text-mid)',
-        padding: '14px 0 10px',
-        borderTop: '1px solid var(--rule)',
-        marginTop: '8px',
-      }}>Berkshire Hathaway — Cash &amp; T-Bill Holdings</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.18em',
+        textTransform: 'uppercase', color: 'var(--text-mid)',
+        padding: '14px 0 10px', borderTop: '1px solid var(--rule)', marginTop: '8px' }}>
+        Berkshire Hathaway — Cash &amp; T-Bill Holdings
+      </div>
 
-      {/* Stat blocks */}
       <div className="responsive-grid" style={{ marginBottom: '16px', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)' }}>
         <div className="stat-card">
           <div className="stat-block-label">{latest?.year} Cash Hoard</div>
@@ -358,7 +289,6 @@ export const BuffettIndicator = ({ isMobile }) => {
         </div>
       </div>
 
-      {/* Time range + fetch status */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '16px', borderBottom: '1px solid var(--rule)', paddingBottom: '10px' }}>
         {TIME_RANGE_OPTIONS.map(({ label, value }) => (
           <button key={value} onClick={() => setTimeRange(value)}
@@ -367,13 +297,10 @@ export const BuffettIndicator = ({ isMobile }) => {
           </button>
         ))}
         <div style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--text-dim)' }}>
-          {fetchStatus === 'loading' && 'FETCHING...'}
-          {fetchStatus === 'live' && '● LIVE'}
-          {fetchStatus === 'fallback' && 'CACHED'}
+          SOURCE: 10-K FILINGS
         </div>
       </div>
 
-      {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1px', marginBottom: '16px', border: '1px solid var(--rule)' }}>
         {/* Cash */}
         <div className="glass-card" style={{ padding: 0 }}>
@@ -383,7 +310,7 @@ export const BuffettIndicator = ({ isMobile }) => {
               <ExportCsvButton data={filtered} filename="berkshire_cash_holdings"
                 columns={[{ key: 'year', label: 'Year' }, { key: 'cash', label: 'Cash + T-Bills ($B)' }, { key: 'yoy', label: 'YoY (%)' }]}
               />
-              <ChartToggle type={cashMainType} setType={setCashMainType} />
+              <ChartToggle type={cashMainType} setType={setCashMain} />
             </div>
           </div>
           <div style={{ padding: isMobile ? '12px 8px' : '16px' }}>
@@ -420,7 +347,7 @@ export const BuffettIndicator = ({ isMobile }) => {
               <ExportCsvButton data={filtered.filter(d => d.yoy !== null)} filename="berkshire_cash_yoy"
                 columns={[{ key: 'year', label: 'Year' }, { key: 'yoy', label: 'YoY (%)' }, { key: 'cash', label: 'Cash ($B)' }]}
               />
-              <ChartToggle type={cashYoyType} setType={setCashYoyType} />
+              <ChartToggle type={cashYoyType} setType={setCashYoy} />
             </div>
           </div>
           <div style={{ padding: isMobile ? '12px 8px' : '16px' }}>
@@ -449,16 +376,21 @@ export const BuffettIndicator = ({ isMobile }) => {
         </div>
       </div>
 
-      {/* Note */}
       <div className="glass-card" style={{ padding: '14px 18px', marginBottom: '4px', borderLeft: '1px solid var(--rule-strong)' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.12em', color: 'var(--text-dim)', lineHeight: '1.8' }}>
-          <span style={{ color: 'var(--text-mid)' }}>DATA NOTES:</span> Cash holdings represent Berkshire Hathaway's combined cash &amp; cash equivalents plus short-term U.S. Treasury bill investments as reported in annual filings.
-          1995–1999 reflect cash &amp; equivalents only. The 1998 spike ($13.6B) reflects the General Re acquisition.
-          Recent years auto-fetched from Yahoo Finance (BRK-B); falls back to last known figures if unavailable.
+          <span style={{ color: 'var(--text-mid)' }}>DATA NOTES:</span>{' '}
+          Cash holdings represent Berkshire Hathaway's combined cash &amp; cash equivalents
+          plus short-term U.S. Treasury bill investments as reported in annual 10-K filings.
+          1995–1999 figures reflect cash &amp; equivalents only (pre-T-bill era).
+          The 1998 spike ($13.6B) reflects the General Re acquisition.
+          Data is sourced directly from annual reports — no external API calls required.
         </div>
       </div>
 
-      <SourceLink href="https://fred.stlouisfed.org/" label="FRED (St. Louis Fed)" note="Wilshire 5000 Full Cap (WILL5000INDFC) &amp; GDP" />
+      <SourceLink href="https://fred.stlouisfed.org/" label="FRED (St. Louis Fed)"
+        note="Wilshire 5000 Full Cap (WILL5000INDFC) &amp; GDP" />
+      <SourceLink href="https://www.berkshirehathaway.com/reports.html"
+        label="Berkshire Hathaway Annual Reports" note="Cash + T-Bill Holdings (10-K)" />
     </div>
   );
 };
