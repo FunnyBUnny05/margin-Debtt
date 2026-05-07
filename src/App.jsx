@@ -11,7 +11,6 @@ import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { PpiDashboard } from './components/PpiDashboard';
 import { ExportCsvButton } from './components/ExportCsvButton';
-import { FearGreedIndex } from './components/FearGreedIndex';
 import { SourceLink } from './components/SourceLink';
 import { ChartToggle } from './components/ChartToggle';
 import { formatDate } from './utils/formatDate';
@@ -71,7 +70,6 @@ const TABS = [
   { key: 'buffett',    label: 'Buffett Ind.' },
   { key: 'sofr',       label: 'SOFR Rate' },
   { key: 'ppi',        label: 'PPI Index' },
-  { key: 'fear_greed', label: 'Fear & Greed' },
 ];
 
 export default function App() {
@@ -548,12 +546,6 @@ export default function App() {
                   <SofrRate isMobile={isMobile} />
                 </ErrorBoundary>
               )}
-              {activeTab === 'fear_greed' && (
-                <ErrorBoundary>
-                  <FearGreedIndex isMobile={isMobile} />
-                </ErrorBoundary>
-              )}
-
             </div>
           )}
         </div>
