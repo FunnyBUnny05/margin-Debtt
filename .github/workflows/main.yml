@@ -35,24 +35,28 @@ jobs:
           python scripts/fetch_cboe_putcall.py     > /tmp/cboe.log  2>&1 & PIDS[2]=$!
           python scripts/fetch_fear_greed.py       > /tmp/fg.log    2>&1 & PIDS[3]=$!
           python scripts/fetch_buffett_indicator.py > /tmp/buffett.log 2>&1 & PIDS[4]=$!
+          python scripts/fetch_ppi_data.py         > /tmp/ppi.log   2>&1 & PIDS[5]=$!
 
           wait "${PIDS[0]}"; R0=$?
           wait "${PIDS[1]}"; R1=$?
           wait "${PIDS[2]}"; R2=$?
           wait "${PIDS[3]}"; R3=$?
           wait "${PIDS[4]}"; R4=$?
+          wait "${PIDS[5]}"; R5=$?
 
           echo "=== FINRA ===" && cat /tmp/finra.log
           echo "=== AAII ===" && cat /tmp/aaii.log
           echo "=== CBOE ===" && cat /tmp/cboe.log
           echo "=== Fear & Greed ===" && cat /tmp/fg.log
           echo "=== Buffett ===" && cat /tmp/buffett.log
+          echo "=== PPI ===" && cat /tmp/ppi.log
 
           [ $R0 -ne 0 ] && echo "::warning::FINRA fetch failed — data may be stale"
           [ $R1 -ne 0 ] && echo "::warning::AAII fetch failed — data may be stale"
           [ $R2 -ne 0 ] && echo "::warning::CBOE put/call fetch failed — data may be stale"
           [ $R3 -ne 0 ] && echo "::warning::Fear & Greed fetch failed — data may be stale"
           [ $R4 -ne 0 ] && echo "::warning::Buffett Indicator fetch failed — data may be stale"
+          [ $R5 -ne 0 ] && echo "::warning::PPI fetch failed — data may be stale"
           exit 0
 
       - name: Report data freshness
@@ -93,7 +97,8 @@ jobs:
             public/margin_data.json \
             public/aaii_allocation_data.json \
             public/buffett_indicator_data.json \
-            public/fear_greed_index.json
+            public/fear_greed_index.json \
+            public/ppi_data.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
