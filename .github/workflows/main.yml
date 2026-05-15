@@ -25,7 +25,7 @@ jobs:
           cache: 'pip'
 
       - name: Install Python dependencies
-        run: pip install pandas openpyxl requests beautifulsoup4 cloudscraper yfinance
+        run: pip install pandas openpyxl requests beautifulsoup4 yfinance
 
       - name: Fetch all market data (parallel)
         run: |
