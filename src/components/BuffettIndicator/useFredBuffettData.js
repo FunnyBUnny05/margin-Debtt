@@ -48,7 +48,7 @@ const logLinearOLS = (values) => {
   const b = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
   const a = (sumY - b * sumX) / n;
   const residuals = logY.map((y, i) => y - (a + b * i));
-  const stdDev = Math.sqrt(residuals.reduce((s, r) => s + r * r, 0) / n);
+  const stdDev = Math.sqrt(residuals.reduce((s, r) => s + r * r, 0) / (n - 1));
   return { a, b, stdDev };
 };
 

@@ -186,7 +186,7 @@ def compute_current(df, wilshire_raw, gdp_raw, coeffs, std_res):
     log_tr  = float(np.polyval(coeffs, t_cur))
     trend   = float(np.exp(log_tr))
     std_devs = (np.log(current_ratio) - log_tr) / std_res
-    dev_pct  = ((current_ratio - trend) / trend) * 100.0
+    dev_pct  = current_ratio - trend
 
     if std_devs > 2.0:    valuation = 'STRONGLY OVERVALUED'
     elif std_devs > 1.0:  valuation = 'OVERVALUED'
