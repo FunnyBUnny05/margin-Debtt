@@ -11,10 +11,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Split vendor libraries into separate chunks for better caching
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'recharts-vendor': ['recharts'],
-          'chartjs-vendor': ['chart.js', 'chartjs-adapter-date-fns'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'recharts-vendor';
+            }
+            if (id.includes('chart.js') || id.includes('chartjs-adapter-date-fns')) {
+              return 'chartjs-vendor';
+            }
+          }
         }
       }
     }
