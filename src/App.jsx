@@ -6,14 +6,11 @@ import {
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { ChartToggle } from './components/ChartToggle';
 import { formatDate } from './utils/formatDate';
-
-const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -46,43 +43,6 @@ const AaiiTooltip = ({ active, payload, label }) => {
       ))}
     </div>
   );
-};
-
-const normalizeMonthKey = (dateStr) => {
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed)) {
-    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
-  }
-  const parts = dateStr.split(/[-/]/);
-  if (parts.length >= 2) {
-    const [p1, p2] = parts;
-    if (p1.length === 4) return `${p1}-${p2.padStart(2, '0')}`;
-    if (p2.length === 4) return `${p2}-${p1.padStart(2, '0')}`;
-  }
-  return dateStr;
-};
-
-const parseFinraMarginCsv = (text) => {
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const dateIdx = headers.findIndex(h => h.includes('date'));
-  const debtIdx = headers.findIndex(h => h.includes('debit'));
-  if (dateIdx === -1 || debtIdx === -1) return [];
-  const rows = lines.slice(1)
-    .map(line => line.split(',').map(cell => cell.trim()))
-    .filter(parts => parts.length > Math.max(dateIdx, debtIdx));
-  const parsed = rows.map(parts => ({
-    date: normalizeMonthKey(parts[dateIdx]),
-    margin_debt: Number(parts[debtIdx].replace(/,/g, ''))
-  }))
-    .filter(d => d.date && !Number.isNaN(d.margin_debt))
-    .sort((a, b) => a.date.localeCompare(b.date));
-  return parsed.map((entry, idx) => {
-    const yearBack = idx >= 12 ? parsed[idx - 12].margin_debt : null;
-    const yoy_growth = yearBack ? ((entry.margin_debt / yearBack - 1) * 100) : null;
-    return { ...entry, yoy_growth: yoy_growth !== null ? Number(yoy_growth.toFixed(1)) : null };
-  });
 };
 
 const TABS = [
@@ -132,29 +92,6 @@ export default function App() {
       setError(null);
 
       const loadMarginData = async () => {
-        const urlsToTry = [FINRA_CSV_URL, ...CORS_PROXIES.map(fn => fn(FINRA_CSV_URL))];
-        for (const url of urlsToTry) {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 10000);
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timer);
-            if (!res.ok) continue;
-            const text = await res.text();
-            const parsed = parseFinraMarginCsv(text);
-            if (parsed.length > 10) {
-              if (!cancelled) {
-                setRawData(parsed);
-                setMetadata({
-                  lastUpdated: new Date().toISOString(),
-                  source: 'FINRA Margin Statistics (Live)',
-                  sourceUrl: 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics',
-                });
-              }
-              return;
-            }
-          } catch { /* try next */ }
-        }
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load margin data');
         const json = await res.json();
