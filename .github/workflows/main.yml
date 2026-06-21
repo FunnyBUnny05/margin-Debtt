@@ -36,6 +36,7 @@ jobs:
           python scripts/fetch_fear_greed.py       > /tmp/fg.log    2>&1 & PIDS[3]=$!
           python scripts/fetch_buffett_indicator.py > /tmp/buffett.log 2>&1 & PIDS[4]=$!
           python scripts/fetch_ppi_data.py         > /tmp/ppi.log   2>&1 & PIDS[5]=$!
+          python scripts/fetch_sofr_data.py        > /tmp/sofr.log  2>&1 & PIDS[6]=$!
 
           wait "${PIDS[0]}"; R0=$?
           wait "${PIDS[1]}"; R1=$?
@@ -43,6 +44,7 @@ jobs:
           wait "${PIDS[3]}"; R3=$?
           wait "${PIDS[4]}"; R4=$?
           wait "${PIDS[5]}"; R5=$?
+          wait "${PIDS[6]}"; R6=$?
 
           echo "=== FINRA ===" && cat /tmp/finra.log
           echo "=== AAII ===" && cat /tmp/aaii.log
@@ -50,6 +52,7 @@ jobs:
           echo "=== Fear & Greed ===" && cat /tmp/fg.log
           echo "=== Buffett ===" && cat /tmp/buffett.log
           echo "=== PPI ===" && cat /tmp/ppi.log
+          echo "=== SOFR ===" && cat /tmp/sofr.log
 
           [ $R0 -ne 0 ] && echo "::warning::FINRA fetch failed — data may be stale"
           [ $R1 -ne 0 ] && echo "::warning::AAII fetch failed — data may be stale"
@@ -57,6 +60,7 @@ jobs:
           [ $R3 -ne 0 ] && echo "::warning::Fear & Greed fetch failed — data may be stale"
           [ $R4 -ne 0 ] && echo "::warning::Buffett Indicator fetch failed — data may be stale"
           [ $R5 -ne 0 ] && echo "::warning::PPI fetch failed — data may be stale"
+          [ $R6 -ne 0 ] && echo "::warning::SOFR fetch failed — data may be stale"
           exit 0
 
       - name: Report data freshness
@@ -68,6 +72,7 @@ jobs:
             'margin_data.json':           ('data', 'date'),
             'aaii_allocation_data.json':  ('data', 'date'),
             'buffett_indicator_data.json':('data', 'date'),
+            'sofr_data.json':             ('data', 'date'),
           }
           for fname, (arr_key, date_key) in files.items():
             path = f'public/{fname}'
@@ -98,7 +103,8 @@ jobs:
             public/aaii_allocation_data.json \
             public/buffett_indicator_data.json \
             public/fear_greed_index.json \
-            public/ppi_data.json
+            public/ppi_data.json \
+            public/sofr_data.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 
