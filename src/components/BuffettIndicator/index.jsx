@@ -250,7 +250,7 @@ export const BuffettIndicator = ({ isMobile }) => {
               <div style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.12em', color: 'var(--text-dim)', lineHeight: '1.7', borderTop: '1px solid var(--rule)', paddingTop: '10px' }}>
                 <span style={{ color: 'var(--text-mid)' }}>FORMULA:</span> Wilshire 5000 Full Cap Index ÷ Nominal GDP × 100.
                 Bands show ±1σ and ±2σ from a log-linear trend fit over the full history (1971–present).
-                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — pre-built weekly by CI.</span>
+                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — computed live in your browser; falls back to a weekly CI snapshot if FRED is unreachable.</span>
               </div>
             </>
           )}

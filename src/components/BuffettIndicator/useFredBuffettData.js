@@ -2,12 +2,14 @@
  * useFredBuffettData
  *
  * Loads the Buffett Indicator dataset.  Strategy (in order):
- *   1. Static JSON  (./buffett_indicator_data.json) — pre-built by CI, always works,
- *      includes Berkshire cash hoard data, updated weekly.
- *   2. FRED live    — tries to fetch WILL5000INDFC + GDP if JSON is > 95 days old.
- *
- * The JSON now embeds berkshire_cash so the browser never needs a separate
- * Yahoo Finance call, which was the main reliability bottleneck.
+ *   1. FRED live — fetch WILL5000INDFC + GDP straight from FRED and run the
+ *      log-linear regression locally in the browser, so the ratio, trend and
+ *      σ-bands are always computed from the freshest data available rather
+ *      than a CI snapshot that can be up to a week (or more, if CI failed) old.
+ *   2. Static JSON (./buffett_indicator_data.json) — used only as a fallback
+ *      if the live FRED fetch fails (e.g. offline, FRED down), and as the
+ *      source of Berkshire cash hoard data (not available from FRED) in
+ *      both cases.
  *
  * Returns { biData, biStatus }
  *   biStatus: 'loading' | 'live' | 'fallback' | 'error'
@@ -60,11 +62,6 @@ const getValuationLabel = (sd) => {
   return 'STRONGLY UNDERVALUED';
 };
 
-const daysSince = (isoString) => {
-  if (!isoString) return Infinity;
-  return (Date.now() - new Date(isoString).getTime()) / 86_400_000;
-};
-
 const fetchFredCsv = async (url) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
@@ -87,7 +84,7 @@ const buildFromFred = (wilshireRaw, gdpRaw) => {
   for (const { date, value: wil } of wilshireRaw) {
     const gdp = gdpMap.get(toQuarterKey(date));
     if (gdp && gdp > 0 && wil > 0) {
-      aligned.push({ date, ratio_pct: (wil / gdp) * 100 });
+      aligned.push({ date, ratio_pct: (wil / gdp) * 100, wil, gdp });
     }
   }
   if (aligned.length < 10) return null;
@@ -123,8 +120,8 @@ const buildFromFred = (wilshireRaw, gdpRaw) => {
       deviation_pct:       parseFloat((last.ratio_pct - last.trend_pct).toFixed(1)),
       std_devs:            parseFloat(std_devs.toFixed(2)),
       valuation:           getValuationLabel(std_devs),
-      market_cap_billions: 0,
-      gdp_billions:        0,
+      market_cap_billions: Math.round(aligned[aligned.length - 1].wil),
+      gdp_billions:        Math.round(aligned[aligned.length - 1].gdp),
     },
     data,
     // berkshire_cash is not available from FRED — caller uses static JSON value
@@ -140,48 +137,44 @@ export const useFredBuffettData = () => {
     let cancelled = false;
 
     const load = async () => {
-      // ── Step 1: Always load static JSON first (fast, reliable) ─────────────
+      // ── Step 1: Load static JSON in the background ─────────────────────────
+      // Used only as a fallback (and as the source of Berkshire cash data,
+      // which FRED doesn't provide).
       let staticData = null;
-      try {
-        const res = await fetch('./buffett_indicator_data.json');
-        if (res.ok) {
-          staticData = await res.json();
-          if (!cancelled) {
-            setBiData(staticData);
-            setBiStatus('fallback'); // will upgrade to 'live' if FRED succeeds
-          }
-        }
-      } catch { /* static fetch failed — continue to FRED */ }
+      const staticPromise = fetch('./buffett_indicator_data.json')
+        .then(res => (res.ok ? res.json() : null))
+        .then(json => { staticData = json; return json; })
+        .catch(() => null);
 
-      if (cancelled) return;
-
-      // ── Step 2: Attempt FRED live refresh only if static data is old ────────
-      const staticAgeDays = daysSince(staticData?.last_updated);
-      if (staticAgeDays < 95) {
-        // Static JSON is fresh enough; mark as live (CI updates it weekly)
-        if (!cancelled && staticData) {
-          setBiStatus('live');
-        }
-        return;
-      }
-
-      // Static data is stale — try FRED
+      // ── Step 2: Always try FRED live first, compute the ratio/trend/bands
+      // locally so the numbers reflect the most current data, not a cached
+      // CI snapshot ─────────────────────────────────────────────────────────
       try {
         const [wilText, gdpText] = await Promise.all([
           fetchFredCsv(WILL5000_URL),
           fetchFredCsv(GDP_URL),
         ]);
         const built = buildFromFred(parseFredCsv(wilText), parseFredCsv(gdpText));
-        if (built && !cancelled) {
-          // Preserve berkshire_cash from static JSON (not available from FRED live)
-          built.berkshire_cash = staticData?.berkshire_cash ?? null;
-          setBiData(built);
-          setBiStatus('live');
+        if (built) {
+          await staticPromise;
+          if (!cancelled) {
+            built.berkshire_cash = staticData?.berkshire_cash ?? null;
+            setBiData(built);
+            setBiStatus('live');
+          }
+          return;
         }
+        throw new Error('FRED data insufficient');
       } catch {
-        // FRED unavailable — static JSON is already shown
-        if (!cancelled && staticData) setBiStatus('fallback');
-        else if (!cancelled) setBiStatus('error');
+        // FRED unavailable or failed to parse — fall back to static JSON
+        await staticPromise;
+        if (cancelled) return;
+        if (staticData) {
+          setBiData(staticData);
+          setBiStatus('fallback');
+        } else {
+          setBiStatus('error');
+        }
       }
     };
 
