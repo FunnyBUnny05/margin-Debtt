@@ -17,6 +17,7 @@ never needs to make a live external API call for it.
 
 import json
 import sys
+import time
 import numpy as np
 import pandas as pd
 import requests
@@ -79,35 +80,61 @@ BERKSHIRE_CASH_HISTORY = {
 }
 
 
+FRED_TIMEOUT_S = 60
+FRED_RETRIES = 3
+FRED_BACKOFF_S = 5  # doubles each retry: 5s, 10s, 20s
+
+
 def fetch_fred_csv(url, label):
     print(f'  Fetching {label} from FRED...')
-    r = requests.get(url, headers=FRED_HEADERS, timeout=30)
-    r.raise_for_status()
-    df = pd.read_csv(StringIO(r.text))
-    df.columns = ['date', 'value']
-    df['date'] = pd.to_datetime(df['date'])
-    df['value'] = pd.to_numeric(df['value'], errors='coerce')
-    df = df.dropna(subset=['value']).set_index('date').sort_index()
-    print(f'    {label}: {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
-    return df
+    last_err = None
+    for attempt in range(1, FRED_RETRIES + 1):
+        try:
+            r = requests.get(url, headers=FRED_HEADERS, timeout=FRED_TIMEOUT_S)
+            r.raise_for_status()
+            df = pd.read_csv(StringIO(r.text))
+            df.columns = ['date', 'value']
+            df['date'] = pd.to_datetime(df['date'])
+            df['value'] = pd.to_numeric(df['value'], errors='coerce')
+            df = df.dropna(subset=['value']).set_index('date').sort_index()
+            print(f'    {label}: {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
+            return df
+        except Exception as e:
+            last_err = e
+            if attempt < FRED_RETRIES:
+                wait = FRED_BACKOFF_S * (2 ** (attempt - 1))
+                print(f'    Attempt {attempt}/{FRED_RETRIES} failed ({e}); retrying in {wait}s...')
+                time.sleep(wait)
+    raise last_err
 
 
 def fetch_wilshire_yfinance():
-    """Fetch Wilshire 5000 Full Cap via Yahoo Finance (^W5000). Covers 1989–present."""
+    """Fetch Wilshire 5000 Full Cap via Yahoo Finance. Covers 1989–present.
+
+    Yahoo's ticker changed from ^W5000 to ^FTW5000 after FTSE Russell took
+    over calculation of the index; ^W5000 stopped updating in mid-2023.
+    """
     try:
         import yfinance as yf
     except ImportError:
         raise RuntimeError('yfinance not installed')
-    print('  Fetching Wilshire 5000 via Yahoo Finance (^W5000)...')
-    hist = yf.download('^W5000', period='max', interval='1mo', auto_adjust=True, progress=False)
-    if hist.empty:
-        raise RuntimeError('yfinance returned no data for ^W5000')
-    df = hist[['Close']].copy()
-    df.columns = ['value']
-    df.index = pd.to_datetime(df.index).tz_localize(None)
-    df = df.dropna().sort_index()
-    print(f'    ^W5000 (yfinance): {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
-    return df
+    for ticker in ('^FTW5000', '^W5000'):
+        print(f'  Fetching Wilshire 5000 via Yahoo Finance ({ticker})...')
+        hist = yf.download(ticker, period='max', interval='1mo', auto_adjust=True, progress=False)
+        if hist.empty:
+            print(f'    {ticker}: no data')
+            continue
+        df = hist[['Close']].copy()
+        df.columns = ['value']
+        df.index = pd.to_datetime(df.index).tz_localize(None)
+        df = df.dropna().sort_index()
+        # Discontinued tickers return a single stale point instead of raising — skip those.
+        if len(df) < 2:
+            print(f'    {ticker}: only {len(df)} obs, likely discontinued — skipping')
+            continue
+        print(f'    {ticker} (yfinance): {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
+        return df
+    raise RuntimeError('yfinance returned no usable data for ^FTW5000 or ^W5000')
 
 
 def get_wilshire(existing_data=None):
