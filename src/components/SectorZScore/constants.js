@@ -8,6 +8,7 @@ export const SECTOR_ETFS = [
   { symbol: 'XLF',  name: 'Financials',           color: '#a855f7' },
   { symbol: 'TAN',  name: 'Solar Energy',         color: '#f97316' },
   { symbol: 'XLP',  name: 'Consumer Staples',     color: '#84cc16' },
+  { symbol: 'SOXX', name: 'Semiconductors',       color: '#f43f5e' },
 ];
 
 export const BENCHMARKS = [
