@@ -6,16 +6,20 @@ Buffett Indicator = Total US Public Equity Market Cap / Nominal GDP × 100
 
 Data sources (tried in order, first success wins):
   Wilshire 5000 Full Cap:
-    1. FRED WILL5000INDFC CSV (no API key, CORS-friendly)
-    2. Yahoo Finance ^W5000 via yfinance (fallback; history starts 1989)
+    1. FRED API (series/observations) — requires FRED_API_KEY env var, reliable
+    2. FRED fredgraph.csv (no key, but frequently hangs/blocks automated
+       requests from datacenter IPs — kept only as a secondary attempt)
+    3. Yahoo Finance ^W5000 via yfinance (history starts 1989)
   GDP:
-    FRED GDP CSV (Nominal, billions USD, SAAR, quarterly)
+    1. FRED API (series/observations) — requires FRED_API_KEY env var
+    2. FRED fredgraph.csv (unreliable, see above; no other GDP source)
 
 Berkshire Hathaway cash hoard is embedded in the output JSON so the browser
 never needs to make a live external API call for it.
 """
 
 import json
+import os
 import sys
 import time
 import numpy as np
@@ -25,6 +29,8 @@ from datetime import datetime
 from io import StringIO
 from pathlib import Path
 
+FRED_API_KEY = os.environ.get('FRED_API_KEY', '').strip()
+FRED_API_URL = 'https://api.stlouisfed.org/fred/series/observations'
 FRED_WILSHIRE_URL = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WILL5000INDFC'
 FRED_GDP_URL      = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDP'
 EDGAR_CONCEPT_URL = (
@@ -85,6 +91,35 @@ FRED_RETRIES = 3
 FRED_BACKOFF_S = 5  # doubles each retry: 5s, 10s, 20s
 
 
+def fetch_fred_api(series_id, label):
+    """Fetch a series from FRED's official REST API. Requires FRED_API_KEY.
+
+    This is the reliable path: fredgraph.csv (the browser chart-export URL)
+    routinely hangs or 404s for automated/datacenter requests, while the
+    documented series/observations API is meant for exactly this use case.
+    """
+    if not FRED_API_KEY:
+        raise RuntimeError('FRED_API_KEY not set')
+    print(f'  Fetching {label} from FRED API...')
+    params = {
+        'series_id': series_id,
+        'api_key': FRED_API_KEY,
+        'file_type': 'json',
+    }
+    r = requests.get(FRED_API_URL, params=params, headers=FRED_HEADERS, timeout=FRED_TIMEOUT_S)
+    r.raise_for_status()
+    obs = r.json().get('observations', [])
+    rows = [(o['date'], o['value']) for o in obs if o.get('value') not in (None, '.')]
+    if not rows:
+        raise RuntimeError(f'FRED API returned no observations for {series_id}')
+    df = pd.DataFrame(rows, columns=['date', 'value'])
+    df['date'] = pd.to_datetime(df['date'])
+    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+    df = df.dropna(subset=['value']).set_index('date').sort_index()
+    print(f'    {label}: {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
+    return df
+
+
 def fetch_fred_csv(url, label):
     print(f'  Fetching {label} from FRED...')
     last_err = None
@@ -109,47 +144,45 @@ def fetch_fred_csv(url, label):
 
 
 def fetch_wilshire_yfinance():
-    """Fetch Wilshire 5000 Full Cap via Yahoo Finance. Covers 1989–present.
-
-    Yahoo's ticker changed from ^W5000 to ^FTW5000 after FTSE Russell took
-    over calculation of the index; ^W5000 stopped updating in mid-2023.
-    """
+    """Fetch Wilshire 5000 Full Cap via Yahoo Finance (^W5000). Covers 1989–present."""
     try:
         import yfinance as yf
     except ImportError:
         raise RuntimeError('yfinance not installed')
-    for ticker in ('^FTW5000', '^W5000'):
-        print(f'  Fetching Wilshire 5000 via Yahoo Finance ({ticker})...')
-        hist = yf.download(ticker, period='max', interval='1mo', auto_adjust=True, progress=False)
-        if hist.empty:
-            print(f'    {ticker}: no data')
-            continue
-        df = hist[['Close']].copy()
-        df.columns = ['value']
-        df.index = pd.to_datetime(df.index).tz_localize(None)
-        df = df.dropna().sort_index()
-        # Discontinued tickers return a single stale point instead of raising — skip those.
-        if len(df) < 2:
-            print(f'    {ticker}: only {len(df)} obs, likely discontinued — skipping')
-            continue
-        print(f'    {ticker} (yfinance): {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
-        return df
-    raise RuntimeError('yfinance returned no usable data for ^FTW5000 or ^W5000')
+    ticker = '^W5000'
+    print(f'  Fetching Wilshire 5000 via Yahoo Finance ({ticker})...')
+    hist = yf.download(ticker, period='max', interval='1mo', auto_adjust=True, progress=False)
+    if hist.empty:
+        raise RuntimeError(f'yfinance returned no data for {ticker}')
+    df = hist[['Close']].copy()
+    df.columns = ['value']
+    df.index = pd.to_datetime(df.index).tz_localize(None)
+    df = df.dropna().sort_index()
+    if len(df) < 2:
+        raise RuntimeError(f'{ticker}: only {len(df)} obs, likely discontinued')
+    print(f'    {ticker} (yfinance): {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
+    return df
 
 
 def get_wilshire(existing_data=None):
     """
-    Try FRED first, then yfinance.
+    Try the FRED API (if FRED_API_KEY is set), then fredgraph.csv, then yfinance.
     If yfinance only covers from 1989, splice with existing historical data.
     Returns DataFrame indexed by date with 'value' column.
     """
-    # 1. Try FRED
+    # 1. Try FRED official API (reliable, requires key)
+    try:
+        return fetch_fred_api('WILL5000INDFC', 'Wilshire 5000 Full Cap')
+    except Exception as e:
+        print(f'  FRED API unavailable for WILL5000INDFC: {e}')
+
+    # 2. Try FRED chart-export CSV (no key, but often blocked for automated requests)
     try:
         return fetch_fred_csv(FRED_WILSHIRE_URL, 'Wilshire 5000 Full Cap')
     except Exception as e:
         print(f'  FRED WILL5000INDFC unavailable: {e}')
 
-    # 2. Try yfinance
+    # 3. Try yfinance
     try:
         yf_df = fetch_wilshire_yfinance()
 
@@ -171,6 +204,15 @@ def get_wilshire(existing_data=None):
     except Exception as e:
         print(f'  yfinance fallback failed: {e}')
         raise RuntimeError('All Wilshire data sources failed')
+
+
+def get_gdp():
+    """Try the FRED API (if FRED_API_KEY is set), then fall back to fredgraph.csv."""
+    try:
+        return fetch_fred_api('GDP', 'US Nominal GDP')
+    except Exception as e:
+        print(f'  FRED API unavailable for GDP: {e}')
+    return fetch_fred_csv(FRED_GDP_URL, 'US Nominal GDP')
 
 
 def compute_indicator(wilshire_raw, gdp_raw):
@@ -320,8 +362,11 @@ def main():
 
     try:
         print('Fetching Buffett Indicator data...')
+        if not FRED_API_KEY:
+            print('  NOTE: FRED_API_KEY not set — relying on fredgraph.csv, which frequently '
+                  'hangs/blocks automated requests. Set the FRED_API_KEY secret for reliable fetches.')
         wilshire_raw = get_wilshire(existing_data)
-        gdp_raw      = fetch_fred_csv(FRED_GDP_URL, 'US Nominal GDP')
+        gdp_raw      = get_gdp()
 
         df, coeffs, std_res = compute_indicator(wilshire_raw, gdp_raw)
         current_info = compute_current(df, wilshire_raw, gdp_raw, coeffs, std_res)
