@@ -1,184 +1,47 @@
 /**
  * useFredBuffettData
  *
- * Loads the Buffett Indicator dataset.  Strategy (in order):
- *   1. FRED live — fetch WILL5000INDFC + GDP straight from FRED and run the
- *      log-linear regression locally in the browser, so the ratio, trend and
- *      σ-bands are always computed from the freshest data available rather
- *      than a CI snapshot that can be up to a week (or more, if CI failed) old.
- *   2. Static JSON (./buffett_indicator_data.json) — used only as a fallback
- *      if the live FRED fetch fails (e.g. offline, FRED down), and as the
- *      source of Berkshire cash hoard data (not available from FRED) in
- *      both cases.
+ * Loads the Buffett Indicator dataset from the static JSON produced by the
+ * weekly CI job (scripts/fetch_buffett_indicator.py). That script pulls the
+ * raw WILL5000INDFC and GDP series from FRED and runs the log-linear
+ * regression itself — the ratio/trend/σ-bands are a local calculation, not a
+ * value pulled pre-computed from a site.
+ *
+ * A prior version of this hook also tried fetching the raw FRED CSVs
+ * directly from the browser to recompute the same regression client-side.
+ * FRED's fredgraph.csv endpoint doesn't send CORS headers for cross-origin
+ * requests, so that fetch failed silently on every load and this hook always
+ * ended up on the static-JSON fallback anyway — it added latency and
+ * complexity without ever actually running in a browser.
  *
  * Returns { biData, biStatus }
- *   biStatus: 'loading' | 'live' | 'fallback' | 'error'
+ *   biStatus: 'loading' | 'loaded' | 'error'
  */
 
 import { useState, useEffect } from 'react';
 
-const WILL5000_URL =
-  'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WILL5000INDFC&freq=q&agg_method=eop';
-const GDP_URL =
-  'https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDP';
-
-const parseFredCsv = (text) => {
-  const lines = text.trim().split('\n');
-  const result = [];
-  for (let i = 1; i < lines.length; i++) {
-    const [dateStr, rawVal] = lines[i].trim().split(',');
-    if (!rawVal || rawVal === '.') continue;
-    const value = parseFloat(rawVal);
-    if (!isNaN(value)) result.push({ date: dateStr.trim(), value });
-  }
-  return result;
-};
-
-const toQuarterKey = (dateStr) => {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  return `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`;
-};
-
-const logLinearOLS = (values) => {
-  const n = values.length;
-  const logY = values.map(v => Math.log(v));
-  const sumX  = (n * (n - 1)) / 2;
-  const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
-  const sumY  = logY.reduce((a, b) => a + b, 0);
-  const sumXY = logY.reduce((s, y, i) => s + i * y, 0);
-  const denom = n * sumX2 - sumX * sumX;
-  const b = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
-  const a = (sumY - b * sumX) / n;
-  const residuals = logY.map((y, i) => y - (a + b * i));
-  const stdDev = Math.sqrt(residuals.reduce((s, r) => s + r * r, 0) / n);
-  return { a, b, stdDev };
-};
-
-const getValuationLabel = (sd) => {
-  if (sd > 2)  return 'STRONGLY OVERVALUED';
-  if (sd > 1)  return 'OVERVALUED';
-  if (sd > -1) return 'FAIR VALUE';
-  if (sd > -2) return 'UNDERVALUED';
-  return 'STRONGLY UNDERVALUED';
-};
-
-const fetchFredCsv = async (url) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`FRED ${res.status}`);
-    return await res.text();
-  } catch (e) {
-    clearTimeout(timer);
-    throw e;
-  }
-};
-
-const buildFromFred = (wilshireRaw, gdpRaw) => {
-  const gdpMap = new Map();
-  for (const { date, value } of gdpRaw) gdpMap.set(toQuarterKey(date), value);
-
-  const aligned = [];
-  for (const { date, value: wil } of wilshireRaw) {
-    const gdp = gdpMap.get(toQuarterKey(date));
-    if (gdp && gdp > 0 && wil > 0) {
-      aligned.push({ date, ratio_pct: (wil / gdp) * 100, wil, gdp });
-    }
-  }
-  if (aligned.length < 10) return null;
-
-  const ratios = aligned.map(d => d.ratio_pct);
-  const { a, b, stdDev } = logLinearOLS(ratios);
-
-  const data = aligned.map((d, i) => {
-    const lt = a + b * i;
-    return {
-      date:        d.date,
-      ratio_pct:   parseFloat(d.ratio_pct.toFixed(2)),
-      trend_pct:   parseFloat(Math.exp(lt).toFixed(2)),
-      band_plus1:  parseFloat(Math.exp(lt + stdDev).toFixed(2)),
-      band_plus2:  parseFloat(Math.exp(lt + 2 * stdDev).toFixed(2)),
-      band_minus1: parseFloat(Math.exp(lt - stdDev).toFixed(2)),
-      band_minus2: parseFloat(Math.exp(lt - 2 * stdDev).toFixed(2)),
-    };
-  });
-
-  const last = data[data.length - 1];
-  const logR = Math.log(last.ratio_pct);
-  const logT = Math.log(last.trend_pct);
-  const std_devs = stdDev > 0 ? (logR - logT) / stdDev : 0;
-
-  return {
-    source: 'FRED — WILL5000INDFC / GDP (Live)',
-    source_urls: [WILL5000_URL, GDP_URL],
-    last_updated: new Date().toISOString(),
-    current: {
-      ratio_pct:           parseFloat(last.ratio_pct.toFixed(1)),
-      trend_pct:           parseFloat(last.trend_pct.toFixed(1)),
-      deviation_pct:       parseFloat((last.ratio_pct - last.trend_pct).toFixed(1)),
-      std_devs:            parseFloat(std_devs.toFixed(2)),
-      valuation:           getValuationLabel(std_devs),
-      market_cap_billions: Math.round(aligned[aligned.length - 1].wil),
-      gdp_billions:        Math.round(aligned[aligned.length - 1].gdp),
-    },
-    data,
-    // berkshire_cash is not available from FRED — caller uses static JSON value
-    berkshire_cash: null,
-  };
-};
-
 export const useFredBuffettData = () => {
-  const [biData, setBiData]   = useState(null);
+  const [biData, setBiData]     = useState(null);
   const [biStatus, setBiStatus] = useState('loading');
 
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
-      // ── Step 1: Load static JSON in the background ─────────────────────────
-      // Used only as a fallback (and as the source of Berkshire cash data,
-      // which FRED doesn't provide).
-      let staticData = null;
-      const staticPromise = fetch('./buffett_indicator_data.json')
-        .then(res => (res.ok ? res.json() : null))
-        .then(json => { staticData = json; return json; })
-        .catch(() => null);
-
-      // ── Step 2: Always try FRED live first, compute the ratio/trend/bands
-      // locally so the numbers reflect the most current data, not a cached
-      // CI snapshot ─────────────────────────────────────────────────────────
-      try {
-        const [wilText, gdpText] = await Promise.all([
-          fetchFredCsv(WILL5000_URL),
-          fetchFredCsv(GDP_URL),
-        ]);
-        const built = buildFromFred(parseFredCsv(wilText), parseFredCsv(gdpText));
-        if (built) {
-          await staticPromise;
-          if (!cancelled) {
-            built.berkshire_cash = staticData?.berkshire_cash ?? null;
-            setBiData(built);
-            setBiStatus('live');
-          }
-          return;
-        }
-        throw new Error('FRED data insufficient');
-      } catch {
-        // FRED unavailable or failed to parse — fall back to static JSON
-        await staticPromise;
+    fetch('./buffett_indicator_data.json')
+      .then(res => (res.ok ? res.json() : null))
+      .then(json => {
         if (cancelled) return;
-        if (staticData) {
-          setBiData(staticData);
-          setBiStatus('fallback');
+        if (json) {
+          setBiData(json);
+          setBiStatus('loaded');
         } else {
           setBiStatus('error');
         }
-      }
-    };
+      })
+      .catch(() => {
+        if (!cancelled) setBiStatus('error');
+      });
 
-    load();
     return () => { cancelled = true; };
   }, []);
 
