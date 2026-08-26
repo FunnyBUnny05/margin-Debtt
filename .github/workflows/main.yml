@@ -28,6 +28,8 @@ jobs:
         run: pip install pandas openpyxl requests beautifulsoup4 yfinance
 
       - name: Fetch all market data (parallel)
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
           set +e
           python scripts/fetch_finra_data.py      > /tmp/finra.log 2>&1 & PIDS[0]=$!
