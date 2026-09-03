@@ -1,6 +1,16 @@
 import React, { useState, memo } from 'react';
 import { SignalBadge } from './SignalBadge';
 
+// Renders "10-yr" / "3-yr" etc. based on the actual weeks of history used for
+// the structural baseline (which can be shorter than the configured baseline
+// period for younger ETFs, or 0 when there wasn't enough history at all).
+const baselineLabel = (weeksUsed) => {
+  if (!weeksUsed) return 'historical';
+  const years = weeksUsed / 52;
+  const rounded = years >= 2 ? Math.round(years) : Math.round(years * 10) / 10;
+  return `${rounded}-yr`;
+};
+
 export const SectorList = memo(function SectorList({ sectors, selectedSector, onSelect, isMobile }) {
   const [expandedSector, setExpandedSector] = useState(null);
 
@@ -115,7 +125,7 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                 <div className="stat-block-label" style={{ marginBottom: '8px' }}>Current Breakdown</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>STRUCT BASELINE:</span>
+                    <span style={{ color: 'var(--text-dim)' }}>STRUCT BASELINE ({baselineLabel(sector.baselineWeeksUsed)}):</span>
                     <span style={{ color: sector.structuralBaseline < 0 ? 'var(--neg)' : 'var(--pos)' }}>
                       {sector.structuralBaseline >= 0 ? '+' : ''}{sector.structuralBaseline.toFixed(2)}%
                     </span>
@@ -136,9 +146,9 @@ export const SectorList = memo(function SectorList({ sectors, selectedSector, on
                     {sector.excessReturn !== null && sector.excessReturn !== undefined && (
                       <>
                         {sector.excessReturn < -5
-                          ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year avg`
+                          ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its ${baselineLabel(sector.baselineWeeksUsed)} avg`
                           : sector.excessReturn > 5
-                          ? `Outperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its 10-year avg`
+                          ? `Outperforming ${Math.abs(sector.excessReturn).toFixed(2)}% more than its ${baselineLabel(sector.baselineWeeksUsed)} avg`
                           : Math.abs(sector.excessReturn) > 2
                           ? sector.excessReturn < 0
                             ? `Underperforming ${Math.abs(sector.excessReturn).toFixed(2)}% vs structural baseline`
