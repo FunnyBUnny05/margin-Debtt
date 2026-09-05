@@ -1,156 +1,10 @@
 import { describe, it, expect } from 'vitest';
-
-// Import functions to test - we'll need to export them from App.jsx
-// For now, we'll copy them here to test them
-const normalizeMonthKey = (dateStr) => {
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed)) {
-    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  const parts = dateStr.split(/[-/]/);
-  if (parts.length >= 2) {
-    const [p1, p2] = parts;
-    if (p1.length === 4) {
-      return `${p1}-${p2.padStart(2, '0')}`;
-    }
-    if (p2.length === 4) {
-      return `${p2}-${p1.padStart(2, '0')}`;
-    }
-  }
-
-  return dateStr;
-};
-
-const parseFinraMarginCsv = (text) => {
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) return [];
-
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const dateIdx = headers.findIndex(h => h.includes('date'));
-  const debtIdx = headers.findIndex(h => h.includes('debit'));
-
-  if (dateIdx === -1 || debtIdx === -1) return [];
-
-  const rows = lines.slice(1)
-    .map(line => line.split(',').map(cell => cell.trim()))
-    .filter(parts => parts.length > Math.max(dateIdx, debtIdx));
-
-  const parsed = rows.map(parts => ({
-    date: normalizeMonthKey(parts[dateIdx]),
-    margin_debt: Number(parts[debtIdx].replace(/,/g, ''))
-  }))
-    .filter(d => d.date && !Number.isNaN(d.margin_debt))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  return parsed.map((entry, idx) => {
-    const yearBack = idx >= 12 ? parsed[idx - 12].margin_debt : null;
-    const yoy_growth = yearBack ? ((entry.margin_debt / yearBack - 1) * 100) : null;
-    return { ...entry, yoy_growth: yoy_growth !== null ? Number(yoy_growth.toFixed(1)) : null };
-  });
-};
-
-const formatDuration = (months) => {
-  if (months === 0) return 'N/A';
-  const wholeMonths = Math.floor(months);
-  const remainderMonths = months - wholeMonths;
-  const days = Math.round(remainderMonths * 30);
-
-  if (wholeMonths === 0) {
-    return `${days} ${days === 1 ? 'day' : 'days'}`;
-  } else if (days === 0) {
-    return `${wholeMonths} ${wholeMonths === 1 ? 'month' : 'months'}`;
-  } else {
-    return `${wholeMonths} ${wholeMonths === 1 ? 'month' : 'months'}, ${days} ${days === 1 ? 'day' : 'days'}`;
-  }
-};
-
-const calculateThresholdStats = (data) => {
-  const aboveThirty = [];
-  const belowNegThirty = [];
-
-  let currentAbovePeriod = null;
-  let currentBelowPeriod = null;
-
-  data.forEach((point, idx) => {
-    if (point.yoy_growth === null) return;
-
-    // Track periods above +30%
-    if (point.yoy_growth >= 30) {
-      if (!currentAbovePeriod) {
-        currentAbovePeriod = { start: idx, count: 1 };
-      } else {
-        currentAbovePeriod.count++;
-      }
-    } else {
-      if (currentAbovePeriod) {
-        aboveThirty.push(currentAbovePeriod.count);
-        currentAbovePeriod = null;
-      }
-    }
-
-    // Track periods below -30%
-    if (point.yoy_growth <= -30) {
-      if (!currentBelowPeriod) {
-        currentBelowPeriod = { start: idx, count: 1 };
-      } else {
-        currentBelowPeriod.count++;
-      }
-    } else {
-      if (currentBelowPeriod) {
-        belowNegThirty.push(currentBelowPeriod.count);
-        currentBelowPeriod = null;
-      }
-    }
-  });
-
-  // Determine current status
-  const latestPoint = data[data.length - 1];
-  let currentStatus = 'neutral';
-  let currentDuration = 0;
-
-  if (latestPoint && latestPoint.yoy_growth !== null) {
-    if (latestPoint.yoy_growth >= 30 && currentAbovePeriod) {
-      currentStatus = 'above30';
-      currentDuration = currentAbovePeriod.count;
-    } else if (latestPoint.yoy_growth <= -30 && currentBelowPeriod) {
-      currentStatus = 'belowNeg30';
-      currentDuration = currentBelowPeriod.count;
-    }
-  }
-
-  // Handle completed periods (not ongoing)
-  const completedAbove = currentStatus === 'above30' ? aboveThirty : [...aboveThirty];
-  const completedBelow = currentStatus === 'belowNeg30' ? belowNegThirty : [...belowNegThirty];
-
-  if (currentAbovePeriod && currentStatus !== 'above30') completedAbove.push(currentAbovePeriod.count);
-  if (currentBelowPeriod && currentStatus !== 'belowNeg30') completedBelow.push(currentBelowPeriod.count);
-
-  const avgAbove = completedAbove.length > 0
-    ? completedAbove.reduce((a, b) => a + b, 0) / completedAbove.length
-    : 0;
-  const avgBelow = completedBelow.length > 0
-    ? completedBelow.reduce((a, b) => a + b, 0) / completedBelow.length
-    : 0;
-
-  return {
-    above30: {
-      avgMonths: avgAbove,
-      occurrences: completedAbove.length,
-      periods: completedAbove
-    },
-    belowNeg30: {
-      avgMonths: avgBelow,
-      occurrences: completedBelow.length,
-      periods: completedBelow
-    },
-    current: {
-      status: currentStatus,
-      duration: currentDuration,
-      yoyGrowth: latestPoint?.yoy_growth
-    }
-  };
-};
+import {
+  normalizeMonthKey,
+  parseFinraMarginCsv,
+  formatDuration,
+  calculateThresholdStats
+} from '../../App';
 
 describe('normalizeMonthKey', () => {
   it('should normalize YYYY-MM format', () => {
@@ -195,28 +49,28 @@ describe('formatDuration', () => {
   });
 
   it('should format whole months correctly', () => {
-    expect(formatDuration(1)).toBe('1 month');
-    expect(formatDuration(2)).toBe('2 months');
-    expect(formatDuration(12)).toBe('12 months');
+    expect(formatDuration(1)).toBe('1mo');
+    expect(formatDuration(2)).toBe('2mo');
+    expect(formatDuration(12)).toBe('12mo');
   });
 
   it('should format fractional months as days', () => {
-    expect(formatDuration(0.5)).toBe('15 days');
-    expect(formatDuration(0.1)).toBe('3 days');
+    expect(formatDuration(0.5)).toBe('15d');
+    expect(formatDuration(0.1)).toBe('3d');
   });
 
   it('should format months with days', () => {
-    expect(formatDuration(1.5)).toBe('1 month, 15 days');
-    expect(formatDuration(2.3)).toBe('2 months, 9 days');
+    expect(formatDuration(1.5)).toBe('1mo 15d');
+    expect(formatDuration(2.3)).toBe('2mo 9d');
   });
 
   it('should handle singular day correctly', () => {
-    expect(formatDuration(1 / 30)).toBe('1 day');
+    expect(formatDuration(1 / 30)).toBe('1d');
   });
 
   it('should round days correctly', () => {
-    expect(formatDuration(1.03)).toBe('1 month, 1 day');
-    expect(formatDuration(3.97)).toBe('3 months, 29 days');
+    expect(formatDuration(1.03)).toBe('1mo 1d');
+    expect(formatDuration(3.97)).toBe('3mo 29d');
   });
 });
 
@@ -432,6 +286,23 @@ describe('calculateThresholdStats', () => {
     const result = calculateThresholdStats(data);
     // Null breaks the period, so we get 1 completed period (35), then another incomplete one
     expect(result.above30.occurrences).toBe(1);
+  });
+
+  it('should skip undefined and non-finite growth values the same as null', () => {
+    const data = [
+      { yoy_growth: undefined },
+      { yoy_growth: 35 },
+      { yoy_growth: Infinity },
+      { yoy_growth: 40 },
+      { yoy_growth: 10 }
+    ];
+
+    const result = calculateThresholdStats(data);
+    // Infinity is skipped just like null (it doesn't close or extend the
+    // in-progress period), so the two `35`/`40` points still count as one
+    // consecutive above-30 period of length 2.
+    expect(result.above30.occurrences).toBe(1);
+    expect(result.above30.periods).toEqual([2]);
   });
 
   it('should handle data with all nulls', () => {

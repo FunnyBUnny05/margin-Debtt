@@ -4,14 +4,17 @@ export function ExportCsvButton({ data, filename, columns }) {
   const handleExport = () => {
     if (!data || data.length === 0) return;
     const cols = columns || Object.keys(data[0]).map(k => ({ key: k, label: k }));
-    const header = cols.map(c => `"${c.label}"`).join(',');
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      // Quote (and escape embedded quotes) whenever the value could otherwise
+      // be misread as multiple fields/rows by a CSV parser.
+      if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+      return str;
+    };
+    const header = cols.map(c => escapeCsv(c.label)).join(',');
     const rows = data.map(row =>
-      cols.map(c => {
-        const val = row[c.key];
-        if (val === null || val === undefined) return '';
-        if (typeof val === 'string' && val.includes(',')) return `"${val}"`;
-        return val;
-      }).join(',')
+      cols.map(c => escapeCsv(row[c.key])).join(',')
     );
     const csv = [header, ...rows].join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
