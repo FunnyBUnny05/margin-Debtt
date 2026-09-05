@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-const calculateReturns = (prices, periodWeeks) => {
+export const calculateReturns = (prices, periodWeeks) => {
   if (!prices || prices.length < periodWeeks) return [];
 
   const returns = [];
@@ -19,7 +19,7 @@ const calculateReturns = (prices, periodWeeks) => {
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-const alignDates = (sectorReturns, benchmarkReturns) => {
+export const alignDates = (sectorReturns, benchmarkReturns) => {
   // Primary lookup: date-string → return value
   const benchmarkMap = new Map();
   // Secondary lookup: timestamp (ms) → return value, for the ±7-day window search
@@ -84,7 +84,7 @@ const alignDates = (sectorReturns, benchmarkReturns) => {
  * Example: If Technology historically returns -0.5% vs SPY over 10 years,
  * that's the structural baseline. Current performance is compared to this baseline.
  */
-const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
+export const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
   // Sort ascending by date to guarantee we use the OLDEST data for baseline
   const sorted = [...alignedData].sort((a, b) => a.date - b.date);
 
@@ -93,7 +93,7 @@ const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
 
   if (safePeriod < 52) {
     // Less than 1 year of baseline data — not meaningful, treat as no structural bias
-    return 0;
+    return { baseline: 0, weeksUsed: 0 };
   }
 
   const baselineWindow = sorted.slice(0, safePeriod);
@@ -102,7 +102,7 @@ const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
   const sum = relativeReturns.reduce((a, b) => a + b, 0);
   const baseline = sum / relativeReturns.length;
 
-  return baseline;
+  return { baseline, weeksUsed: safePeriod };
 };
 
 /**
@@ -123,13 +123,13 @@ const calculateStructuralBaseline = (alignedData, baselinePeriod) => {
  *   Excess return: -1.5% - (-0.5%) = -1.0%
  *   If this -1.0% excess is 2 std devs below mean → Z-Score = -2.0 (CHEAP)
  */
-const calculateZScores = (alignedData, windowWeeks, baselinePeriod) => {
+export const calculateZScores = (alignedData, windowWeeks, baselinePeriod) => {
   // Sort ascending by date to ensure window loops are in chronological order
   const sortedData = [...alignedData].sort((a, b) => a.date - b.date);
   if (sortedData.length < windowWeeks) return [];
 
   // Calculate the structural baseline for this sector
-  const structuralBaseline = calculateStructuralBaseline(sortedData, baselinePeriod);
+  const { baseline: structuralBaseline, weeksUsed: baselineWeeksUsed } = calculateStructuralBaseline(sortedData, baselinePeriod);
 
   // Add excess returns to each data point
   const dataWithExcess = sortedData.map(d => ({
@@ -163,6 +163,7 @@ const calculateZScores = (alignedData, windowWeeks, baselinePeriod) => {
       relativeReturn: currentRelReturn,
       excessReturn: currentExcessReturn,
       structuralBaseline,
+      baselineWeeksUsed,
       sectorReturn: dataWithExcess[i].sectorReturn,
       benchmarkReturn: dataWithExcess[i].benchmarkReturn
     });
@@ -171,7 +172,7 @@ const calculateZScores = (alignedData, windowWeeks, baselinePeriod) => {
   return zScores;
 };
 
-const aggregateToMonthly = (zScores) => {
+export const aggregateToMonthly = (zScores) => {
   if (zScores.length === 0) return [];
 
   const monthlyMap = new Map();
@@ -202,7 +203,8 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
           currentZScore: null,
           avgZScore: null,
           structuralBaseline: null,
-          excessReturn: null
+          excessReturn: null,
+          baselineWeeksUsed: null
         };
       }
 
@@ -219,6 +221,7 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
       const structuralBaseline = currentData ? currentData.structuralBaseline : null;
       const excessReturn = currentData ? currentData.excessReturn : null;
       const relativeReturn = currentData ? currentData.relativeReturn : null;
+      const baselineWeeksUsed = currentData ? currentData.baselineWeeksUsed : null;
 
       const avgZScore = monthlyZScores.length > 0
         ? monthlyZScores.reduce((sum, d) => sum + d.zScore, 0) / monthlyZScores.length
@@ -232,6 +235,7 @@ export const useZScoreCalculation = (sectorData, benchmarkData, sectors, returnP
         structuralBaseline,
         excessReturn,
         relativeReturn,
+        baselineWeeksUsed,
         prices,
         dataPoints: alignedData.length
       };

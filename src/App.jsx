@@ -48,7 +48,7 @@ const AaiiTooltip = ({ active, payload, label }) => {
   );
 };
 
-const normalizeMonthKey = (dateStr) => {
+export const normalizeMonthKey = (dateStr) => {
   const parsed = new Date(dateStr);
   if (!isNaN(parsed)) {
     return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}`;
@@ -62,7 +62,7 @@ const normalizeMonthKey = (dateStr) => {
   return dateStr;
 };
 
-const parseFinraMarginCsv = (text) => {
+export const parseFinraMarginCsv = (text) => {
   const lines = text.trim().split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
@@ -101,6 +101,44 @@ const TAB_SUBTITLE = {
   buffett: 'Berkshire Hathaway annual cash & T-bill holdings',
   sofr:    'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed',
   ppi:     'Monthly price changes received by domestic producers — BLS',
+};
+
+export const formatDuration = (months) => {
+  if (months === 0) return 'N/A';
+  const whole = Math.floor(months);
+  const days  = Math.round((months - whole) * 30);
+  if (whole === 0) return `${days}d`;
+  if (days === 0) return `${whole}mo`;
+  return `${whole}mo ${days}d`;
+};
+
+export const calculateThresholdStats = (d) => {
+  const above = [], below = [];
+  let curAbove = null, curBelow = null;
+  d.forEach((pt, idx) => {
+    if (pt.yoy_growth == null || !isFinite(pt.yoy_growth)) return;
+    if (pt.yoy_growth >= 30) {
+      curAbove = curAbove ? { ...curAbove, count: curAbove.count + 1 } : { start: idx, count: 1 };
+    } else {
+      if (curAbove) { above.push(curAbove.count); curAbove = null; }
+    }
+    if (pt.yoy_growth <= -30) {
+      curBelow = curBelow ? { ...curBelow, count: curBelow.count + 1 } : { start: idx, count: 1 };
+    } else {
+      if (curBelow) { below.push(curBelow.count); curBelow = null; }
+    }
+  });
+  const latest = d[d.length - 1];
+  let status = 'neutral', duration = 0;
+  if (latest?.yoy_growth >= 30 && curAbove) { status = 'above30'; duration = curAbove.count; }
+  else if (latest?.yoy_growth <= -30 && curBelow) { status = 'belowNeg30'; duration = curBelow.count; }
+  const completedAbove = status === 'above30' ? above : [...above, ...(curAbove ? [curAbove.count] : [])];
+  const completedBelow = status === 'belowNeg30' ? below : [...below, ...(curBelow ? [curBelow.count] : [])];
+  return {
+    above30:     { avgMonths: completedAbove.length ? completedAbove.reduce((a, b) => a + b, 0) / completedAbove.length : 0, occurrences: completedAbove.length, periods: completedAbove },
+    belowNeg30:  { avgMonths: completedBelow.length ? completedBelow.reduce((a, b) => a + b, 0) / completedBelow.length : 0, occurrences: completedBelow.length, periods: completedBelow },
+    current:     { status, duration, yoyGrowth: latest?.yoy_growth },
+  };
 };
 
 export default function App() {
@@ -203,44 +241,6 @@ export default function App() {
     if (!iso) return 'N/A';
     const d = new Date(iso);
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-
-  const formatDuration = (months) => {
-    if (months === 0) return 'N/A';
-    const whole = Math.floor(months);
-    const days  = Math.round((months - whole) * 30);
-    if (whole === 0) return `${days}d`;
-    if (days === 0) return `${whole}mo`;
-    return `${whole}mo ${days}d`;
-  };
-
-  const calculateThresholdStats = (d) => {
-    const above = [], below = [];
-    let curAbove = null, curBelow = null;
-    d.forEach((pt, idx) => {
-      if (pt.yoy_growth == null || !isFinite(pt.yoy_growth)) return;
-      if (pt.yoy_growth >= 30) {
-        curAbove = curAbove ? { ...curAbove, count: curAbove.count + 1 } : { start: idx, count: 1 };
-      } else {
-        if (curAbove) { above.push(curAbove.count); curAbove = null; }
-      }
-      if (pt.yoy_growth <= -30) {
-        curBelow = curBelow ? { ...curBelow, count: curBelow.count + 1 } : { start: idx, count: 1 };
-      } else {
-        if (curBelow) { below.push(curBelow.count); curBelow = null; }
-      }
-    });
-    const latest = d[d.length - 1];
-    let status = 'neutral', duration = 0;
-    if (latest?.yoy_growth >= 30 && curAbove) { status = 'above30'; duration = curAbove.count; }
-    else if (latest?.yoy_growth <= -30 && curBelow) { status = 'belowNeg30'; duration = curBelow.count; }
-    const completedAbove = status === 'above30' ? above : [...above, ...(curAbove ? [curAbove.count] : [])];
-    const completedBelow = status === 'belowNeg30' ? below : [...below, ...(curBelow ? [curBelow.count] : [])];
-    return {
-      above30:     { avgMonths: completedAbove.length ? completedAbove.reduce((a, b) => a + b, 0) / completedAbove.length : 0, occurrences: completedAbove.length, periods: completedAbove },
-      belowNeg30:  { avgMonths: completedBelow.length ? completedBelow.reduce((a, b) => a + b, 0) / completedBelow.length : 0, occurrences: completedBelow.length, periods: completedBelow },
-      current:     { status, duration, yoyGrowth: latest?.yoy_growth },
-    };
   };
 
   const thresholdStats = data.length ? calculateThresholdStats(data) : null;

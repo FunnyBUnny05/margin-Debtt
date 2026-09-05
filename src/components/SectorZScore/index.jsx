@@ -296,7 +296,7 @@ export const SectorZScore = ({ isMobile }) => {
           }}>
             <div className="stat-block-label" style={{ marginBottom: '8px' }}>How It Works</div>
             <div style={{ color: 'var(--text-mid)' }}>
-              1. <span style={{ color: 'var(--text)' }}>STRUCTURAL BASELINE:</span> Calculate each sector's 10-year avg return vs {benchmark}<br/>
+              1. <span style={{ color: 'var(--text)' }}>STRUCTURAL BASELINE:</span> Calculate each sector's avg return vs {benchmark} over up to 10 years of history (shorter for younger ETFs)<br/>
               2. <span style={{ color: 'var(--text)' }}>EXCESS RETURN:</span> Current return minus the structural baseline<br/>
               3. <span style={{ color: 'var(--text)' }}>Z-SCORE:</span> How many std deviations the excess return is from its mean
             </div>
