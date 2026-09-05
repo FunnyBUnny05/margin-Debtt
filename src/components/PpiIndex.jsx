@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, ReferenceLine
+  CartesianGrid, Tooltip, ReferenceLine, Cell
 } from 'recharts';
 import { SourceLink } from './SourceLink';
 import { ExportCsvButton } from './ExportCsvButton';
@@ -228,11 +228,11 @@ export function PpiIndex({ isMobile }) {
                   name="MoM %"
                   radius={[4, 4, 0, 0]}
                   fill="var(--bb-yellow)"
-                  label={false}
-                  cell={filtered.map((entry, i) => (
-                    { fill: momColor(entry.mom) }
+                >
+                  {filtered.map((entry, i) => (
+                    <Cell key={i} fill={momColor(entry.mom)} />
                   ))}
-                />
+                </Bar>
               ) : (
                 <Line
                   type="monotone"
