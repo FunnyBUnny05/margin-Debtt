@@ -94,8 +94,7 @@ export const BuffettIndicator = ({ isMobile }) => {
   const [cashMainType, setCashMain]       = useState('bar');
   const [cashYoyType, setCashYoy]         = useState('bar');
 
-  const { biData, biStatus: rawBiStatus } = useFredBuffettData();
-  const biStatus = rawBiStatus === 'live' || rawBiStatus === 'fallback' ? 'loaded' : rawBiStatus;
+  const { biData, biStatus } = useFredBuffettData();
 
   // ── Berkshire cash series (from embedded JSON; BRK_STATIC as fallback) ─────
   const ENRICHED = useMemo(() => {
@@ -148,9 +147,8 @@ export const BuffettIndicator = ({ isMobile }) => {
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>Buffett Indicator — Wilshire 5000 / GDP</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.18em',
-              color: rawBiStatus === 'live' ? 'var(--pos)' : 'var(--text-mid)' }}>
-              ● {rawBiStatus === 'live' ? 'CURRENT' : rawBiStatus === 'fallback' ? 'CACHED' : rawBiStatus.toUpperCase()}
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.18em', color: 'var(--text-mid)' }}>
+              ● {biData?.last_updated ? `UPDATED ${new Date(biData.last_updated).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}` : biStatus.toUpperCase()}
             </span>
           </div>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -250,7 +248,7 @@ export const BuffettIndicator = ({ isMobile }) => {
               <div style={{ marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.12em', color: 'var(--text-dim)', lineHeight: '1.7', borderTop: '1px solid var(--rule)', paddingTop: '10px' }}>
                 <span style={{ color: 'var(--text-mid)' }}>FORMULA:</span> Wilshire 5000 Full Cap Index ÷ Nominal GDP × 100.
                 Bands show ±1σ and ±2σ from a log-linear trend fit over the full history (1971–present).
-                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — computed live in your browser; falls back to a weekly CI snapshot if FRED is unreachable.</span>
+                <span style={{ color: 'var(--text-dim)', marginLeft: 6 }}>Sources: FRED WILL5000INDFC, GDP — pulled and computed by a weekly CI job, served as static data.</span>
               </div>
             </>
           )}
