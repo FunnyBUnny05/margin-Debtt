@@ -25,7 +25,7 @@ jobs:
           cache: 'pip'
 
       - name: Install Python dependencies
-        run: pip install pandas openpyxl requests beautifulsoup4 yfinance
+        run: pip install -r requirements.txt
 
       - name: Fetch all market data (parallel)
         run: |
@@ -37,6 +37,7 @@ jobs:
           python scripts/fetch_buffett_indicator.py > /tmp/buffett.log 2>&1 & PIDS[4]=$!
           python scripts/fetch_ppi_data.py         > /tmp/ppi.log   2>&1 & PIDS[5]=$!
           python scripts/fetch_sofr_data.py        > /tmp/sofr.log  2>&1 & PIDS[6]=$!
+          python scripts/fetch_sector_prices.py    > /tmp/sector.log 2>&1 & PIDS[7]=$!
 
           wait "${PIDS[0]}"; R0=$?
           wait "${PIDS[1]}"; R1=$?
@@ -45,6 +46,7 @@ jobs:
           wait "${PIDS[4]}"; R4=$?
           wait "${PIDS[5]}"; R5=$?
           wait "${PIDS[6]}"; R6=$?
+          wait "${PIDS[7]}"; R7=$?
 
           echo "=== FINRA ===" && cat /tmp/finra.log
           echo "=== AAII ===" && cat /tmp/aaii.log
@@ -53,6 +55,7 @@ jobs:
           echo "=== Buffett ===" && cat /tmp/buffett.log
           echo "=== PPI ===" && cat /tmp/ppi.log
           echo "=== SOFR ===" && cat /tmp/sofr.log
+          echo "=== Sector prices ===" && cat /tmp/sector.log
 
           [ $R0 -ne 0 ] && echo "::warning::FINRA fetch failed — data may be stale"
           [ $R1 -ne 0 ] && echo "::warning::AAII fetch failed — data may be stale"
@@ -61,6 +64,7 @@ jobs:
           [ $R4 -ne 0 ] && echo "::warning::Buffett Indicator fetch failed — data may be stale"
           [ $R5 -ne 0 ] && echo "::warning::PPI fetch failed — data may be stale"
           [ $R6 -ne 0 ] && echo "::warning::SOFR fetch failed — data may be stale"
+          [ $R7 -ne 0 ] && echo "::warning::Sector price snapshot failed — Sector Z-Score will fall back to live fetch"
           exit 0
 
       - name: Report data freshness
@@ -92,6 +96,13 @@ jobs:
             print(f'fear_greed_index.json: latest_data={latest}, last_updated={updated}')
           else:
             print('fear_greed_index.json: FILE MISSING')
+          sp = 'public/sector_prices.json'
+          if os.path.exists(sp):
+            data = json.load(open(sp))
+            spy = data.get('symbols', {}).get('SPY', {}).get('dates', ['unknown'])
+            print(f"sector_prices.json: latest_data={spy[-1]}, symbols={len(data.get('symbols', {}))}, last_updated={data.get('last_updated', 'unknown')[:10]}")
+          else:
+            print('sector_prices.json: FILE MISSING')
           EOF
 
       - name: Commit updated data
@@ -104,7 +115,8 @@ jobs:
             public/buffett_indicator_data.json \
             public/fear_greed_index.json \
             public/ppi_data.json \
-            public/sofr_data.json
+            public/sofr_data.json \
+            public/sector_prices.json
           git diff --staged --quiet || git commit -m "Update market data $(date +'%Y-%m-%d')"
           git push
 

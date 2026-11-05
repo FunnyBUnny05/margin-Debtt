@@ -62,6 +62,35 @@ const ErrorState = ({ error, onRetry }) => (
   </div>
 );
 
+const SOURCE_LABEL = { snapshot: 'WEEKLY SNAPSHOT', live: 'LIVE', mixed: 'SNAPSHOT + LIVE' };
+
+const DataStatus = ({ meta, refreshing, progress, onRefresh }) => {
+  const asOf = meta?.asOf instanceof Date && !isNaN(meta.asOf)
+    ? meta.asOf.toISOString().slice(0, 10)
+    : '—';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
+      padding: '6px 12px', marginTop: '1px', background: 'var(--bg-raised)', borderBottom: '1px solid var(--rule)',
+      fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.08em',
+    }}>
+      <span>
+        PRICES AS OF <span style={{ color: 'var(--text)' }}>{asOf}</span>
+        {meta?.source && <> · {SOURCE_LABEL[meta.source] || meta.source}</>}
+        {refreshing && progress.total > 0 && (
+          <span className="pulse-animation" style={{ marginLeft: '8px', color: 'var(--accent)' }}>
+            UPDATING {progress.current}/{progress.total}…
+          </span>
+        )}
+      </span>
+      <button className="bb-btn" onClick={onRefresh} disabled={refreshing}
+        style={{ fontSize: '10px', padding: '3px 10px', opacity: refreshing ? 0.5 : 1 }}>
+        {refreshing ? 'REFRESHING…' : 'REFRESH LIVE'}
+      </button>
+    </div>
+  );
+};
+
 const StatCards = memo(function StatCards({ sectors, isMobile }) {
   const validSectors = sectors.filter((s) => s.currentZScore !== null);
   if (validSectors.length === 0) return null;
@@ -131,7 +160,7 @@ export const SectorZScore = ({ isMobile }) => {
   const [zScoreType, setZScoreType] = useState('line');
   const [priceType, setPriceType] = useState('line');
 
-  const { data: sectorData, benchmarkData, loading, error, progress, refetch } = useYahooFinance(
+  const { data: sectorData, benchmarkData, loading, refreshing, error, progress, meta, refetch, refreshLive } = useYahooFinance(
     SECTOR_ETFS,
     benchmark
   );
@@ -170,6 +199,8 @@ export const SectorZScore = ({ isMobile }) => {
         setZWindow={setZWindow}
         isMobile={isMobile}
       />
+
+      <DataStatus meta={meta} refreshing={refreshing} progress={progress} onRefresh={refreshLive} />
 
       <StatCards sectors={sectors} isMobile={isMobile} />
 

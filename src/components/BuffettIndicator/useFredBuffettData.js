@@ -117,7 +117,7 @@ const buildFromFred = (wilshireRaw, gdpRaw) => {
     current: {
       ratio_pct:           parseFloat(last.ratio_pct.toFixed(1)),
       trend_pct:           parseFloat(last.trend_pct.toFixed(1)),
-      deviation_pct:       parseFloat((last.ratio_pct - last.trend_pct).toFixed(1)),
+      deviation_pct:       parseFloat(((last.ratio_pct / last.trend_pct - 1) * 100).toFixed(1)),
       std_devs:            parseFloat(std_devs.toFixed(2)),
       valuation:           getValuationLabel(std_devs),
       market_cap_billions: Math.round(aligned[aligned.length - 1].wil),

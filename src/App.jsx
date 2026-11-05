@@ -6,14 +6,11 @@ import {
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { ChartToggle } from './components/ChartToggle';
 import { formatDate } from './utils/formatDate';
-
-const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -41,7 +38,9 @@ const AaiiTooltip = ({ active, payload, label }) => {
       <p style={{ color: 'var(--bb-white)', margin: 0, fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, margin: '4px 0 0 0', fontSize: '13px', fontWeight: '500' }}>
-          {p.name}: {typeof p.value === 'number' ? `${p.value > 0 ? '+' : ''}${p.value.toFixed(1)}%` : p.value}
+          {p.name}: {typeof p.value === 'number'
+            ? `${p.dataKey === 'spread' && p.value > 0 ? '+' : ''}${p.value.toFixed(1)}%`
+            : p.value}
         </p>
       ))}
     </div>
@@ -98,7 +97,7 @@ const TAB_SUBTITLE = {
   margin:  'Securities margin account debit balances (USD billions)',
   aaii:    'Individual investor asset allocation trends (%)',
   sectors: 'Relative sector performance analysis vs benchmark',
-  buffett: 'Berkshire Hathaway annual cash & T-bill holdings',
+  buffett: 'US stock market cap ÷ GDP vs long-run trend, plus Berkshire Hathaway cash holdings',
   sofr:    'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed',
   ppi:     'Monthly price changes received by domestic producers — BLS',
 };
@@ -169,30 +168,10 @@ export default function App() {
       setLoading(true);
       setError(null);
 
+      // margin_data.json is refreshed weekly by scripts/fetch_finra_data.py (GitHub Action).
+      // The browser used to try a live FINRA CSV first, but that URL is dead (404) and
+      // FINRA sends no CORS headers, so it only delayed the whole app by up to ~30s.
       const loadMarginData = async () => {
-        const urlsToTry = [FINRA_CSV_URL, ...CORS_PROXIES.map(fn => fn(FINRA_CSV_URL))];
-        for (const url of urlsToTry) {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 10000);
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timer);
-            if (!res.ok) continue;
-            const text = await res.text();
-            const parsed = parseFinraMarginCsv(text);
-            if (parsed.length > 10) {
-              if (!cancelled) {
-                setRawData(parsed);
-                setMetadata({
-                  lastUpdated: new Date().toISOString(),
-                  source: 'FINRA Margin Statistics (Live)',
-                  sourceUrl: 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics',
-                });
-              }
-              return;
-            }
-          } catch { /* try next */ }
-        }
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load margin data');
         const json = await res.json();
@@ -210,7 +189,7 @@ export default function App() {
         if (!json.data?.length) throw new Error('No AAII data in local file');
         if (!cancelled) {
           setAaiiRawData(json.data);
-          setAaiiMetadata({ lastUpdated: json.last_updated, source: json.source, sourceUrl: json.source_url });
+          setAaiiMetadata({ lastUpdated: json.last_updated, lastChecked: json.last_checked, source: json.source, sourceUrl: json.source_url });
         }
       };
 
@@ -232,7 +211,6 @@ export default function App() {
     : timeRange === '10y' ? data.slice(-120)
     : timeRange === '5y'  ? data.slice(-60)
     : data.slice(-24);
-  const chartInterval = Math.floor((filteredData.length || 1) / 8);
   const currentDebt = data[data.length - 1];
   const peak2021 = data.find(d => d.date === '2021-10') || data[data.length - 1];
   const peak2000 = data.find(d => d.date === '2000-03') || data[0];
@@ -303,7 +281,10 @@ export default function App() {
           {(activeTab === 'margin' && metadata) || (activeTab === 'aaii' && aaiiMetadata) ? (
             <div className="bb-topbar-date" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', borderLeft: '1px solid #D97706', flexShrink: 0 }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#000', opacity: 0.8 }}>
-                UPD: {formatLastUpdated(activeTab === 'margin' ? metadata?.lastUpdated : aaiiMetadata?.lastUpdated)}
+                DATA THRU {activeTab === 'margin'
+                  ? (rawData[rawData.length - 1]?.date || '—')
+                  : (aaiiRawData[aaiiRawData.length - 1]?.date?.slice(0, 7) || '—')}
+                {!isMobile && <>{' · '}CHECKED {formatLastUpdated(activeTab === 'margin' ? metadata?.lastUpdated : (aaiiMetadata?.lastChecked || aaiiMetadata?.lastUpdated))}</>}
               </span>
             </div>
           ) : null}
@@ -426,7 +407,7 @@ export default function App() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
-                    <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval={chartInterval} />
+                    <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval="preserveEnd" minTickGap={24} />
                     <YAxis stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={v => `$${v}B`} />
                     <Tooltip content={<CustomTooltip />} />
                     {marginMainType === 'line' ? (
@@ -459,7 +440,7 @@ export default function App() {
                 <ResponsiveContainer width="100%" height={isMobile ? 200 : 260}>
                   <ComposedChart data={filteredData.filter(d => d.yoy_growth !== null)} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
-                    <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval={chartInterval} />
+                    <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval="preserveEnd" minTickGap={24} />
                     <YAxis stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={v => `${v}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <ReferenceLine y={0} stroke="#4B5563" strokeWidth={1} />
@@ -485,8 +466,8 @@ export default function App() {
                 <div style={{ fontFamily: 'var(--font-ui)', fontWeight: '700', color: '#FCD34D', fontSize: '10px', letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '6px' }}>HISTORICAL PATTERN</div>
                 <p style={{ fontFamily: 'var(--font-mono)', color: '#D1D5DB', fontSize: '12px', lineHeight: '1.6' }}>
                   Sustained 30%+ YoY margin debt growth has preceded every major market correction.
-                  2000 peak (+80% YoY) → dot-com crash. 2007 peak (+62% YoY) → financial crisis.
-                  2021 peak (+71% YoY) → 2022 bear market.
+                  2000 peak (+80.5% YoY) → dot-com crash. 2007 peak (+62.6% YoY) → financial crisis.
+                  2021 peak (+71.6% YoY) → 2022 bear market.
                 </p>
               </div>
             </div>
@@ -586,7 +567,6 @@ export default function App() {
           const aaiiData = aaiiRawData;
           const aaiiFiltered = timeRange === 'all' ? aaiiData : timeRange === '10y' ? aaiiData.slice(-120) : timeRange === '5y' ? aaiiData.slice(-60) : aaiiData.slice(-24);
           const cur = aaiiData[aaiiData.length - 1];
-          const ci = Math.floor((aaiiFiltered.length || 1) / 8);
           return (
             <>
               <div className="responsive-grid" style={{ marginTop: '1px' }}>
@@ -616,8 +596,8 @@ export default function App() {
                   <ResponsiveContainer width="100%" height={isMobile ? 240 : 320}>
                     <ComposedChart data={aaiiFiltered} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
-                      <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval={ci} />
-                      <YAxis stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={v => `${v}%`} domain={[0, 100]} />
+                      <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval="preserveEnd" minTickGap={24} />
+                      <YAxis stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={v => `${Math.round(v)}%`} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow />
                       <Tooltip content={<AaiiTooltip />} />
                       {aaiiAllocType === 'line' ? (
                         <>
@@ -646,7 +626,7 @@ export default function App() {
                   <ResponsiveContainer width="100%" height={isMobile ? 200 : 240}>
                     <ComposedChart data={aaiiFiltered.map(d => ({ ...d, spread: (d.stocks || 0) - (d.cash || 0) }))} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="1 3" stroke="#111827" />
-                      <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval={ci} />
+                      <XAxis dataKey="date" stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={formatDate} interval="preserveEnd" minTickGap={24} />
                       <YAxis stroke="#374151" tick={{ fill: '#6B7280', fontSize: 10, fontFamily: 'JetBrains Mono' }} tickFormatter={v => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`} />
                       <Tooltip content={<AaiiTooltip />} />
                       <ReferenceLine y={0}  stroke="#4B5563" />

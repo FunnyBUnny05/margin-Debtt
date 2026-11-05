@@ -101,7 +101,10 @@ export function PpiIndex({ isMobile }) {
   const minYoy    = Math.min(...yoyValues);
   const avgYoy    = (yoyValues.reduce((a, b) => a + b, 0) / yoyValues.length).toFixed(2);
 
-  const chartInterval = Math.floor((filtered.length || 1) / 8);
+  const baseDate = rawData[series]?.[0]?.date;
+  const baseLabel = baseDate
+    ? new Date(`${baseDate}-01T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    : 'Nov 2009';
   const seriesLabel   = series === 'unadj' ? 'Not Seasonally Adjusted' : 'Seasonally Adjusted';
 
   return (
@@ -165,7 +168,7 @@ export function PpiIndex({ isMobile }) {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: isMobile ? '28px' : '32px', fontWeight: '700', color: 'var(--bb-yellow)' }}>
             {latest?.index?.toFixed(1)}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>Base: Nov 2009 = 100</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--bb-gray-3)', marginTop: '8px' }}>Base: {baseLabel} = 100</div>
         </div>
 
         <div className="stat-card" style={{ borderTop: '3px solid var(--bb-gray-2)' }}>
@@ -205,7 +208,8 @@ export function PpiIndex({ isMobile }) {
                 stroke="var(--bb-gray-3)"
                 tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />
@@ -285,7 +289,8 @@ export function PpiIndex({ isMobile }) {
                 stroke="var(--bb-gray-3)"
                 tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />
@@ -323,14 +328,14 @@ export function PpiIndex({ isMobile }) {
       {/* Index Level Chart */}
       <div className="glass-card animate-in" style={{ padding: '0', marginBottom: '20px', animationDelay: '300ms' }}>
         <div className="bb-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>PPI FINAL DEMAND — INDEX LEVEL (BASE: NOV 2009 = 100)</span>
+          <span>PPI FINAL DEMAND — INDEX LEVEL (BASE: {baseLabel.toUpperCase()} = 100)</span>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <ExportCsvButton
               data={filtered}
               filename={`ppi_index_level_${series}`}
               columns={[
                 { key: 'date',  label: 'Date' },
-                { key: 'index', label: 'PPI Index Level (Base Nov-2009=100)' },
+                { key: 'index', label: `PPI Index Level (Base ${baseLabel}=100)` },
                 { key: 'mom',   label: 'MoM Change (%)' },
                 { key: 'yoy',   label: 'YoY Change (%)' },
               ]}
@@ -353,7 +358,8 @@ export function PpiIndex({ isMobile }) {
                 stroke="var(--bb-gray-3)"
                 tick={{ fill: 'var(--bb-gray-2)', fontSize: 11, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />
