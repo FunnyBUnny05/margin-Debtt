@@ -27,6 +27,9 @@ from pathlib import Path
 
 FRED_WILSHIRE_URL = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WILL5000INDFC'
 FRED_GDP_URL      = 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDP'
+# FRED routinely times out from GitHub Actions runners; DBnomics mirrors the same
+# BEA series (NIPA Table 1.1.5, line 1 — nominal GDP, $M SAAR, quarterly).
+DBNOMICS_GDP_URL  = 'https://api.db.nomics.world/v22/series/BEA/NIPA-T10105/A191RC-Q?observations=1&format=json'
 EDGAR_CONCEPT_URL = (
     'https://data.sec.gov/api/xbrl/companyconcept/'
     'CIK0001067983/us-gaap/CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents.json'
@@ -85,7 +88,13 @@ FRED_RETRIES = 3
 FRED_BACKOFF_S = 5  # doubles each retry: 5s, 10s, 20s
 
 
+_fred_down = False  # once FRED times out, don't burn minutes retrying it for the next series
+
+
 def fetch_fred_csv(url, label):
+    global _fred_down
+    if _fred_down:
+        raise RuntimeError('FRED unreachable earlier in this run; skipping')
     print(f'  Fetching {label} from FRED...')
     last_err = None
     for attempt in range(1, FRED_RETRIES + 1):
@@ -105,7 +114,35 @@ def fetch_fred_csv(url, label):
                 wait = FRED_BACKOFF_S * (2 ** (attempt - 1))
                 print(f'    Attempt {attempt}/{FRED_RETRIES} failed ({e}); retrying in {wait}s...')
                 time.sleep(wait)
+    _fred_down = True
     raise last_err
+
+
+def fetch_gdp_dbnomics():
+    print('  Fetching US Nominal GDP from DBnomics (BEA mirror)...')
+    r = requests.get(DBNOMICS_GDP_URL, timeout=60)
+    r.raise_for_status()
+    doc = r.json()['series']['docs'][0]
+    rows = []
+    for period, value in zip(doc['period'], doc['value']):
+        if value is None or value == 'NA':
+            continue
+        year, q = period.split('-Q')
+        # Match FRED's convention: quarter start date, value in $ billions
+        rows.append({'date': pd.Timestamp(int(year), (int(q) - 1) * 3 + 1, 1), 'value': float(value) / 1000.0})
+    df = pd.DataFrame(rows).set_index('date').sort_index()
+    if len(df) < 100:
+        raise RuntimeError(f'DBnomics GDP returned only {len(df)} rows')
+    print(f'    GDP (DBnomics): {len(df)} obs  latest={df.index[-1].date()}  val={df["value"].iloc[-1]:,.1f}')
+    return df
+
+
+def get_gdp():
+    try:
+        return fetch_fred_csv(FRED_GDP_URL, 'US Nominal GDP')
+    except Exception as e:
+        print(f'  FRED GDP unavailable: {e}')
+    return fetch_gdp_dbnomics()
 
 
 def fetch_wilshire_yfinance():
@@ -137,36 +174,40 @@ def fetch_wilshire_yfinance():
     raise RuntimeError('yfinance returned no usable data for ^FTW5000 or ^W5000')
 
 
-def get_wilshire(existing_data=None):
+def get_wilshire(existing_data=None, gdp_raw=None):
     """
     Try FRED first, then yfinance.
     If yfinance only covers from 1989, splice with existing historical data.
     Returns DataFrame indexed by date with 'value' column.
     """
-    # 1. Try FRED
-    try:
-        return fetch_fred_csv(FRED_WILSHIRE_URL, 'Wilshire 5000 Full Cap')
-    except Exception as e:
-        print(f'  FRED WILL5000INDFC unavailable: {e}')
-
-    # 2. Try yfinance
+    # FRED was already tried by the caller; fall back to yfinance
     try:
         yf_df = fetch_wilshire_yfinance()
 
-        # Splice with existing historical data if available (FRED had data from 1971)
-        if existing_data and existing_data.get('data'):
-            print('  Splicing yfinance with existing historical data (pre-1989)...')
-            hist_records = [
-                {'date': d['date'], 'value': d['ratio_pct']}
-                for d in existing_data['data']
-            ]
-            hist_df = pd.DataFrame(hist_records)
-            hist_df['date'] = pd.to_datetime(hist_df['date'])
-            hist_df = hist_df.set_index('date').sort_index()
-
-            # We can't directly use ratio_pct as Wilshire index (they're different scales)
-            # Just return yfinance data (history from 1989) — trend will be shorter but still valid
-            print('  NOTE: Using yfinance data from 1989 (FRED unavailable for pre-1989 history)')
+        # Yahoo's older ^W5000 history doesn't match FRED's WILL5000INDFC (e.g. 1995 and
+        # 2021 differ by 25%+), so it must not replace the stored history. Instead:
+        # rebuild Wilshire levels from the stored ratio × GDP, then append only the
+        # quarters after it, scaled so Yahoo matches the stored series where they overlap.
+        if existing_data and existing_data.get('data') and gdp_raw is not None:
+            gdp_q = gdp_raw.resample('QE').ffill()['value']
+            rows = []
+            for d in existing_data['data']:
+                dt = pd.Timestamp(d['date'])
+                if dt in gdp_q.index:
+                    rows.append({'date': dt, 'value': d['ratio_pct'] / 100.0 * gdp_q[dt]})
+            if rows:
+                hist_df = pd.DataFrame(rows).set_index('date').sort_index()
+                yf_q = yf_df.resample('QE').last()['value']
+                overlap = hist_df.index.intersection(yf_q.index)[-4:]
+                if len(overlap) == 0:
+                    raise RuntimeError('No overlap between stored history and Yahoo data')
+                scale = float((hist_df.loc[overlap, 'value'] / yf_q.loc[overlap]).mean())
+                if not 0.9 < scale < 1.1:
+                    raise RuntimeError(f'Yahoo/stored scale factor {scale:.3f} looks wrong; refusing to splice')
+                newer = yf_df[yf_df.index > hist_df.index[-1]] * scale
+                print(f'  Kept {len(hist_df)} stored quarters; appended {len(newer)} newer Yahoo points '
+                      f'(scale {scale:.4f}, fit on {len(overlap)} overlapping quarters)')
+                return pd.concat([hist_df, newer]).sort_index()
         return yf_df
     except Exception as e:
         print(f'  yfinance fallback failed: {e}')
@@ -288,7 +329,7 @@ def build_output(df, current_info, berkshire_series):
             'Index points ≈ total US public equity market cap in $B. '
             'Bands = ±1σ / ±2σ from log-linear trend over full history.'
         ),
-        'source_urls': [FRED_WILSHIRE_URL, FRED_GDP_URL],
+        'source_urls': [FRED_WILSHIRE_URL, FRED_GDP_URL, DBNOMICS_GDP_URL],
         'current': current_info,
         'data': records,
         'berkshire_cash': {
@@ -320,8 +361,14 @@ def main():
 
     try:
         print('Fetching Buffett Indicator data...')
-        wilshire_raw = get_wilshire(existing_data)
-        gdp_raw      = fetch_fred_csv(FRED_GDP_URL, 'US Nominal GDP')
+        # Probe FRED with Wilshire first; if FRED is down, GDP goes straight to DBnomics
+        try:
+            wilshire_raw = fetch_fred_csv(FRED_WILSHIRE_URL, 'Wilshire 5000 Full Cap')
+            gdp_raw = get_gdp()
+        except Exception as e:
+            print(f'  FRED WILL5000INDFC unavailable: {e}')
+            gdp_raw = get_gdp()
+            wilshire_raw = get_wilshire(existing_data, gdp_raw)
 
         df, coeffs, std_res = compute_indicator(wilshire_raw, gdp_raw)
         current_info = compute_current(df, wilshire_raw, gdp_raw, coeffs, std_res)

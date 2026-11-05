@@ -149,7 +149,7 @@ export const BuffettIndicator = ({ isMobile }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span>Buffett Indicator — Wilshire 5000 / GDP</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', letterSpacing: '0.18em',
-              color: rawBiStatus === 'live' ? 'var(--pos)' : 'var(--text-mid)' }}>
+              color: rawBiStatus === 'live' ? '#064E3B' : 'rgba(0,0,0,0.65)', fontWeight: 700 }}>
               ● {rawBiStatus === 'live' ? 'CURRENT' : rawBiStatus === 'fallback' ? 'CACHED' : rawBiStatus.toUpperCase()}
             </span>
           </div>
@@ -227,7 +227,8 @@ export const BuffettIndicator = ({ isMobile }) => {
                   <CartesianGrid strokeDasharray="1 4" stroke={gridStroke} vertical={false} />
                   <XAxis dataKey="date" tick={axTick} axisLine={false} tickLine={false}
                     tickFormatter={d => new Date(d).getFullYear()}
-                    interval={isMobile ? 'preserveStartEnd' : Math.floor(biChartData.length / 8)}
+                    interval="preserveEnd"
+                    minTickGap={isMobile ? 32 : 24}
                   />
                   <YAxis tickFormatter={v => `${v.toFixed(0)}%`} tick={axTick} axisLine={false} tickLine={false} width={48} />
                   <Tooltip content={<BuffettTooltip />} cursor={{ stroke: 'var(--rule-strong)', strokeWidth: 1 }} />

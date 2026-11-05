@@ -1,2009 +1,2028 @@
 {
-  "last_updated": "2026-05-04T12:02:19.899015Z",
+  "last_updated": "2026-11-05T17:08:56.910008Z",
   "source": "FRED \u2014 Wilshire 5000 Full Cap (WILL5000INDFC) / Nominal GDP",
-  "source_note": "Wilshire 5000 Full Cap Index \u00f7 US Nominal GDP \u00d7 100. Index points \u2248 total US public equity market cap in $B. Bands = \u00b11\u03c3 / \u00b12\u03c3 from log-linear OLS trend (1971\u2013present).",
+  "source_note": "Wilshire 5000 Full Cap Index \u00f7 US Nominal GDP \u00d7 100. Index points \u2248 total US public equity market cap in $B. Bands = \u00b11\u03c3 / \u00b12\u03c3 from log-linear trend over full history.",
   "source_urls": [
-    "https://fred.stlouisfed.org/series/WILL5000INDFC",
-    "https://fred.stlouisfed.org/series/GDP"
+    "https://fred.stlouisfed.org/graph/fredgraph.csv?id=WILL5000INDFC",
+    "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDP",
+    "https://api.db.nomics.world/v22/series/BEA/NIPA-T10105/A191RC-Q?observations=1&format=json"
   ],
   "current": {
-    "ratio_pct": 204.0,
-    "market_cap_billions": 65001.0,
-    "gdp_billions": 31856.0,
-    "trend_pct": 193.3,
-    "deviation_pct": 5.6,
-    "std_devs": 0.26,
+    "ratio_pct": 232.4,
+    "market_cap_billions": 76711.0,
+    "gdp_billions": 33010.0,
+    "trend_pct": 198.0,
+    "deviation_pct": 17.4,
+    "std_devs": 0.76,
     "valuation": "FAIR VALUE"
   },
   "data": [
     {
       "date": "1971-03-31",
       "ratio_pct": 57.0,
-      "trend_pct": 42.67,
-      "band_plus1": 52.63,
-      "band_plus2": 64.91,
-      "band_minus1": 34.59,
-      "band_minus2": 28.05
+      "trend_pct": 42.54,
+      "band_plus1": 52.45,
+      "band_plus2": 64.67,
+      "band_minus1": 34.5,
+      "band_minus2": 27.98
     },
     {
       "date": "1971-06-30",
       "ratio_pct": 58.5,
-      "trend_pct": 42.96,
-      "band_plus1": 52.99,
-      "band_plus2": 65.36,
-      "band_minus1": 34.83,
-      "band_minus2": 28.24
+      "trend_pct": 42.84,
+      "band_plus1": 52.82,
+      "band_plus2": 65.12,
+      "band_minus1": 34.74,
+      "band_minus2": 28.18
     },
     {
       "date": "1971-09-30",
       "ratio_pct": 60.0,
-      "trend_pct": 43.26,
-      "band_plus1": 53.35,
-      "band_plus2": 65.81,
-      "band_minus1": 35.07,
-      "band_minus2": 28.43
+      "trend_pct": 43.13,
+      "band_plus1": 53.18,
+      "band_plus2": 65.57,
+      "band_minus1": 34.98,
+      "band_minus2": 28.37
     },
     {
       "date": "1971-12-31",
       "ratio_pct": 61.5,
-      "trend_pct": 43.56,
-      "band_plus1": 53.72,
-      "band_plus2": 66.26,
-      "band_minus1": 35.31,
-      "band_minus2": 28.63
+      "trend_pct": 43.43,
+      "band_plus1": 53.55,
+      "band_plus2": 66.03,
+      "band_minus1": 35.23,
+      "band_minus2": 28.57
     },
     {
       "date": "1972-03-31",
       "ratio_pct": 63.0,
-      "trend_pct": 43.86,
-      "band_plus1": 54.09,
-      "band_plus2": 66.72,
-      "band_minus1": 35.56,
-      "band_minus2": 28.83
+      "trend_pct": 43.73,
+      "band_plus1": 53.92,
+      "band_plus2": 66.48,
+      "band_minus1": 35.47,
+      "band_minus2": 28.77
     },
     {
       "date": "1972-06-30",
       "ratio_pct": 60.25,
-      "trend_pct": 44.16,
-      "band_plus1": 54.47,
-      "band_plus2": 67.18,
-      "band_minus1": 35.8,
-      "band_minus2": 29.03
+      "trend_pct": 44.04,
+      "band_plus1": 54.3,
+      "band_plus2": 66.95,
+      "band_minus1": 35.72,
+      "band_minus2": 28.97
     },
     {
       "date": "1972-09-30",
       "ratio_pct": 57.5,
-      "trend_pct": 44.46,
-      "band_plus1": 54.84,
-      "band_plus2": 67.64,
-      "band_minus1": 36.05,
-      "band_minus2": 29.23
+      "trend_pct": 44.34,
+      "band_plus1": 54.67,
+      "band_plus2": 67.41,
+      "band_minus1": 35.96,
+      "band_minus2": 29.17
     },
     {
       "date": "1972-12-31",
       "ratio_pct": 54.75,
-      "trend_pct": 44.77,
-      "band_plus1": 55.22,
-      "band_plus2": 68.11,
-      "band_minus1": 36.3,
-      "band_minus2": 29.43
+      "trend_pct": 44.65,
+      "band_plus1": 55.05,
+      "band_plus2": 67.88,
+      "band_minus1": 36.21,
+      "band_minus2": 29.37
     },
     {
       "date": "1973-03-31",
       "ratio_pct": 52.0,
-      "trend_pct": 45.08,
-      "band_plus1": 55.6,
-      "band_plus2": 68.58,
-      "band_minus1": 36.55,
-      "band_minus2": 29.63
+      "trend_pct": 44.96,
+      "band_plus1": 55.43,
+      "band_plus2": 68.35,
+      "band_minus1": 36.46,
+      "band_minus2": 29.57
     },
     {
       "date": "1973-06-30",
       "ratio_pct": 48.25,
-      "trend_pct": 45.39,
-      "band_plus1": 55.98,
-      "band_plus2": 69.05,
-      "band_minus1": 36.8,
-      "band_minus2": 29.83
+      "trend_pct": 45.27,
+      "band_plus1": 55.82,
+      "band_plus2": 68.82,
+      "band_minus1": 36.72,
+      "band_minus2": 29.78
     },
     {
       "date": "1973-09-30",
       "ratio_pct": 44.5,
-      "trend_pct": 45.7,
-      "band_plus1": 56.37,
-      "band_plus2": 69.52,
-      "band_minus1": 37.05,
-      "band_minus2": 30.04
+      "trend_pct": 45.58,
+      "band_plus1": 56.2,
+      "band_plus2": 69.3,
+      "band_minus1": 36.97,
+      "band_minus2": 29.99
     },
     {
       "date": "1973-12-31",
       "ratio_pct": 40.75,
-      "trend_pct": 46.02,
-      "band_plus1": 56.76,
-      "band_plus2": 70.0,
-      "band_minus1": 37.31,
-      "band_minus2": 30.25
+      "trend_pct": 45.9,
+      "band_plus1": 56.59,
+      "band_plus2": 69.78,
+      "band_minus1": 37.23,
+      "band_minus2": 30.19
     },
     {
       "date": "1974-03-31",
       "ratio_pct": 37.0,
-      "trend_pct": 46.33,
-      "band_plus1": 57.15,
-      "band_plus2": 70.49,
-      "band_minus1": 37.56,
-      "band_minus2": 30.46
+      "trend_pct": 46.22,
+      "band_plus1": 56.99,
+      "band_plus2": 70.26,
+      "band_minus1": 37.49,
+      "band_minus2": 30.4
     },
     {
       "date": "1974-06-30",
       "ratio_pct": 38.75,
-      "trend_pct": 46.65,
-      "band_plus1": 57.54,
-      "band_plus2": 70.97,
-      "band_minus1": 37.82,
-      "band_minus2": 30.67
+      "trend_pct": 46.54,
+      "band_plus1": 57.38,
+      "band_plus2": 70.75,
+      "band_minus1": 37.74,
+      "band_minus2": 30.61
     },
     {
       "date": "1974-09-30",
       "ratio_pct": 40.5,
-      "trend_pct": 46.97,
-      "band_plus1": 57.94,
-      "band_plus2": 71.46,
-      "band_minus1": 38.08,
-      "band_minus2": 30.88
+      "trend_pct": 46.86,
+      "band_plus1": 57.78,
+      "band_plus2": 71.24,
+      "band_minus1": 38.01,
+      "band_minus2": 30.83
     },
     {
       "date": "1974-12-31",
       "ratio_pct": 42.25,
-      "trend_pct": 47.3,
-      "band_plus1": 58.34,
-      "band_plus2": 71.95,
-      "band_minus1": 38.35,
-      "band_minus2": 31.09
+      "trend_pct": 47.19,
+      "band_plus1": 58.18,
+      "band_plus2": 71.73,
+      "band_minus1": 38.27,
+      "band_minus2": 31.04
     },
     {
       "date": "1975-03-31",
       "ratio_pct": 44.0,
-      "trend_pct": 47.62,
-      "band_plus1": 58.74,
-      "band_plus2": 72.45,
-      "band_minus1": 38.61,
-      "band_minus2": 31.3
+      "trend_pct": 47.51,
+      "band_plus1": 58.58,
+      "band_plus2": 72.23,
+      "band_minus1": 38.54,
+      "band_minus2": 31.25
     },
     {
       "date": "1975-06-30",
       "ratio_pct": 44.75,
-      "trend_pct": 47.95,
-      "band_plus1": 59.14,
-      "band_plus2": 72.95,
-      "band_minus1": 38.88,
-      "band_minus2": 31.52
+      "trend_pct": 47.84,
+      "band_plus1": 58.99,
+      "band_plus2": 72.73,
+      "band_minus1": 38.8,
+      "band_minus2": 31.47
     },
     {
       "date": "1975-09-30",
       "ratio_pct": 45.5,
-      "trend_pct": 48.28,
-      "band_plus1": 59.55,
-      "band_plus2": 73.45,
-      "band_minus1": 39.14,
-      "band_minus2": 31.74
+      "trend_pct": 48.17,
+      "band_plus1": 59.4,
+      "band_plus2": 73.23,
+      "band_minus1": 39.07,
+      "band_minus2": 31.69
     },
     {
       "date": "1975-12-31",
       "ratio_pct": 46.25,
-      "trend_pct": 48.61,
-      "band_plus1": 59.96,
-      "band_plus2": 73.96,
-      "band_minus1": 39.41,
-      "band_minus2": 31.96
+      "trend_pct": 48.51,
+      "band_plus1": 59.81,
+      "band_plus2": 73.74,
+      "band_minus1": 39.34,
+      "band_minus2": 31.91
     },
     {
       "date": "1976-03-31",
       "ratio_pct": 47.0,
-      "trend_pct": 48.95,
-      "band_plus1": 60.37,
-      "band_plus2": 74.47,
-      "band_minus1": 39.69,
-      "band_minus2": 32.18
+      "trend_pct": 48.84,
+      "band_plus1": 60.22,
+      "band_plus2": 74.25,
+      "band_minus1": 39.61,
+      "band_minus2": 32.13
     },
     {
       "date": "1976-06-30",
       "ratio_pct": 46.25,
-      "trend_pct": 49.29,
-      "band_plus1": 60.79,
-      "band_plus2": 74.98,
-      "band_minus1": 39.96,
-      "band_minus2": 32.4
+      "trend_pct": 49.18,
+      "band_plus1": 60.64,
+      "band_plus2": 74.77,
+      "band_minus1": 39.89,
+      "band_minus2": 32.35
     },
     {
       "date": "1976-09-30",
       "ratio_pct": 45.5,
-      "trend_pct": 49.63,
-      "band_plus1": 61.21,
-      "band_plus2": 75.5,
-      "band_minus1": 40.23,
-      "band_minus2": 32.62
+      "trend_pct": 49.52,
+      "band_plus1": 61.06,
+      "band_plus2": 75.29,
+      "band_minus1": 40.17,
+      "band_minus2": 32.58
     },
     {
       "date": "1976-12-31",
       "ratio_pct": 44.75,
-      "trend_pct": 49.97,
-      "band_plus1": 61.63,
-      "band_plus2": 76.02,
-      "band_minus1": 40.51,
-      "band_minus2": 32.85
+      "trend_pct": 49.87,
+      "band_plus1": 61.48,
+      "band_plus2": 75.81,
+      "band_minus1": 40.44,
+      "band_minus2": 32.8
     },
     {
       "date": "1977-03-31",
       "ratio_pct": 44.0,
-      "trend_pct": 50.31,
-      "band_plus1": 62.06,
-      "band_plus2": 76.54,
-      "band_minus1": 40.79,
-      "band_minus2": 33.07
+      "trend_pct": 50.21,
+      "band_plus1": 61.91,
+      "band_plus2": 76.33,
+      "band_minus1": 40.72,
+      "band_minus2": 33.03
     },
     {
       "date": "1977-06-30",
       "ratio_pct": 43.75,
-      "trend_pct": 50.66,
-      "band_plus1": 62.48,
-      "band_plus2": 77.07,
-      "band_minus1": 41.07,
-      "band_minus2": 33.3
+      "trend_pct": 50.56,
+      "band_plus1": 62.34,
+      "band_plus2": 76.86,
+      "band_minus1": 41.01,
+      "band_minus2": 33.26
     },
     {
       "date": "1977-09-30",
       "ratio_pct": 43.5,
-      "trend_pct": 51.01,
-      "band_plus1": 62.91,
-      "band_plus2": 77.6,
-      "band_minus1": 41.35,
-      "band_minus2": 33.53
+      "trend_pct": 50.91,
+      "band_plus1": 62.77,
+      "band_plus2": 77.39,
+      "band_minus1": 41.29,
+      "band_minus2": 33.49
     },
     {
       "date": "1977-12-31",
       "ratio_pct": 43.25,
-      "trend_pct": 51.36,
-      "band_plus1": 63.35,
-      "band_plus2": 78.13,
-      "band_minus1": 41.64,
-      "band_minus2": 33.76
+      "trend_pct": 51.26,
+      "band_plus1": 63.21,
+      "band_plus2": 77.93,
+      "band_minus1": 41.58,
+      "band_minus2": 33.72
     },
     {
       "date": "1978-03-31",
       "ratio_pct": 43.0,
-      "trend_pct": 51.71,
-      "band_plus1": 63.78,
-      "band_plus2": 78.67,
-      "band_minus1": 41.93,
-      "band_minus2": 33.99
+      "trend_pct": 51.62,
+      "band_plus1": 63.64,
+      "band_plus2": 78.47,
+      "band_minus1": 41.86,
+      "band_minus2": 33.95
     },
     {
       "date": "1978-06-30",
       "ratio_pct": 42.5,
-      "trend_pct": 52.07,
-      "band_plus1": 64.22,
-      "band_plus2": 79.21,
-      "band_minus1": 42.22,
-      "band_minus2": 34.23
+      "trend_pct": 51.98,
+      "band_plus1": 64.08,
+      "band_plus2": 79.01,
+      "band_minus1": 42.16,
+      "band_minus2": 34.19
     },
     {
       "date": "1978-09-30",
       "ratio_pct": 42.0,
-      "trend_pct": 52.43,
-      "band_plus1": 64.67,
-      "band_plus2": 79.76,
-      "band_minus1": 42.51,
-      "band_minus2": 34.46
+      "trend_pct": 52.34,
+      "band_plus1": 64.53,
+      "band_plus2": 79.56,
+      "band_minus1": 42.45,
+      "band_minus2": 34.43
     },
     {
       "date": "1978-12-31",
       "ratio_pct": 41.5,
-      "trend_pct": 52.79,
-      "band_plus1": 65.11,
-      "band_plus2": 80.31,
-      "band_minus1": 42.8,
-      "band_minus2": 34.7
+      "trend_pct": 52.7,
+      "band_plus1": 64.98,
+      "band_plus2": 80.11,
+      "band_minus1": 42.74,
+      "band_minus2": 34.67
     },
     {
       "date": "1979-03-31",
       "ratio_pct": 41.0,
-      "trend_pct": 53.15,
-      "band_plus1": 65.56,
-      "band_plus2": 80.86,
-      "band_minus1": 43.09,
-      "band_minus2": 34.94
+      "trend_pct": 53.06,
+      "band_plus1": 65.43,
+      "band_plus2": 80.67,
+      "band_minus1": 43.04,
+      "band_minus2": 34.91
     },
     {
       "date": "1979-06-30",
       "ratio_pct": 41.25,
-      "trend_pct": 53.52,
-      "band_plus1": 66.01,
-      "band_plus2": 81.42,
-      "band_minus1": 43.39,
-      "band_minus2": 35.18
+      "trend_pct": 53.43,
+      "band_plus1": 65.88,
+      "band_plus2": 81.23,
+      "band_minus1": 43.34,
+      "band_minus2": 35.15
     },
     {
       "date": "1979-09-30",
       "ratio_pct": 41.5,
-      "trend_pct": 53.89,
-      "band_plus1": 66.47,
-      "band_plus2": 81.98,
-      "band_minus1": 43.69,
-      "band_minus2": 35.42
+      "trend_pct": 53.8,
+      "band_plus1": 66.34,
+      "band_plus2": 81.79,
+      "band_minus1": 43.64,
+      "band_minus2": 35.39
     },
     {
       "date": "1979-12-31",
       "ratio_pct": 41.75,
-      "trend_pct": 54.26,
-      "band_plus1": 66.92,
-      "band_plus2": 82.54,
-      "band_minus1": 43.99,
-      "band_minus2": 35.67
+      "trend_pct": 54.18,
+      "band_plus1": 66.8,
+      "band_plus2": 82.36,
+      "band_minus1": 43.94,
+      "band_minus2": 35.64
     },
     {
       "date": "1980-03-31",
       "ratio_pct": 42.0,
-      "trend_pct": 54.63,
-      "band_plus1": 67.38,
-      "band_plus2": 83.11,
-      "band_minus1": 44.29,
-      "band_minus2": 35.91
+      "trend_pct": 54.55,
+      "band_plus1": 67.26,
+      "band_plus2": 82.93,
+      "band_minus1": 44.24,
+      "band_minus2": 35.88
     },
     {
       "date": "1980-06-30",
       "ratio_pct": 42.5,
-      "trend_pct": 55.01,
-      "band_plus1": 67.85,
-      "band_plus2": 83.69,
-      "band_minus1": 44.6,
-      "band_minus2": 36.16
+      "trend_pct": 54.93,
+      "band_plus1": 67.73,
+      "band_plus2": 83.5,
+      "band_minus1": 44.55,
+      "band_minus2": 36.13
     },
     {
       "date": "1980-09-30",
       "ratio_pct": 43.0,
-      "trend_pct": 55.39,
-      "band_plus1": 68.32,
-      "band_plus2": 84.26,
-      "band_minus1": 44.91,
-      "band_minus2": 36.41
+      "trend_pct": 55.31,
+      "band_plus1": 68.19,
+      "band_plus2": 84.08,
+      "band_minus1": 44.86,
+      "band_minus2": 36.38
     },
     {
       "date": "1980-12-31",
       "ratio_pct": 43.5,
-      "trend_pct": 55.77,
-      "band_plus1": 68.79,
-      "band_plus2": 84.84,
-      "band_minus1": 45.22,
-      "band_minus2": 36.66
+      "trend_pct": 55.69,
+      "band_plus1": 68.67,
+      "band_plus2": 84.66,
+      "band_minus1": 45.17,
+      "band_minus2": 36.63
     },
     {
       "date": "1981-03-31",
       "ratio_pct": 44.0,
-      "trend_pct": 56.15,
-      "band_plus1": 69.26,
-      "band_plus2": 85.43,
-      "band_minus1": 45.53,
-      "band_minus2": 36.91
+      "trend_pct": 56.08,
+      "band_plus1": 69.14,
+      "band_plus2": 85.25,
+      "band_minus1": 45.48,
+      "band_minus2": 36.89
     },
     {
       "date": "1981-06-30",
       "ratio_pct": 44.0,
-      "trend_pct": 56.54,
-      "band_plus1": 69.74,
-      "band_plus2": 86.02,
-      "band_minus1": 45.84,
-      "band_minus2": 37.17
+      "trend_pct": 56.47,
+      "band_plus1": 69.62,
+      "band_plus2": 85.84,
+      "band_minus1": 45.8,
+      "band_minus2": 37.14
     },
     {
       "date": "1981-09-30",
       "ratio_pct": 44.0,
-      "trend_pct": 56.93,
-      "band_plus1": 70.22,
-      "band_plus2": 86.61,
-      "band_minus1": 46.16,
-      "band_minus2": 37.42
+      "trend_pct": 56.86,
+      "band_plus1": 70.1,
+      "band_plus2": 86.44,
+      "band_minus1": 46.12,
+      "band_minus2": 37.4
     },
     {
       "date": "1981-12-31",
       "ratio_pct": 44.0,
-      "trend_pct": 57.32,
-      "band_plus1": 70.7,
-      "band_plus2": 87.21,
-      "band_minus1": 46.48,
-      "band_minus2": 37.68
+      "trend_pct": 57.25,
+      "band_plus1": 70.59,
+      "band_plus2": 87.04,
+      "band_minus1": 46.43,
+      "band_minus2": 37.66
     },
     {
       "date": "1982-03-31",
       "ratio_pct": 44.0,
-      "trend_pct": 57.72,
-      "band_plus1": 71.19,
-      "band_plus2": 87.81,
-      "band_minus1": 46.8,
-      "band_minus2": 37.94
+      "trend_pct": 57.65,
+      "band_plus1": 71.08,
+      "band_plus2": 87.64,
+      "band_minus1": 46.76,
+      "band_minus2": 37.92
     },
     {
       "date": "1982-06-30",
       "ratio_pct": 47.0,
-      "trend_pct": 58.12,
-      "band_plus1": 71.68,
-      "band_plus2": 88.41,
-      "band_minus1": 47.12,
-      "band_minus2": 38.2
+      "trend_pct": 58.05,
+      "band_plus1": 71.57,
+      "band_plus2": 88.25,
+      "band_minus1": 47.08,
+      "band_minus2": 38.18
     },
     {
       "date": "1982-09-30",
       "ratio_pct": 50.0,
-      "trend_pct": 58.52,
-      "band_plus1": 72.17,
-      "band_plus2": 89.02,
-      "band_minus1": 47.44,
-      "band_minus2": 38.46
+      "trend_pct": 58.45,
+      "band_plus1": 72.07,
+      "band_plus2": 88.86,
+      "band_minus1": 47.41,
+      "band_minus2": 38.45
     },
     {
       "date": "1982-12-31",
       "ratio_pct": 53.0,
-      "trend_pct": 58.92,
-      "band_plus1": 72.67,
-      "band_plus2": 89.63,
-      "band_minus1": 47.77,
-      "band_minus2": 38.73
+      "trend_pct": 58.86,
+      "band_plus1": 72.57,
+      "band_plus2": 89.47,
+      "band_minus1": 47.74,
+      "band_minus2": 38.72
     },
     {
       "date": "1983-03-31",
       "ratio_pct": 56.0,
-      "trend_pct": 59.33,
-      "band_plus1": 73.17,
-      "band_plus2": 90.25,
-      "band_minus1": 48.1,
-      "band_minus2": 39.0
+      "trend_pct": 59.26,
+      "band_plus1": 73.07,
+      "band_plus2": 90.09,
+      "band_minus1": 48.07,
+      "band_minus2": 38.98
     },
     {
       "date": "1983-06-30",
       "ratio_pct": 56.25,
-      "trend_pct": 59.73,
-      "band_plus1": 73.68,
-      "band_plus2": 90.87,
-      "band_minus1": 48.43,
-      "band_minus2": 39.26
+      "trend_pct": 59.68,
+      "band_plus1": 73.58,
+      "band_plus2": 90.72,
+      "band_minus1": 48.4,
+      "band_minus2": 39.25
     },
     {
       "date": "1983-09-30",
       "ratio_pct": 56.5,
-      "trend_pct": 60.15,
-      "band_plus1": 74.18,
-      "band_plus2": 91.5,
-      "band_minus1": 48.76,
-      "band_minus2": 39.54
+      "trend_pct": 60.09,
+      "band_plus1": 74.09,
+      "band_plus2": 91.35,
+      "band_minus1": 48.73,
+      "band_minus2": 39.53
     },
     {
       "date": "1983-12-31",
       "ratio_pct": 56.75,
-      "trend_pct": 60.56,
-      "band_plus1": 74.7,
-      "band_plus2": 92.13,
-      "band_minus1": 49.1,
-      "band_minus2": 39.81
+      "trend_pct": 60.51,
+      "band_plus1": 74.6,
+      "band_plus2": 91.98,
+      "band_minus1": 49.07,
+      "band_minus2": 39.8
     },
     {
       "date": "1984-03-31",
       "ratio_pct": 57.0,
-      "trend_pct": 60.98,
-      "band_plus1": 75.21,
-      "band_plus2": 92.76,
-      "band_minus1": 49.44,
+      "trend_pct": 60.92,
+      "band_plus1": 75.12,
+      "band_plus2": 92.62,
+      "band_minus1": 49.41,
       "band_minus2": 40.08
     },
     {
       "date": "1984-06-30",
       "ratio_pct": 59.0,
-      "trend_pct": 61.4,
-      "band_plus1": 75.73,
-      "band_plus2": 93.4,
-      "band_minus1": 49.78,
-      "band_minus2": 40.36
+      "trend_pct": 61.35,
+      "band_plus1": 75.64,
+      "band_plus2": 93.26,
+      "band_minus1": 49.76,
+      "band_minus2": 40.35
     },
     {
       "date": "1984-09-30",
       "ratio_pct": 61.0,
-      "trend_pct": 61.82,
-      "band_plus1": 76.25,
-      "band_plus2": 94.05,
-      "band_minus1": 50.12,
-      "band_minus2": 40.64
+      "trend_pct": 61.77,
+      "band_plus1": 76.16,
+      "band_plus2": 93.91,
+      "band_minus1": 50.1,
+      "band_minus2": 40.63
     },
     {
       "date": "1984-12-31",
       "ratio_pct": 63.0,
-      "trend_pct": 62.25,
-      "band_plus1": 76.78,
-      "band_plus2": 94.7,
-      "band_minus1": 50.47,
+      "trend_pct": 62.2,
+      "band_plus1": 76.69,
+      "band_plus2": 94.56,
+      "band_minus1": 50.45,
       "band_minus2": 40.92
     },
     {
       "date": "1985-03-31",
       "ratio_pct": 65.0,
-      "trend_pct": 62.68,
-      "band_plus1": 77.3,
-      "band_plus2": 95.35,
-      "band_minus1": 50.81,
+      "trend_pct": 62.63,
+      "band_plus1": 77.22,
+      "band_plus2": 95.21,
+      "band_minus1": 50.8,
       "band_minus2": 41.2
     },
     {
       "date": "1985-06-30",
       "ratio_pct": 69.0,
-      "trend_pct": 63.11,
-      "band_plus1": 77.84,
-      "band_plus2": 96.0,
-      "band_minus1": 51.16,
+      "trend_pct": 63.07,
+      "band_plus1": 77.76,
+      "band_plus2": 95.87,
+      "band_minus1": 51.15,
       "band_minus2": 41.48
     },
     {
       "date": "1985-09-30",
       "ratio_pct": 73.0,
-      "trend_pct": 63.54,
-      "band_plus1": 78.37,
-      "band_plus2": 96.67,
-      "band_minus1": 51.52,
+      "trend_pct": 63.5,
+      "band_plus1": 78.3,
+      "band_plus2": 96.54,
+      "band_minus1": 51.5,
       "band_minus2": 41.77
     },
     {
       "date": "1985-12-31",
       "ratio_pct": 77.0,
-      "trend_pct": 63.98,
-      "band_plus1": 78.91,
-      "band_plus2": 97.33,
-      "band_minus1": 51.87,
+      "trend_pct": 63.94,
+      "band_plus1": 78.84,
+      "band_plus2": 97.21,
+      "band_minus1": 51.86,
       "band_minus2": 42.06
     },
     {
       "date": "1986-03-31",
       "ratio_pct": 81.0,
-      "trend_pct": 64.42,
-      "band_plus1": 79.46,
-      "band_plus2": 98.0,
-      "band_minus1": 52.23,
+      "trend_pct": 64.39,
+      "band_plus1": 79.39,
+      "band_plus2": 97.88,
+      "band_minus1": 52.22,
       "band_minus2": 42.35
     },
     {
       "date": "1986-06-30",
       "ratio_pct": 79.75,
-      "trend_pct": 64.86,
-      "band_plus1": 80.0,
-      "band_plus2": 98.68,
-      "band_minus1": 52.59,
-      "band_minus2": 42.64
+      "trend_pct": 64.83,
+      "band_plus1": 79.94,
+      "band_plus2": 98.56,
+      "band_minus1": 52.58,
+      "band_minus2": 42.65
     },
     {
       "date": "1986-09-30",
       "ratio_pct": 78.5,
-      "trend_pct": 65.31,
-      "band_plus1": 80.56,
-      "band_plus2": 99.36,
+      "trend_pct": 65.28,
+      "band_plus1": 80.49,
+      "band_plus2": 99.24,
       "band_minus1": 52.95,
-      "band_minus2": 42.93
+      "band_minus2": 42.94
     },
     {
       "date": "1986-12-31",
       "ratio_pct": 77.25,
-      "trend_pct": 65.76,
-      "band_plus1": 81.11,
-      "band_plus2": 100.04,
-      "band_minus1": 53.32,
-      "band_minus2": 43.23
+      "trend_pct": 65.73,
+      "band_plus1": 81.05,
+      "band_plus2": 99.93,
+      "band_minus1": 53.31,
+      "band_minus2": 43.24
     },
     {
       "date": "1987-03-31",
       "ratio_pct": 76.0,
-      "trend_pct": 66.21,
-      "band_plus1": 81.67,
-      "band_plus2": 100.73,
+      "trend_pct": 66.19,
+      "band_plus1": 81.61,
+      "band_plus2": 100.62,
       "band_minus1": 53.68,
-      "band_minus2": 43.52
+      "band_minus2": 43.54
     },
     {
       "date": "1987-06-30",
       "ratio_pct": 73.25,
-      "trend_pct": 66.67,
-      "band_plus1": 82.23,
-      "band_plus2": 101.43,
+      "trend_pct": 66.65,
+      "band_plus1": 82.17,
+      "band_plus2": 101.32,
       "band_minus1": 54.05,
-      "band_minus2": 43.82
+      "band_minus2": 43.84
     },
     {
       "date": "1987-09-30",
       "ratio_pct": 70.5,
-      "trend_pct": 67.13,
-      "band_plus1": 82.8,
-      "band_plus2": 102.12,
+      "trend_pct": 67.11,
+      "band_plus1": 82.74,
+      "band_plus2": 102.02,
       "band_minus1": 54.43,
-      "band_minus2": 44.13
+      "band_minus2": 44.14
     },
     {
       "date": "1987-12-31",
       "ratio_pct": 67.75,
-      "trend_pct": 67.59,
-      "band_plus1": 83.37,
-      "band_plus2": 102.83,
-      "band_minus1": 54.8,
-      "band_minus2": 44.43
+      "trend_pct": 67.57,
+      "band_plus1": 83.32,
+      "band_plus2": 102.73,
+      "band_minus1": 54.81,
+      "band_minus2": 44.45
     },
     {
       "date": "1988-03-31",
       "ratio_pct": 65.0,
-      "trend_pct": 68.06,
-      "band_plus1": 83.94,
-      "band_plus2": 103.54,
-      "band_minus1": 55.18,
-      "band_minus2": 44.74
+      "trend_pct": 68.04,
+      "band_plus1": 83.9,
+      "band_plus2": 103.44,
+      "band_minus1": 55.19,
+      "band_minus2": 44.76
     },
     {
       "date": "1988-06-30",
       "ratio_pct": 67.0,
-      "trend_pct": 68.53,
-      "band_plus1": 84.52,
-      "band_plus2": 104.25,
-      "band_minus1": 55.56,
-      "band_minus2": 45.04
+      "trend_pct": 68.51,
+      "band_plus1": 84.48,
+      "band_plus2": 104.16,
+      "band_minus1": 55.57,
+      "band_minus2": 45.07
     },
     {
       "date": "1988-09-30",
       "ratio_pct": 69.0,
-      "trend_pct": 69.0,
-      "band_plus1": 85.1,
-      "band_plus2": 104.97,
-      "band_minus1": 55.94,
-      "band_minus2": 45.36
+      "trend_pct": 68.99,
+      "band_plus1": 85.06,
+      "band_plus2": 104.88,
+      "band_minus1": 55.95,
+      "band_minus2": 45.38
     },
     {
       "date": "1988-12-31",
       "ratio_pct": 71.0,
       "trend_pct": 69.47,
-      "band_plus1": 85.69,
-      "band_plus2": 105.69,
-      "band_minus1": 56.33,
-      "band_minus2": 45.67
+      "band_plus1": 85.65,
+      "band_plus2": 105.61,
+      "band_minus1": 56.34,
+      "band_minus2": 45.7
     },
     {
       "date": "1989-03-31",
       "ratio_pct": 73.0,
       "trend_pct": 69.95,
-      "band_plus1": 86.28,
-      "band_plus2": 106.42,
-      "band_minus1": 56.72,
-      "band_minus2": 45.98
+      "band_plus1": 86.25,
+      "band_plus2": 106.34,
+      "band_minus1": 56.73,
+      "band_minus2": 46.01
     },
     {
       "date": "1989-06-30",
       "ratio_pct": 69.0,
-      "trend_pct": 70.44,
-      "band_plus1": 86.88,
-      "band_plus2": 107.15,
-      "band_minus1": 57.11,
-      "band_minus2": 46.3
+      "trend_pct": 70.43,
+      "band_plus1": 86.84,
+      "band_plus2": 107.07,
+      "band_minus1": 57.13,
+      "band_minus2": 46.33
     },
     {
       "date": "1989-09-30",
       "ratio_pct": 65.0,
       "trend_pct": 70.92,
-      "band_plus1": 87.47,
-      "band_plus2": 107.89,
-      "band_minus1": 57.5,
-      "band_minus2": 46.62
+      "band_plus1": 87.44,
+      "band_plus2": 107.82,
+      "band_minus1": 57.52,
+      "band_minus2": 46.65
     },
     {
       "date": "1989-12-31",
       "ratio_pct": 61.0,
       "trend_pct": 71.41,
-      "band_plus1": 88.08,
-      "band_plus2": 108.64,
-      "band_minus1": 57.9,
-      "band_minus2": 46.94
+      "band_plus1": 88.05,
+      "band_plus2": 108.56,
+      "band_minus1": 57.92,
+      "band_minus2": 46.98
     },
     {
       "date": "1990-03-31",
       "ratio_pct": 57.0,
-      "trend_pct": 71.9,
-      "band_plus1": 88.68,
-      "band_plus2": 109.38,
-      "band_minus1": 58.29,
-      "band_minus2": 47.26
+      "trend_pct": 71.91,
+      "band_plus1": 88.66,
+      "band_plus2": 109.32,
+      "band_minus1": 58.32,
+      "band_minus2": 47.3
     },
     {
       "date": "1990-06-30",
       "ratio_pct": 60.5,
-      "trend_pct": 72.4,
-      "band_plus1": 89.29,
-      "band_plus2": 110.14,
-      "band_minus1": 58.7,
-      "band_minus2": 47.59
+      "trend_pct": 72.41,
+      "band_plus1": 89.28,
+      "band_plus2": 110.07,
+      "band_minus1": 58.73,
+      "band_minus2": 47.63
     },
     {
       "date": "1990-09-30",
       "ratio_pct": 64.0,
-      "trend_pct": 72.9,
-      "band_plus1": 89.91,
-      "band_plus2": 110.9,
-      "band_minus1": 59.1,
-      "band_minus2": 47.92
+      "trend_pct": 72.91,
+      "band_plus1": 89.89,
+      "band_plus2": 110.84,
+      "band_minus1": 59.13,
+      "band_minus2": 47.96
     },
     {
       "date": "1990-12-31",
       "ratio_pct": 67.5,
-      "trend_pct": 73.4,
-      "band_plus1": 90.53,
-      "band_plus2": 111.66,
-      "band_minus1": 59.51,
-      "band_minus2": 48.25
+      "trend_pct": 73.41,
+      "band_plus1": 90.52,
+      "band_plus2": 111.61,
+      "band_minus1": 59.54,
+      "band_minus2": 48.29
     },
     {
       "date": "1991-03-31",
       "ratio_pct": 71.0,
-      "trend_pct": 73.9,
-      "band_plus1": 91.15,
-      "band_plus2": 112.43,
-      "band_minus1": 59.92,
-      "band_minus2": 48.58
+      "trend_pct": 73.92,
+      "band_plus1": 91.14,
+      "band_plus2": 112.38,
+      "band_minus1": 59.96,
+      "band_minus2": 48.63
     },
     {
       "date": "1991-06-30",
       "ratio_pct": 72.75,
-      "trend_pct": 74.41,
+      "trend_pct": 74.44,
       "band_plus1": 91.78,
-      "band_plus2": 113.2,
-      "band_minus1": 60.33,
-      "band_minus2": 48.91
+      "band_plus2": 113.16,
+      "band_minus1": 60.37,
+      "band_minus2": 48.96
     },
     {
       "date": "1991-09-30",
       "ratio_pct": 74.5,
-      "trend_pct": 74.93,
+      "trend_pct": 74.95,
       "band_plus1": 92.41,
-      "band_plus2": 113.98,
-      "band_minus1": 60.75,
-      "band_minus2": 49.25
+      "band_plus2": 113.94,
+      "band_minus1": 60.79,
+      "band_minus2": 49.3
     },
     {
       "date": "1991-12-31",
       "ratio_pct": 76.25,
-      "trend_pct": 75.44,
+      "trend_pct": 75.47,
       "band_plus1": 93.05,
-      "band_plus2": 114.77,
-      "band_minus1": 61.16,
-      "band_minus2": 49.59
+      "band_plus2": 114.73,
+      "band_minus1": 61.21,
+      "band_minus2": 49.64
     },
     {
       "date": "1992-03-31",
       "ratio_pct": 78.0,
-      "trend_pct": 75.96,
-      "band_plus1": 93.69,
-      "band_plus2": 115.56,
-      "band_minus1": 61.59,
-      "band_minus2": 49.93
+      "trend_pct": 75.99,
+      "band_plus1": 93.7,
+      "band_plus2": 115.53,
+      "band_minus1": 61.63,
+      "band_minus2": 49.99
     },
     {
       "date": "1992-06-30",
       "ratio_pct": 80.0,
-      "trend_pct": 76.48,
-      "band_plus1": 94.34,
-      "band_plus2": 116.36,
-      "band_minus1": 62.01,
-      "band_minus2": 50.28
+      "trend_pct": 76.52,
+      "band_plus1": 94.35,
+      "band_plus2": 116.33,
+      "band_minus1": 62.06,
+      "band_minus2": 50.34
     },
     {
       "date": "1992-09-30",
       "ratio_pct": 82.0,
-      "trend_pct": 77.01,
-      "band_plus1": 94.99,
-      "band_plus2": 117.16,
-      "band_minus1": 62.44,
-      "band_minus2": 50.62
+      "trend_pct": 77.05,
+      "band_plus1": 95.0,
+      "band_plus2": 117.13,
+      "band_minus1": 62.49,
+      "band_minus2": 50.68
     },
     {
       "date": "1992-12-31",
       "ratio_pct": 84.0,
-      "trend_pct": 77.54,
-      "band_plus1": 95.64,
-      "band_plus2": 117.97,
-      "band_minus1": 62.87,
-      "band_minus2": 50.97
+      "trend_pct": 77.58,
+      "band_plus1": 95.66,
+      "band_plus2": 117.95,
+      "band_minus1": 62.92,
+      "band_minus2": 51.04
     },
     {
       "date": "1993-03-31",
       "ratio_pct": 86.0,
-      "trend_pct": 78.08,
-      "band_plus1": 96.3,
-      "band_plus2": 118.78,
-      "band_minus1": 63.3,
-      "band_minus2": 51.32
+      "trend_pct": 78.12,
+      "band_plus1": 96.32,
+      "band_plus2": 118.76,
+      "band_minus1": 63.36,
+      "band_minus2": 51.39
     },
     {
       "date": "1993-06-30",
       "ratio_pct": 86.0,
-      "trend_pct": 78.61,
-      "band_plus1": 96.96,
-      "band_plus2": 119.6,
-      "band_minus1": 63.74,
-      "band_minus2": 51.68
+      "trend_pct": 78.66,
+      "band_plus1": 96.99,
+      "band_plus2": 119.59,
+      "band_minus1": 63.8,
+      "band_minus2": 51.75
     },
     {
       "date": "1993-09-30",
       "ratio_pct": 86.0,
-      "trend_pct": 79.16,
-      "band_plus1": 97.63,
-      "band_plus2": 120.42,
-      "band_minus1": 64.18,
-      "band_minus2": 52.03
+      "trend_pct": 79.21,
+      "band_plus1": 97.66,
+      "band_plus2": 120.41,
+      "band_minus1": 64.24,
+      "band_minus2": 52.1
     },
     {
       "date": "1993-12-31",
       "ratio_pct": 86.0,
-      "trend_pct": 79.7,
-      "band_plus1": 98.3,
+      "trend_pct": 79.76,
+      "band_plus1": 98.34,
       "band_plus2": 121.25,
-      "band_minus1": 64.62,
-      "band_minus2": 52.39
+      "band_minus1": 64.69,
+      "band_minus2": 52.46
     },
     {
       "date": "1994-03-31",
       "ratio_pct": 86.0,
-      "trend_pct": 80.25,
-      "band_plus1": 98.98,
+      "trend_pct": 80.31,
+      "band_plus1": 99.02,
       "band_plus2": 122.09,
-      "band_minus1": 65.06,
-      "band_minus2": 52.75
+      "band_minus1": 65.14,
+      "band_minus2": 52.83
     },
     {
       "date": "1994-06-30",
       "ratio_pct": 87.75,
-      "trend_pct": 80.8,
-      "band_plus1": 99.66,
-      "band_plus2": 122.93,
-      "band_minus1": 65.51,
-      "band_minus2": 53.11
+      "trend_pct": 80.87,
+      "band_plus1": 99.71,
+      "band_plus2": 122.94,
+      "band_minus1": 65.59,
+      "band_minus2": 53.19
     },
     {
       "date": "1994-09-30",
       "ratio_pct": 89.5,
-      "trend_pct": 81.36,
-      "band_plus1": 100.35,
-      "band_plus2": 123.77,
-      "band_minus1": 65.96,
-      "band_minus2": 53.48
+      "trend_pct": 81.43,
+      "band_plus1": 100.4,
+      "band_plus2": 123.79,
+      "band_minus1": 66.04,
+      "band_minus2": 53.56
     },
     {
       "date": "1994-12-31",
       "ratio_pct": 91.25,
-      "trend_pct": 81.92,
-      "band_plus1": 101.04,
-      "band_plus2": 124.63,
-      "band_minus1": 66.42,
-      "band_minus2": 53.85
+      "trend_pct": 81.99,
+      "band_plus1": 101.09,
+      "band_plus2": 124.65,
+      "band_minus1": 66.5,
+      "band_minus2": 53.93
     },
     {
       "date": "1995-03-31",
       "ratio_pct": 93.0,
-      "trend_pct": 82.49,
-      "band_plus1": 101.74,
-      "band_plus2": 125.49,
-      "band_minus1": 66.88,
-      "band_minus2": 54.22
+      "trend_pct": 82.56,
+      "band_plus1": 101.79,
+      "band_plus2": 125.51,
+      "band_minus1": 66.96,
+      "band_minus2": 54.31
     },
     {
       "date": "1995-06-30",
       "ratio_pct": 97.5,
-      "trend_pct": 83.05,
-      "band_plus1": 102.44,
-      "band_plus2": 126.35,
-      "band_minus1": 67.34,
-      "band_minus2": 54.59
+      "trend_pct": 83.13,
+      "band_plus1": 102.5,
+      "band_plus2": 126.38,
+      "band_minus1": 67.42,
+      "band_minus2": 54.68
     },
     {
       "date": "1995-09-30",
       "ratio_pct": 102.0,
-      "trend_pct": 83.63,
-      "band_plus1": 103.15,
-      "band_plus2": 127.22,
-      "band_minus1": 67.8,
-      "band_minus2": 54.97
+      "trend_pct": 83.71,
+      "band_plus1": 103.21,
+      "band_plus2": 127.25,
+      "band_minus1": 67.89,
+      "band_minus2": 55.06
     },
     {
       "date": "1995-12-31",
       "ratio_pct": 106.5,
-      "trend_pct": 84.2,
-      "band_plus1": 103.86,
-      "band_plus2": 128.1,
-      "band_minus1": 68.27,
-      "band_minus2": 55.35
+      "trend_pct": 84.29,
+      "band_plus1": 103.93,
+      "band_plus2": 128.14,
+      "band_minus1": 68.36,
+      "band_minus2": 55.45
     },
     {
       "date": "1996-03-31",
       "ratio_pct": 111.0,
-      "trend_pct": 84.78,
-      "band_plus1": 104.57,
-      "band_plus2": 128.98,
-      "band_minus1": 68.74,
-      "band_minus2": 55.73
+      "trend_pct": 84.87,
+      "band_plus1": 104.65,
+      "band_plus2": 129.02,
+      "band_minus1": 68.84,
+      "band_minus2": 55.83
     },
     {
       "date": "1996-06-30",
       "ratio_pct": 116.5,
-      "trend_pct": 85.37,
-      "band_plus1": 105.29,
-      "band_plus2": 129.87,
-      "band_minus1": 69.21,
-      "band_minus2": 56.11
+      "trend_pct": 85.46,
+      "band_plus1": 105.37,
+      "band_plus2": 129.92,
+      "band_minus1": 69.31,
+      "band_minus2": 56.22
     },
     {
       "date": "1996-09-30",
       "ratio_pct": 122.0,
-      "trend_pct": 85.95,
-      "band_plus1": 106.02,
-      "band_plus2": 130.76,
-      "band_minus1": 69.69,
-      "band_minus2": 56.5
+      "trend_pct": 86.05,
+      "band_plus1": 106.1,
+      "band_plus2": 130.82,
+      "band_minus1": 69.79,
+      "band_minus2": 56.61
     },
     {
       "date": "1996-12-31",
       "ratio_pct": 127.5,
-      "trend_pct": 86.55,
-      "band_plus1": 106.75,
-      "band_plus2": 131.66,
-      "band_minus1": 70.17,
-      "band_minus2": 56.89
+      "trend_pct": 86.65,
+      "band_plus1": 106.84,
+      "band_plus2": 131.73,
+      "band_minus1": 70.28,
+      "band_minus2": 57.0
     },
     {
       "date": "1997-03-31",
       "ratio_pct": 133.0,
-      "trend_pct": 87.14,
-      "band_plus1": 107.48,
-      "band_plus2": 132.57,
-      "band_minus1": 70.65,
-      "band_minus2": 57.28
+      "trend_pct": 87.25,
+      "band_plus1": 107.58,
+      "band_plus2": 132.64,
+      "band_minus1": 70.76,
+      "band_minus2": 57.39
     },
     {
       "date": "1997-06-30",
       "ratio_pct": 137.25,
-      "trend_pct": 87.74,
-      "band_plus1": 108.22,
-      "band_plus2": 133.48,
-      "band_minus1": 71.14,
-      "band_minus2": 57.68
+      "trend_pct": 87.85,
+      "band_plus1": 108.32,
+      "band_plus2": 133.56,
+      "band_minus1": 71.25,
+      "band_minus2": 57.79
     },
     {
       "date": "1997-09-30",
       "ratio_pct": 141.5,
-      "trend_pct": 88.35,
-      "band_plus1": 108.97,
-      "band_plus2": 134.4,
-      "band_minus1": 71.63,
-      "band_minus2": 58.07
+      "trend_pct": 88.46,
+      "band_plus1": 109.07,
+      "band_plus2": 134.48,
+      "band_minus1": 71.75,
+      "band_minus2": 58.19
     },
     {
       "date": "1997-12-31",
       "ratio_pct": 145.75,
-      "trend_pct": 88.96,
-      "band_plus1": 109.72,
-      "band_plus2": 135.33,
-      "band_minus1": 72.12,
-      "band_minus2": 58.47
+      "trend_pct": 89.08,
+      "band_plus1": 109.83,
+      "band_plus2": 135.42,
+      "band_minus1": 72.25,
+      "band_minus2": 58.59
     },
     {
       "date": "1998-03-31",
       "ratio_pct": 150.0,
-      "trend_pct": 89.57,
-      "band_plus1": 110.48,
-      "band_plus2": 136.26,
-      "band_minus1": 72.62,
-      "band_minus2": 58.88
+      "trend_pct": 89.69,
+      "band_plus1": 110.59,
+      "band_plus2": 136.35,
+      "band_minus1": 72.75,
+      "band_minus2": 59.0
     },
     {
       "date": "1998-06-30",
       "ratio_pct": 150.75,
-      "trend_pct": 90.19,
-      "band_plus1": 111.24,
-      "band_plus2": 137.2,
-      "band_minus1": 73.12,
-      "band_minus2": 59.28
+      "trend_pct": 90.32,
+      "band_plus1": 111.36,
+      "band_plus2": 137.3,
+      "band_minus1": 73.25,
+      "band_minus2": 59.41
     },
     {
       "date": "1998-09-30",
       "ratio_pct": 151.5,
-      "trend_pct": 90.81,
-      "band_plus1": 112.0,
-      "band_plus2": 138.15,
-      "band_minus1": 73.62,
-      "band_minus2": 59.69
+      "trend_pct": 90.94,
+      "band_plus1": 112.13,
+      "band_plus2": 138.25,
+      "band_minus1": 73.76,
+      "band_minus2": 59.82
     },
     {
       "date": "1998-12-31",
       "ratio_pct": 152.25,
-      "trend_pct": 91.43,
-      "band_plus1": 112.78,
-      "band_plus2": 139.1,
-      "band_minus1": 74.13,
-      "band_minus2": 60.1
+      "trend_pct": 91.57,
+      "band_plus1": 112.91,
+      "band_plus2": 139.21,
+      "band_minus1": 74.27,
+      "band_minus2": 60.24
     },
     {
       "date": "1999-03-31",
       "ratio_pct": 153.0,
-      "trend_pct": 92.06,
-      "band_plus1": 113.55,
-      "band_plus2": 140.06,
-      "band_minus1": 74.64,
-      "band_minus2": 60.52
+      "trend_pct": 92.21,
+      "band_plus1": 113.69,
+      "band_plus2": 140.17,
+      "band_minus1": 74.78,
+      "band_minus2": 60.65
     },
     {
       "date": "1999-06-30",
       "ratio_pct": 147.5,
-      "trend_pct": 92.7,
-      "band_plus1": 114.34,
-      "band_plus2": 141.02,
-      "band_minus1": 75.16,
-      "band_minus2": 60.93
+      "trend_pct": 92.85,
+      "band_plus1": 114.48,
+      "band_plus2": 141.15,
+      "band_minus1": 75.3,
+      "band_minus2": 61.07
     },
     {
       "date": "1999-09-30",
       "ratio_pct": 142.0,
-      "trend_pct": 93.34,
-      "band_plus1": 115.12,
-      "band_plus2": 141.99,
-      "band_minus1": 75.67,
-      "band_minus2": 61.35
+      "trend_pct": 93.49,
+      "band_plus1": 115.27,
+      "band_plus2": 142.12,
+      "band_minus1": 75.82,
+      "band_minus2": 61.5
     },
     {
       "date": "1999-12-31",
       "ratio_pct": 136.5,
-      "trend_pct": 93.98,
-      "band_plus1": 115.92,
-      "band_plus2": 142.97,
-      "band_minus1": 76.2,
-      "band_minus2": 61.78
+      "trend_pct": 94.14,
+      "band_plus1": 116.07,
+      "band_plus2": 143.11,
+      "band_minus1": 76.35,
+      "band_minus2": 61.92
     },
     {
       "date": "2000-03-31",
       "ratio_pct": 131.0,
-      "trend_pct": 94.63,
-      "band_plus1": 116.71,
-      "band_plus2": 143.96,
-      "band_minus1": 76.72,
-      "band_minus2": 62.2
+      "trend_pct": 94.79,
+      "band_plus1": 116.87,
+      "band_plus2": 144.1,
+      "band_minus1": 76.88,
+      "band_minus2": 62.35
     },
     {
       "date": "2000-06-30",
       "ratio_pct": 127.25,
-      "trend_pct": 95.28,
-      "band_plus1": 117.52,
-      "band_plus2": 144.95,
-      "band_minus1": 77.25,
-      "band_minus2": 62.63
+      "trend_pct": 95.45,
+      "band_plus1": 117.68,
+      "band_plus2": 145.1,
+      "band_minus1": 77.41,
+      "band_minus2": 62.78
     },
     {
       "date": "2000-09-30",
       "ratio_pct": 123.5,
-      "trend_pct": 95.94,
-      "band_plus1": 118.33,
-      "band_plus2": 145.95,
-      "band_minus1": 77.78,
-      "band_minus2": 63.06
+      "trend_pct": 96.11,
+      "band_plus1": 118.5,
+      "band_plus2": 146.1,
+      "band_minus1": 77.95,
+      "band_minus2": 63.22
     },
     {
       "date": "2000-12-31",
       "ratio_pct": 119.75,
-      "trend_pct": 96.6,
-      "band_plus1": 119.14,
-      "band_plus2": 146.95,
-      "band_minus1": 78.32,
-      "band_minus2": 63.5
+      "trend_pct": 96.77,
+      "band_plus1": 119.32,
+      "band_plus2": 147.12,
+      "band_minus1": 78.49,
+      "band_minus2": 63.66
     },
     {
       "date": "2001-03-31",
       "ratio_pct": 116.0,
-      "trend_pct": 97.26,
-      "band_plus1": 119.96,
-      "band_plus2": 147.97,
-      "band_minus1": 78.86,
-      "band_minus2": 63.93
+      "trend_pct": 97.44,
+      "band_plus1": 120.15,
+      "band_plus2": 148.14,
+      "band_minus1": 79.03,
+      "band_minus2": 64.1
     },
     {
       "date": "2001-06-30",
       "ratio_pct": 107.5,
-      "trend_pct": 97.93,
-      "band_plus1": 120.79,
-      "band_plus2": 148.99,
-      "band_minus1": 79.4,
-      "band_minus2": 64.37
+      "trend_pct": 98.12,
+      "band_plus1": 120.98,
+      "band_plus2": 149.16,
+      "band_minus1": 79.58,
+      "band_minus2": 64.54
     },
     {
       "date": "2001-09-30",
       "ratio_pct": 99.0,
-      "trend_pct": 98.61,
-      "band_plus1": 121.62,
-      "band_plus2": 150.01,
-      "band_minus1": 79.95,
-      "band_minus2": 64.82
+      "trend_pct": 98.8,
+      "band_plus1": 121.82,
+      "band_plus2": 150.2,
+      "band_minus1": 80.13,
+      "band_minus2": 64.99
     },
     {
       "date": "2001-12-31",
       "ratio_pct": 90.5,
-      "trend_pct": 99.29,
-      "band_plus1": 122.46,
-      "band_plus2": 151.05,
-      "band_minus1": 80.5,
-      "band_minus2": 65.26
+      "trend_pct": 99.48,
+      "band_plus1": 122.66,
+      "band_plus2": 151.24,
+      "band_minus1": 80.69,
+      "band_minus2": 65.44
     },
     {
       "date": "2002-03-31",
       "ratio_pct": 82.0,
-      "trend_pct": 99.97,
-      "band_plus1": 123.31,
-      "band_plus2": 152.09,
-      "band_minus1": 81.05,
-      "band_minus2": 65.71
+      "trend_pct": 100.17,
+      "band_plus1": 123.51,
+      "band_plus2": 152.29,
+      "band_minus1": 81.25,
+      "band_minus2": 65.89
     },
     {
       "date": "2002-06-30",
       "ratio_pct": 86.5,
-      "trend_pct": 100.66,
-      "band_plus1": 124.16,
-      "band_plus2": 153.13,
-      "band_minus1": 81.61,
-      "band_minus2": 66.17
+      "trend_pct": 100.87,
+      "band_plus1": 124.37,
+      "band_plus2": 153.34,
+      "band_minus1": 81.81,
+      "band_minus2": 66.35
     },
     {
       "date": "2002-09-30",
       "ratio_pct": 91.0,
-      "trend_pct": 101.35,
-      "band_plus1": 125.01,
-      "band_plus2": 154.19,
-      "band_minus1": 82.17,
-      "band_minus2": 66.62
+      "trend_pct": 101.57,
+      "band_plus1": 125.23,
+      "band_plus2": 154.4,
+      "band_minus1": 82.38,
+      "band_minus2": 66.81
     },
     {
       "date": "2002-12-31",
       "ratio_pct": 95.5,
-      "trend_pct": 102.05,
-      "band_plus1": 125.87,
-      "band_plus2": 155.25,
-      "band_minus1": 82.74,
-      "band_minus2": 67.08
+      "trend_pct": 102.27,
+      "band_plus1": 126.1,
+      "band_plus2": 155.48,
+      "band_minus1": 82.95,
+      "band_minus2": 67.27
     },
     {
       "date": "2003-03-31",
       "ratio_pct": 100.0,
-      "trend_pct": 102.75,
-      "band_plus1": 126.74,
-      "band_plus2": 156.32,
-      "band_minus1": 83.31,
-      "band_minus2": 67.54
+      "trend_pct": 102.98,
+      "band_plus1": 126.97,
+      "band_plus2": 156.55,
+      "band_minus1": 83.52,
+      "band_minus2": 67.74
     },
     {
       "date": "2003-06-30",
       "ratio_pct": 102.25,
-      "trend_pct": 103.46,
-      "band_plus1": 127.61,
-      "band_plus2": 157.4,
-      "band_minus1": 83.88,
-      "band_minus2": 68.01
+      "trend_pct": 103.69,
+      "band_plus1": 127.85,
+      "band_plus2": 157.64,
+      "band_minus1": 84.1,
+      "band_minus2": 68.21
     },
     {
       "date": "2003-09-30",
       "ratio_pct": 104.5,
-      "trend_pct": 104.18,
-      "band_plus1": 128.49,
-      "band_plus2": 158.48,
-      "band_minus1": 84.46,
-      "band_minus2": 68.48
+      "trend_pct": 104.41,
+      "band_plus1": 128.74,
+      "band_plus2": 158.73,
+      "band_minus1": 84.68,
+      "band_minus2": 68.68
     },
     {
       "date": "2003-12-31",
       "ratio_pct": 106.75,
-      "trend_pct": 104.89,
-      "band_plus1": 129.38,
-      "band_plus2": 159.57,
-      "band_minus1": 85.04,
-      "band_minus2": 68.95
+      "trend_pct": 105.14,
+      "band_plus1": 129.63,
+      "band_plus2": 159.83,
+      "band_minus1": 85.27,
+      "band_minus2": 69.16
     },
     {
       "date": "2004-03-31",
       "ratio_pct": 109.0,
-      "trend_pct": 105.62,
-      "band_plus1": 130.27,
-      "band_plus2": 160.67,
-      "band_minus1": 85.63,
-      "band_minus2": 69.42
+      "trend_pct": 105.87,
+      "band_plus1": 130.53,
+      "band_plus2": 160.94,
+      "band_minus1": 85.86,
+      "band_minus2": 69.64
     },
     {
       "date": "2004-06-30",
       "ratio_pct": 110.5,
-      "trend_pct": 106.34,
-      "band_plus1": 131.17,
-      "band_plus2": 161.78,
-      "band_minus1": 86.22,
-      "band_minus2": 69.9
+      "trend_pct": 106.6,
+      "band_plus1": 131.43,
+      "band_plus2": 162.05,
+      "band_minus1": 86.46,
+      "band_minus2": 70.12
     },
     {
       "date": "2004-09-30",
       "ratio_pct": 112.0,
-      "trend_pct": 107.08,
-      "band_plus1": 132.07,
-      "band_plus2": 162.9,
-      "band_minus1": 86.81,
-      "band_minus2": 70.38
+      "trend_pct": 107.34,
+      "band_plus1": 132.34,
+      "band_plus2": 163.18,
+      "band_minus1": 87.06,
+      "band_minus2": 70.61
     },
     {
       "date": "2004-12-31",
       "ratio_pct": 113.5,
-      "trend_pct": 107.81,
-      "band_plus1": 132.98,
-      "band_plus2": 164.02,
-      "band_minus1": 87.41,
-      "band_minus2": 70.87
+      "trend_pct": 108.08,
+      "band_plus1": 133.26,
+      "band_plus2": 164.31,
+      "band_minus1": 87.66,
+      "band_minus2": 71.1
     },
     {
       "date": "2005-03-31",
       "ratio_pct": 115.0,
-      "trend_pct": 108.56,
-      "band_plus1": 133.9,
-      "band_plus2": 165.15,
-      "band_minus1": 88.01,
-      "band_minus2": 71.36
+      "trend_pct": 108.83,
+      "band_plus1": 134.18,
+      "band_plus2": 165.45,
+      "band_minus1": 88.27,
+      "band_minus2": 71.59
     },
     {
       "date": "2005-06-30",
       "ratio_pct": 117.75,
-      "trend_pct": 109.31,
-      "band_plus1": 134.82,
-      "band_plus2": 166.29,
-      "band_minus1": 88.62,
-      "band_minus2": 71.85
+      "trend_pct": 109.58,
+      "band_plus1": 135.11,
+      "band_plus2": 166.59,
+      "band_minus1": 88.88,
+      "band_minus2": 72.09
     },
     {
       "date": "2005-09-30",
       "ratio_pct": 120.5,
-      "trend_pct": 110.06,
-      "band_plus1": 135.75,
-      "band_plus2": 167.43,
-      "band_minus1": 89.23,
-      "band_minus2": 72.34
+      "trend_pct": 110.34,
+      "band_plus1": 136.05,
+      "band_plus2": 167.75,
+      "band_minus1": 89.49,
+      "band_minus2": 72.58
     },
     {
       "date": "2005-12-31",
       "ratio_pct": 123.25,
-      "trend_pct": 110.82,
-      "band_plus1": 136.68,
-      "band_plus2": 168.59,
-      "band_minus1": 89.85,
-      "band_minus2": 72.84
+      "trend_pct": 111.11,
+      "band_plus1": 136.99,
+      "band_plus2": 168.91,
+      "band_minus1": 90.12,
+      "band_minus2": 73.09
     },
     {
       "date": "2006-03-31",
       "ratio_pct": 126.0,
-      "trend_pct": 111.58,
-      "band_plus1": 137.62,
-      "band_plus2": 169.75,
-      "band_minus1": 90.46,
-      "band_minus2": 73.35
+      "trend_pct": 111.88,
+      "band_plus1": 137.94,
+      "band_plus2": 170.08,
+      "band_minus1": 90.74,
+      "band_minus2": 73.59
     },
     {
       "date": "2006-06-30",
       "ratio_pct": 121.25,
-      "trend_pct": 112.35,
-      "band_plus1": 138.57,
-      "band_plus2": 170.92,
-      "band_minus1": 91.09,
-      "band_minus2": 73.85
+      "trend_pct": 112.65,
+      "band_plus1": 138.9,
+      "band_plus2": 171.26,
+      "band_minus1": 91.37,
+      "band_minus2": 74.1
     },
     {
       "date": "2006-09-30",
       "ratio_pct": 116.5,
-      "trend_pct": 113.12,
-      "band_plus1": 139.53,
-      "band_plus2": 172.09,
-      "band_minus1": 91.72,
-      "band_minus2": 74.36
+      "trend_pct": 113.44,
+      "band_plus1": 139.86,
+      "band_plus2": 172.45,
+      "band_minus1": 92.0,
+      "band_minus2": 74.62
     },
     {
       "date": "2006-12-31",
       "ratio_pct": 111.75,
-      "trend_pct": 113.9,
-      "band_plus1": 140.49,
-      "band_plus2": 173.28,
-      "band_minus1": 92.35,
-      "band_minus2": 74.87
+      "trend_pct": 114.22,
+      "band_plus1": 140.83,
+      "band_plus2": 173.64,
+      "band_minus1": 92.64,
+      "band_minus2": 75.14
     },
     {
       "date": "2007-03-31",
       "ratio_pct": 107.0,
-      "trend_pct": 114.69,
-      "band_plus1": 141.46,
-      "band_plus2": 174.47,
-      "band_minus1": 92.98,
-      "band_minus2": 75.39
+      "trend_pct": 115.01,
+      "band_plus1": 141.81,
+      "band_plus2": 174.84,
+      "band_minus1": 93.28,
+      "band_minus2": 75.66
     },
     {
       "date": "2007-06-30",
       "ratio_pct": 95.0,
-      "trend_pct": 115.48,
-      "band_plus1": 142.43,
-      "band_plus2": 175.68,
-      "band_minus1": 93.62,
-      "band_minus2": 75.91
+      "trend_pct": 115.81,
+      "band_plus1": 142.79,
+      "band_plus2": 176.06,
+      "band_minus1": 93.93,
+      "band_minus2": 76.18
     },
     {
       "date": "2007-09-30",
       "ratio_pct": 83.0,
-      "trend_pct": 116.27,
-      "band_plus1": 143.41,
-      "band_plus2": 176.89,
-      "band_minus1": 94.27,
-      "band_minus2": 76.43
+      "trend_pct": 116.61,
+      "band_plus1": 143.78,
+      "band_plus2": 177.28,
+      "band_minus1": 94.58,
+      "band_minus2": 76.71
     },
     {
       "date": "2007-12-31",
       "ratio_pct": 71.0,
-      "trend_pct": 117.07,
-      "band_plus1": 144.4,
-      "band_plus2": 178.11,
-      "band_minus1": 94.92,
-      "band_minus2": 76.96
+      "trend_pct": 117.42,
+      "band_plus1": 144.78,
+      "band_plus2": 178.51,
+      "band_minus1": 95.23,
+      "band_minus2": 77.24
     },
     {
       "date": "2008-03-31",
       "ratio_pct": 59.0,
-      "trend_pct": 117.88,
-      "band_plus1": 145.4,
-      "band_plus2": 179.33,
-      "band_minus1": 95.57,
-      "band_minus2": 77.49
+      "trend_pct": 118.23,
+      "band_plus1": 145.78,
+      "band_plus2": 179.74,
+      "band_minus1": 95.89,
+      "band_minus2": 77.78
     },
     {
       "date": "2008-06-30",
       "ratio_pct": 63.75,
-      "trend_pct": 118.69,
-      "band_plus1": 146.4,
-      "band_plus2": 180.57,
-      "band_minus1": 96.23,
-      "band_minus2": 78.02
+      "trend_pct": 119.05,
+      "band_plus1": 146.79,
+      "band_plus2": 180.99,
+      "band_minus1": 96.56,
+      "band_minus2": 78.31
     },
     {
       "date": "2008-09-30",
       "ratio_pct": 68.5,
-      "trend_pct": 119.51,
-      "band_plus1": 147.41,
-      "band_plus2": 181.81,
-      "band_minus1": 96.89,
-      "band_minus2": 78.56
+      "trend_pct": 119.88,
+      "band_plus1": 147.81,
+      "band_plus2": 182.24,
+      "band_minus1": 97.23,
+      "band_minus2": 78.86
     },
     {
       "date": "2008-12-31",
       "ratio_pct": 73.25,
-      "trend_pct": 120.33,
-      "band_plus1": 148.42,
-      "band_plus2": 183.07,
-      "band_minus1": 97.56,
-      "band_minus2": 79.1
+      "trend_pct": 120.71,
+      "band_plus1": 148.83,
+      "band_plus2": 183.51,
+      "band_minus1": 97.9,
+      "band_minus2": 79.4
     },
     {
       "date": "2009-03-31",
       "ratio_pct": 78.0,
-      "trend_pct": 121.16,
-      "band_plus1": 149.44,
-      "band_plus2": 184.33,
-      "band_minus1": 98.23,
-      "band_minus2": 79.64
+      "trend_pct": 121.55,
+      "band_plus1": 149.86,
+      "band_plus2": 184.78,
+      "band_minus1": 98.58,
+      "band_minus2": 79.95
     },
     {
       "date": "2009-06-30",
       "ratio_pct": 84.75,
-      "trend_pct": 122.0,
-      "band_plus1": 150.47,
-      "band_plus2": 185.6,
-      "band_minus1": 98.91,
-      "band_minus2": 80.19
+      "trend_pct": 122.39,
+      "band_plus1": 150.9,
+      "band_plus2": 186.06,
+      "band_minus1": 99.26,
+      "band_minus2": 80.51
     },
     {
       "date": "2009-09-30",
       "ratio_pct": 91.5,
-      "trend_pct": 122.84,
-      "band_plus1": 151.51,
-      "band_plus2": 186.88,
-      "band_minus1": 99.59,
-      "band_minus2": 80.75
+      "trend_pct": 123.24,
+      "band_plus1": 151.95,
+      "band_plus2": 187.35,
+      "band_minus1": 99.95,
+      "band_minus2": 81.07
     },
     {
       "date": "2009-12-31",
       "ratio_pct": 98.25,
-      "trend_pct": 123.69,
-      "band_plus1": 152.55,
-      "band_plus2": 188.16,
-      "band_minus1": 100.28,
-      "band_minus2": 81.3
+      "trend_pct": 124.09,
+      "band_plus1": 153.0,
+      "band_plus2": 188.65,
+      "band_minus1": 100.64,
+      "band_minus2": 81.63
     },
     {
       "date": "2010-03-31",
       "ratio_pct": 105.0,
-      "trend_pct": 124.54,
-      "band_plus1": 153.61,
-      "band_plus2": 189.46,
-      "band_minus1": 100.97,
-      "band_minus2": 81.86
+      "trend_pct": 124.95,
+      "band_plus1": 154.06,
+      "band_plus2": 189.95,
+      "band_minus1": 101.34,
+      "band_minus2": 82.19
     },
     {
       "date": "2010-06-30",
       "ratio_pct": 103.25,
-      "trend_pct": 125.4,
-      "band_plus1": 154.66,
-      "band_plus2": 190.76,
-      "band_minus1": 101.67,
-      "band_minus2": 82.43
+      "trend_pct": 125.82,
+      "band_plus1": 155.13,
+      "band_plus2": 191.27,
+      "band_minus1": 102.04,
+      "band_minus2": 82.76
     },
     {
       "date": "2010-09-30",
       "ratio_pct": 101.5,
-      "trend_pct": 126.26,
-      "band_plus1": 155.73,
-      "band_plus2": 192.08,
-      "band_minus1": 102.37,
-      "band_minus2": 82.99
+      "trend_pct": 126.69,
+      "band_plus1": 156.2,
+      "band_plus2": 192.6,
+      "band_minus1": 102.75,
+      "band_minus2": 83.34
     },
     {
       "date": "2010-12-31",
       "ratio_pct": 99.75,
-      "trend_pct": 127.13,
-      "band_plus1": 156.8,
-      "band_plus2": 193.4,
-      "band_minus1": 103.07,
-      "band_minus2": 83.57
+      "trend_pct": 127.57,
+      "band_plus1": 157.29,
+      "band_plus2": 193.93,
+      "band_minus1": 103.46,
+      "band_minus2": 83.91
     },
     {
       "date": "2011-03-31",
       "ratio_pct": 98.0,
-      "trend_pct": 128.01,
-      "band_plus1": 157.88,
-      "band_plus2": 194.73,
-      "band_minus1": 103.78,
-      "band_minus2": 84.14
+      "trend_pct": 128.45,
+      "band_plus1": 158.38,
+      "band_plus2": 195.27,
+      "band_minus1": 104.18,
+      "band_minus2": 84.5
     },
     {
       "date": "2011-06-30",
       "ratio_pct": 102.75,
-      "trend_pct": 128.89,
-      "band_plus1": 158.97,
-      "band_plus2": 196.08,
-      "band_minus1": 104.5,
-      "band_minus2": 84.72
+      "trend_pct": 129.34,
+      "band_plus1": 159.47,
+      "band_plus2": 196.63,
+      "band_minus1": 104.9,
+      "band_minus2": 85.08
     },
     {
       "date": "2011-09-30",
       "ratio_pct": 107.5,
-      "trend_pct": 129.78,
-      "band_plus1": 160.07,
-      "band_plus2": 197.43,
-      "band_minus1": 105.22,
-      "band_minus2": 85.31
+      "trend_pct": 130.24,
+      "band_plus1": 160.58,
+      "band_plus2": 197.99,
+      "band_minus1": 105.63,
+      "band_minus2": 85.67
     },
     {
       "date": "2011-12-31",
       "ratio_pct": 112.25,
-      "trend_pct": 130.67,
-      "band_plus1": 161.17,
-      "band_plus2": 198.79,
-      "band_minus1": 105.94,
-      "band_minus2": 85.89
+      "trend_pct": 131.14,
+      "band_plus1": 161.69,
+      "band_plus2": 199.36,
+      "band_minus1": 106.36,
+      "band_minus2": 86.26
     },
     {
       "date": "2012-03-31",
       "ratio_pct": 117.0,
-      "trend_pct": 131.57,
-      "band_plus1": 162.28,
-      "band_plus2": 200.16,
-      "band_minus1": 106.67,
-      "band_minus2": 86.48
+      "trend_pct": 132.05,
+      "band_plus1": 162.81,
+      "band_plus2": 200.74,
+      "band_minus1": 107.1,
+      "band_minus2": 86.86
     },
     {
       "date": "2012-06-30",
       "ratio_pct": 122.0,
-      "trend_pct": 132.48,
-      "band_plus1": 163.4,
-      "band_plus2": 201.54,
-      "band_minus1": 107.41,
-      "band_minus2": 87.08
+      "trend_pct": 132.97,
+      "band_plus1": 163.94,
+      "band_plus2": 202.14,
+      "band_minus1": 107.84,
+      "band_minus2": 87.46
     },
     {
       "date": "2012-09-30",
       "ratio_pct": 127.0,
-      "trend_pct": 133.39,
-      "band_plus1": 164.52,
-      "band_plus2": 202.93,
-      "band_minus1": 108.15,
-      "band_minus2": 87.68
+      "trend_pct": 133.89,
+      "band_plus1": 165.08,
+      "band_plus2": 203.54,
+      "band_minus1": 108.59,
+      "band_minus2": 88.07
     },
     {
       "date": "2012-12-31",
       "ratio_pct": 132.0,
-      "trend_pct": 134.31,
-      "band_plus1": 165.66,
-      "band_plus2": 204.32,
-      "band_minus1": 108.89,
-      "band_minus2": 88.28
+      "trend_pct": 134.81,
+      "band_plus1": 166.22,
+      "band_plus2": 204.95,
+      "band_minus1": 109.34,
+      "band_minus2": 88.68
     },
     {
       "date": "2013-03-31",
       "ratio_pct": 137.0,
-      "trend_pct": 135.23,
-      "band_plus1": 166.8,
-      "band_plus2": 205.73,
-      "band_minus1": 109.64,
-      "band_minus2": 88.89
+      "trend_pct": 135.75,
+      "band_plus1": 167.37,
+      "band_plus2": 206.37,
+      "band_minus1": 110.1,
+      "band_minus2": 89.3
     },
     {
       "date": "2013-06-30",
       "ratio_pct": 139.0,
-      "trend_pct": 136.17,
-      "band_plus1": 167.95,
-      "band_plus2": 207.15,
-      "band_minus1": 110.4,
-      "band_minus2": 89.51
+      "trend_pct": 136.69,
+      "band_plus1": 168.53,
+      "band_plus2": 207.8,
+      "band_minus1": 110.86,
+      "band_minus2": 89.91
     },
     {
       "date": "2013-09-30",
       "ratio_pct": 141.0,
-      "trend_pct": 137.1,
-      "band_plus1": 169.1,
-      "band_plus2": 208.58,
-      "band_minus1": 111.16,
-      "band_minus2": 90.12
+      "trend_pct": 137.64,
+      "band_plus1": 169.7,
+      "band_plus2": 209.24,
+      "band_minus1": 111.63,
+      "band_minus2": 90.54
     },
     {
       "date": "2013-12-31",
       "ratio_pct": 143.0,
-      "trend_pct": 138.05,
-      "band_plus1": 170.27,
-      "band_plus2": 210.01,
-      "band_minus1": 111.92,
-      "band_minus2": 90.74
+      "trend_pct": 138.59,
+      "band_plus1": 170.88,
+      "band_plus2": 210.69,
+      "band_minus1": 112.4,
+      "band_minus2": 91.17
     },
     {
       "date": "2014-03-31",
       "ratio_pct": 145.0,
-      "trend_pct": 139.0,
-      "band_plus1": 171.44,
-      "band_plus2": 211.46,
-      "band_minus1": 112.69,
-      "band_minus2": 91.37
+      "trend_pct": 139.55,
+      "band_plus1": 172.06,
+      "band_plus2": 212.15,
+      "band_minus1": 113.18,
+      "band_minus2": 91.8
     },
     {
       "date": "2014-06-30",
       "ratio_pct": 140.75,
-      "trend_pct": 139.96,
-      "band_plus1": 172.62,
-      "band_plus2": 212.92,
-      "band_minus1": 113.47,
-      "band_minus2": 92.0
+      "trend_pct": 140.52,
+      "band_plus1": 173.26,
+      "band_plus2": 213.62,
+      "band_minus1": 113.97,
+      "band_minus2": 92.43
     },
     {
       "date": "2014-09-30",
       "ratio_pct": 136.5,
-      "trend_pct": 140.92,
-      "band_plus1": 173.81,
-      "band_plus2": 214.38,
-      "band_minus1": 114.25,
-      "band_minus2": 92.63
+      "trend_pct": 141.49,
+      "band_plus1": 174.46,
+      "band_plus2": 215.1,
+      "band_minus1": 114.76,
+      "band_minus2": 93.07
     },
     {
       "date": "2014-12-31",
       "ratio_pct": 132.25,
-      "trend_pct": 141.89,
-      "band_plus1": 175.01,
-      "band_plus2": 215.86,
-      "band_minus1": 115.04,
-      "band_minus2": 93.27
+      "trend_pct": 142.47,
+      "band_plus1": 175.67,
+      "band_plus2": 216.59,
+      "band_minus1": 115.55,
+      "band_minus2": 93.72
     },
     {
       "date": "2015-03-31",
       "ratio_pct": 128.0,
-      "trend_pct": 142.87,
-      "band_plus1": 176.22,
-      "band_plus2": 217.35,
-      "band_minus1": 115.83,
-      "band_minus2": 93.91
+      "trend_pct": 143.46,
+      "band_plus1": 176.88,
+      "band_plus2": 218.09,
+      "band_minus1": 116.35,
+      "band_minus2": 94.37
     },
     {
       "date": "2015-06-30",
       "ratio_pct": 129.25,
-      "trend_pct": 143.85,
-      "band_plus1": 177.43,
-      "band_plus2": 218.85,
-      "band_minus1": 116.63,
-      "band_minus2": 94.56
+      "trend_pct": 144.45,
+      "band_plus1": 178.11,
+      "band_plus2": 219.6,
+      "band_minus1": 117.16,
+      "band_minus2": 95.02
     },
     {
       "date": "2015-09-30",
       "ratio_pct": 130.5,
-      "trend_pct": 144.85,
-      "band_plus1": 178.65,
-      "band_plus2": 220.35,
-      "band_minus1": 117.43,
-      "band_minus2": 95.21
+      "trend_pct": 145.46,
+      "band_plus1": 179.34,
+      "band_plus2": 221.12,
+      "band_minus1": 117.97,
+      "band_minus2": 95.68
     },
     {
       "date": "2015-12-31",
       "ratio_pct": 131.75,
-      "trend_pct": 145.84,
-      "band_plus1": 179.88,
-      "band_plus2": 221.87,
-      "band_minus1": 118.24,
-      "band_minus2": 95.87
+      "trend_pct": 146.46,
+      "band_plus1": 180.59,
+      "band_plus2": 222.66,
+      "band_minus1": 118.79,
+      "band_minus2": 96.34
     },
     {
       "date": "2016-03-31",
       "ratio_pct": 133.0,
-      "trend_pct": 146.85,
-      "band_plus1": 181.12,
-      "band_plus2": 223.4,
-      "band_minus1": 119.06,
-      "band_minus2": 96.53
+      "trend_pct": 147.48,
+      "band_plus1": 181.84,
+      "band_plus2": 224.2,
+      "band_minus1": 119.61,
+      "band_minus2": 97.01
     },
     {
       "date": "2016-06-30",
       "ratio_pct": 137.5,
-      "trend_pct": 147.86,
-      "band_plus1": 182.37,
-      "band_plus2": 224.94,
-      "band_minus1": 119.88,
-      "band_minus2": 97.19
+      "trend_pct": 148.5,
+      "band_plus1": 183.1,
+      "band_plus2": 225.75,
+      "band_minus1": 120.44,
+      "band_minus2": 97.68
     },
     {
       "date": "2016-09-30",
       "ratio_pct": 142.0,
-      "trend_pct": 148.88,
-      "band_plus1": 183.63,
-      "band_plus2": 226.49,
-      "band_minus1": 120.7,
-      "band_minus2": 97.86
+      "trend_pct": 149.53,
+      "band_plus1": 184.37,
+      "band_plus2": 227.32,
+      "band_minus1": 121.28,
+      "band_minus2": 98.36
     },
     {
       "date": "2016-12-31",
       "ratio_pct": 146.5,
-      "trend_pct": 149.9,
-      "band_plus1": 184.89,
-      "band_plus2": 228.05,
-      "band_minus1": 121.54,
-      "band_minus2": 98.54
+      "trend_pct": 150.57,
+      "band_plus1": 185.64,
+      "band_plus2": 228.89,
+      "band_minus1": 122.12,
+      "band_minus2": 99.04
     },
     {
       "date": "2017-03-31",
       "ratio_pct": 151.0,
-      "trend_pct": 150.94,
-      "band_plus1": 186.17,
-      "band_plus2": 229.62,
-      "band_minus1": 122.37,
-      "band_minus2": 99.22
+      "trend_pct": 151.61,
+      "band_plus1": 186.93,
+      "band_plus2": 230.48,
+      "band_minus1": 122.96,
+      "band_minus2": 99.73
     },
     {
       "date": "2017-06-30",
       "ratio_pct": 146.0,
-      "trend_pct": 151.98,
-      "band_plus1": 187.45,
-      "band_plus2": 231.2,
-      "band_minus1": 123.22,
-      "band_minus2": 99.9
+      "trend_pct": 152.66,
+      "band_plus1": 188.23,
+      "band_plus2": 232.08,
+      "band_minus1": 123.82,
+      "band_minus2": 100.42
     },
     {
       "date": "2017-09-30",
       "ratio_pct": 141.0,
-      "trend_pct": 153.02,
-      "band_plus1": 188.74,
-      "band_plus2": 232.8,
-      "band_minus1": 124.07,
-      "band_minus2": 100.59
+      "trend_pct": 153.72,
+      "band_plus1": 189.53,
+      "band_plus2": 233.69,
+      "band_minus1": 124.67,
+      "band_minus2": 101.12
     },
     {
       "date": "2017-12-31",
       "ratio_pct": 136.0,
-      "trend_pct": 154.08,
-      "band_plus1": 190.04,
-      "band_plus2": 234.4,
-      "band_minus1": 124.92,
-      "band_minus2": 101.28
+      "trend_pct": 154.78,
+      "band_plus1": 190.84,
+      "band_plus2": 235.31,
+      "band_minus1": 125.54,
+      "band_minus2": 101.82
     },
     {
       "date": "2018-03-31",
       "ratio_pct": 131.0,
-      "trend_pct": 155.14,
-      "band_plus1": 191.35,
-      "band_plus2": 236.02,
-      "band_minus1": 125.78,
-      "band_minus2": 101.98
+      "trend_pct": 155.86,
+      "band_plus1": 192.17,
+      "band_plus2": 236.94,
+      "band_minus1": 126.41,
+      "band_minus2": 102.52
     },
     {
       "date": "2018-06-30",
       "ratio_pct": 137.75,
-      "trend_pct": 156.21,
-      "band_plus1": 192.67,
-      "band_plus2": 237.64,
-      "band_minus1": 126.65,
-      "band_minus2": 102.68
+      "trend_pct": 156.94,
+      "band_plus1": 193.5,
+      "band_plus2": 238.58,
+      "band_minus1": 127.28,
+      "band_minus2": 103.23
     },
     {
       "date": "2018-09-30",
       "ratio_pct": 144.5,
-      "trend_pct": 157.29,
-      "band_plus1": 194.0,
-      "band_plus2": 239.28,
-      "band_minus1": 127.52,
-      "band_minus2": 103.39
+      "trend_pct": 158.02,
+      "band_plus1": 194.84,
+      "band_plus2": 240.23,
+      "band_minus1": 128.17,
+      "band_minus2": 103.95
     },
     {
       "date": "2018-12-31",
       "ratio_pct": 151.25,
-      "trend_pct": 158.37,
-      "band_plus1": 195.33,
-      "band_plus2": 240.93,
-      "band_minus1": 128.4,
-      "band_minus2": 104.1
+      "trend_pct": 159.12,
+      "band_plus1": 196.19,
+      "band_plus2": 241.9,
+      "band_minus1": 129.05,
+      "band_minus2": 104.67
     },
     {
       "date": "2019-03-31",
       "ratio_pct": 158.0,
-      "trend_pct": 159.46,
-      "band_plus1": 196.68,
-      "band_plus2": 242.59,
-      "band_minus1": 129.28,
-      "band_minus2": 104.82
+      "trend_pct": 160.22,
+      "band_plus1": 197.55,
+      "band_plus2": 243.57,
+      "band_minus1": 129.95,
+      "band_minus2": 105.39
     },
     {
       "date": "2019-06-30",
       "ratio_pct": 166.0,
-      "trend_pct": 160.56,
-      "band_plus1": 198.04,
-      "band_plus2": 244.26,
-      "band_minus1": 130.17,
-      "band_minus2": 105.54
+      "trend_pct": 161.33,
+      "band_plus1": 198.92,
+      "band_plus2": 245.26,
+      "band_minus1": 130.85,
+      "band_minus2": 106.13
     },
     {
       "date": "2019-09-30",
       "ratio_pct": 174.0,
-      "trend_pct": 161.67,
-      "band_plus1": 199.4,
-      "band_plus2": 245.94,
-      "band_minus1": 131.07,
-      "band_minus2": 106.27
+      "trend_pct": 162.45,
+      "band_plus1": 200.3,
+      "band_plus2": 246.96,
+      "band_minus1": 131.76,
+      "band_minus2": 106.86
     },
     {
       "date": "2019-12-31",
       "ratio_pct": 182.0,
-      "trend_pct": 162.78,
-      "band_plus1": 200.77,
-      "band_plus2": 247.64,
-      "band_minus1": 131.97,
-      "band_minus2": 107.0
+      "trend_pct": 163.58,
+      "band_plus1": 201.69,
+      "band_plus2": 248.67,
+      "band_minus1": 132.67,
+      "band_minus2": 107.6
     },
     {
       "date": "2020-03-31",
       "ratio_pct": 190.0,
-      "trend_pct": 163.9,
-      "band_plus1": 202.16,
-      "band_plus2": 249.34,
-      "band_minus1": 132.88,
-      "band_minus2": 107.74
+      "trend_pct": 164.71,
+      "band_plus1": 203.08,
+      "band_plus2": 250.4,
+      "band_minus1": 133.59,
+      "band_minus2": 108.35
     },
     {
       "date": "2020-06-30",
       "ratio_pct": 195.0,
-      "trend_pct": 165.03,
-      "band_plus1": 203.55,
-      "band_plus2": 251.06,
-      "band_minus1": 133.8,
-      "band_minus2": 108.48
+      "trend_pct": 165.85,
+      "band_plus1": 204.49,
+      "band_plus2": 252.13,
+      "band_minus1": 134.51,
+      "band_minus2": 109.1
     },
     {
       "date": "2020-09-30",
       "ratio_pct": 200.0,
-      "trend_pct": 166.17,
-      "band_plus1": 204.95,
-      "band_plus2": 252.79,
-      "band_minus1": 134.72,
-      "band_minus2": 109.23
+      "trend_pct": 167.0,
+      "band_plus1": 205.91,
+      "band_plus2": 253.88,
+      "band_minus1": 135.45,
+      "band_minus2": 109.85
     },
     {
       "date": "2020-12-31",
       "ratio_pct": 205.0,
-      "trend_pct": 167.31,
-      "band_plus1": 206.36,
-      "band_plus2": 254.53,
-      "band_minus1": 135.65,
-      "band_minus2": 109.98
+      "trend_pct": 168.16,
+      "band_plus1": 207.34,
+      "band_plus2": 255.64,
+      "band_minus1": 136.39,
+      "band_minus2": 110.62
     },
     {
       "date": "2021-03-31",
       "ratio_pct": 210.0,
-      "trend_pct": 168.46,
-      "band_plus1": 207.79,
-      "band_plus2": 256.29,
-      "band_minus1": 136.58,
-      "band_minus2": 110.74
+      "trend_pct": 169.32,
+      "band_plus1": 208.77,
+      "band_plus2": 257.41,
+      "band_minus1": 137.33,
+      "band_minus2": 111.38
     },
     {
       "date": "2021-06-30",
       "ratio_pct": 193.25,
-      "trend_pct": 169.63,
-      "band_plus1": 209.22,
-      "band_plus2": 258.05,
-      "band_minus1": 137.53,
-      "band_minus2": 111.5
+      "trend_pct": 170.5,
+      "band_plus1": 210.22,
+      "band_plus2": 259.19,
+      "band_minus1": 138.28,
+      "band_minus2": 112.15
     },
     {
       "date": "2021-09-30",
       "ratio_pct": 176.5,
-      "trend_pct": 170.79,
-      "band_plus1": 210.66,
-      "band_plus2": 259.83,
-      "band_minus1": 138.47,
-      "band_minus2": 112.27
+      "trend_pct": 171.68,
+      "band_plus1": 211.68,
+      "band_plus2": 260.99,
+      "band_minus1": 139.24,
+      "band_minus2": 112.93
     },
     {
       "date": "2021-12-31",
       "ratio_pct": 159.75,
-      "trend_pct": 171.97,
-      "band_plus1": 212.11,
-      "band_plus2": 261.62,
-      "band_minus1": 139.43,
-      "band_minus2": 113.04
+      "trend_pct": 172.87,
+      "band_plus1": 213.14,
+      "band_plus2": 262.8,
+      "band_minus1": 140.21,
+      "band_minus2": 113.71
     },
     {
       "date": "2022-03-31",
       "ratio_pct": 143.0,
-      "trend_pct": 173.16,
-      "band_plus1": 213.57,
-      "band_plus2": 263.42,
-      "band_minus1": 140.39,
-      "band_minus2": 113.82
+      "trend_pct": 174.07,
+      "band_plus1": 214.62,
+      "band_plus2": 264.62,
+      "band_minus1": 141.18,
+      "band_minus2": 114.5
     },
     {
       "date": "2022-06-30",
       "ratio_pct": 150.0,
-      "trend_pct": 174.35,
-      "band_plus1": 215.04,
-      "band_plus2": 265.24,
-      "band_minus1": 141.36,
-      "band_minus2": 114.61
+      "trend_pct": 175.27,
+      "band_plus1": 216.11,
+      "band_plus2": 266.45,
+      "band_minus1": 142.16,
+      "band_minus2": 115.3
     },
     {
       "date": "2022-09-30",
       "ratio_pct": 157.0,
-      "trend_pct": 175.55,
-      "band_plus1": 216.53,
-      "band_plus2": 267.07,
-      "band_minus1": 142.33,
-      "band_minus2": 115.39
+      "trend_pct": 176.49,
+      "band_plus1": 217.61,
+      "band_plus2": 268.3,
+      "band_minus1": 143.14,
+      "band_minus2": 116.09
     },
     {
       "date": "2022-12-31",
       "ratio_pct": 164.0,
-      "trend_pct": 176.76,
-      "band_plus1": 218.02,
-      "band_plus2": 268.91,
-      "band_minus1": 143.31,
-      "band_minus2": 116.19
+      "trend_pct": 177.71,
+      "band_plus1": 219.11,
+      "band_plus2": 270.16,
+      "band_minus1": 144.13,
+      "band_minus2": 116.9
     },
     {
       "date": "2023-03-31",
       "ratio_pct": 171.0,
-      "trend_pct": 177.98,
-      "band_plus1": 219.52,
-      "band_plus2": 270.76,
-      "band_minus1": 144.3,
-      "band_minus2": 116.99
+      "trend_pct": 178.94,
+      "band_plus1": 220.63,
+      "band_plus2": 272.03,
+      "band_minus1": 145.13,
+      "band_minus2": 117.71
     },
     {
       "date": "2023-06-30",
       "ratio_pct": 178.75,
-      "trend_pct": 179.2,
-      "band_plus1": 221.03,
-      "band_plus2": 272.62,
-      "band_minus1": 145.29,
-      "band_minus2": 117.8
+      "trend_pct": 180.18,
+      "band_plus1": 222.16,
+      "band_plus2": 273.92,
+      "band_minus1": 146.14,
+      "band_minus2": 118.53
     },
     {
       "date": "2023-09-30",
       "ratio_pct": 186.5,
-      "trend_pct": 180.44,
-      "band_plus1": 222.56,
-      "band_plus2": 274.5,
-      "band_minus1": 146.29,
-      "band_minus2": 118.61
+      "trend_pct": 181.43,
+      "band_plus1": 223.7,
+      "band_plus2": 275.82,
+      "band_minus1": 147.15,
+      "band_minus2": 119.35
     },
     {
       "date": "2023-12-31",
       "ratio_pct": 194.25,
-      "trend_pct": 181.68,
-      "band_plus1": 224.09,
-      "band_plus2": 276.39,
-      "band_minus1": 147.3,
-      "band_minus2": 119.43
+      "trend_pct": 182.69,
+      "band_plus1": 225.25,
+      "band_plus2": 277.73,
+      "band_minus1": 148.17,
+      "band_minus2": 120.17
     },
     {
       "date": "2024-03-31",
       "ratio_pct": 202.0,
-      "trend_pct": 182.93,
-      "band_plus1": 225.63,
-      "band_plus2": 278.3,
-      "band_minus1": 148.32,
-      "band_minus2": 120.25
+      "trend_pct": 183.96,
+      "band_plus1": 226.81,
+      "band_plus2": 279.65,
+      "band_minus1": 149.2,
+      "band_minus2": 121.01
     },
     {
       "date": "2024-06-30",
       "ratio_pct": 208.5,
-      "trend_pct": 184.19,
-      "band_plus1": 227.19,
-      "band_plus2": 280.22,
-      "band_minus1": 149.34,
-      "band_minus2": 121.08
+      "trend_pct": 185.23,
+      "band_plus1": 228.38,
+      "band_plus2": 281.59,
+      "band_minus1": 150.23,
+      "band_minus2": 121.85
     },
     {
       "date": "2024-09-30",
       "ratio_pct": 215.0,
-      "trend_pct": 185.46,
-      "band_plus1": 228.75,
-      "band_plus2": 282.15,
-      "band_minus1": 150.37,
-      "band_minus2": 121.91
+      "trend_pct": 186.52,
+      "band_plus1": 229.97,
+      "band_plus2": 283.54,
+      "band_minus1": 151.27,
+      "band_minus2": 122.69
     },
     {
       "date": "2024-12-31",
       "ratio_pct": 221.5,
-      "trend_pct": 186.74,
-      "band_plus1": 230.33,
-      "band_plus2": 284.09,
-      "band_minus1": 151.4,
-      "band_minus2": 122.75
+      "trend_pct": 187.81,
+      "band_plus1": 231.56,
+      "band_plus2": 285.51,
+      "band_minus1": 152.32,
+      "band_minus2": 123.54
     },
     {
       "date": "2025-03-31",
       "ratio_pct": 228.0,
-      "trend_pct": 188.03,
-      "band_plus1": 231.92,
-      "band_plus2": 286.05,
-      "band_minus1": 152.45,
-      "band_minus2": 123.6
+      "trend_pct": 189.11,
+      "band_plus1": 233.17,
+      "band_plus2": 287.49,
+      "band_minus1": 153.38,
+      "band_minus2": 124.4
     },
     {
       "date": "2025-06-30",
       "ratio_pct": 203.18,
-      "trend_pct": 189.32,
-      "band_plus1": 233.51,
-      "band_plus2": 288.02,
-      "band_minus1": 153.5,
-      "band_minus2": 124.45
+      "trend_pct": 190.42,
+      "band_plus1": 234.78,
+      "band_plus2": 289.48,
+      "band_minus1": 154.44,
+      "band_minus2": 125.26
     },
     {
       "date": "2025-09-30",
       "ratio_pct": 214.96,
-      "trend_pct": 190.63,
-      "band_plus1": 235.12,
-      "band_plus2": 290.0,
-      "band_minus1": 154.55,
-      "band_minus2": 125.31
+      "trend_pct": 191.74,
+      "band_plus1": 236.41,
+      "band_plus2": 291.49,
+      "band_minus1": 155.51,
+      "band_minus2": 126.13
     },
     {
       "date": "2025-12-31",
       "ratio_pct": 217.07,
-      "trend_pct": 191.94,
-      "band_plus1": 236.74,
-      "band_plus2": 292.0,
-      "band_minus1": 155.62,
-      "band_minus2": 126.17
+      "trend_pct": 193.07,
+      "band_plus1": 238.05,
+      "band_plus2": 293.51,
+      "band_minus1": 156.59,
+      "band_minus2": 127.0
     },
     {
       "date": "2026-03-31",
       "ratio_pct": 204.04,
-      "trend_pct": 193.26,
-      "band_plus1": 238.37,
-      "band_plus2": 294.01,
-      "band_minus1": 156.69,
-      "band_minus2": 127.04
+      "trend_pct": 194.41,
+      "band_plus1": 239.7,
+      "band_plus2": 295.54,
+      "band_minus1": 157.67,
+      "band_minus2": 127.88
+    },
+    {
+      "date": "2026-06-30",
+      "ratio_pct": 231.49,
+      "trend_pct": 195.75,
+      "band_plus1": 241.36,
+      "band_plus2": 297.59,
+      "band_minus1": 158.77,
+      "band_minus2": 128.77
+    },
+    {
+      "date": "2026-09-30",
+      "ratio_pct": 230.62,
+      "trend_pct": 197.11,
+      "band_plus1": 243.03,
+      "band_plus2": 299.65,
+      "band_minus1": 159.87,
+      "band_minus2": 129.66
     }
   ],
   "berkshire_cash": {

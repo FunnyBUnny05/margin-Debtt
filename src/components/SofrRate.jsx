@@ -9,8 +9,22 @@ import { ChartToggle } from './ChartToggle';
 import { formatDate } from '../utils/formatDate';
 import { ChartTooltip } from './ChartTooltip';
 
-const sofrFormatValue = (p) =>
-  typeof p.value === 'number' ? `${p.value.toFixed(2)}%` : p.value;
+const sofrFormatValue = (p) => {
+  if (typeof p.value !== 'number') return p.value;
+  if (p.dataKey === 'volume') return `$${p.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}B`;
+  return `${p.value.toFixed(2)}%`;
+};
+
+// public/sofr_data.json uses the fetch script's field names; normalise to the live shape
+export const normalizeSofrRecord = (x) => ({
+  date: x.date,
+  rate: x.rate,
+  p1: x.p1 ?? x.percentile_1 ?? null,
+  p25: x.p25 ?? x.percentile_25 ?? null,
+  p75: x.p75 ?? x.percentile_75 ?? null,
+  p99: x.p99 ?? x.percentile_99 ?? null,
+  volume: x.volume ?? x.volume_bn ?? null,
+});
 const CustomTooltip = (props) => <ChartTooltip {...props} formatValue={sofrFormatValue} />;
 
 export function SofrRate({ isMobile }) {
@@ -54,7 +68,7 @@ export function SofrRate({ isMobile }) {
           const r = await fetch('./sofr_data.json');
           if (!r.ok) throw new Error('Failed to load SOFR data');
           const json = await r.json();
-          records = json.data || [];
+          records = (json.data || []).map(normalizeSofrRecord);
           if (!cancelled) setMetadata({ lastUpdated: json.last_updated, source: json.source, sourceUrl: json.source_url });
         } else {
           if (!cancelled) setMetadata({
@@ -105,7 +119,6 @@ export function SofrRate({ isMobile }) {
   const minRate = Math.min(...allRates);
   const avgRate = (allRates.reduce((a, b) => a + b, 0) / allRates.length).toFixed(2);
 
-  const chartInterval = Math.floor((filtered.length || 1) / 8);
 
   return (
     <>
@@ -182,7 +195,8 @@ export function SofrRate({ isMobile }) {
                 stroke="var(--rule)"
                 tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />
@@ -239,7 +253,8 @@ export function SofrRate({ isMobile }) {
                 stroke="var(--rule)"
                 tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />
@@ -320,7 +335,8 @@ export function SofrRate({ isMobile }) {
                 stroke="var(--rule)"
                 tick={{ fill: 'var(--text-dim)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={formatDate}
-                interval={chartInterval}
+                interval="preserveEnd"
+                minTickGap={24}
                 axisLine={false}
                 tickLine={false}
               />

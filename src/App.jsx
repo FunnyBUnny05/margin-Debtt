@@ -97,7 +97,7 @@ const TAB_SUBTITLE = {
   margin:  'Securities margin account debit balances (USD billions)',
   aaii:    'Individual investor asset allocation trends (%)',
   sectors: 'Relative sector performance analysis vs benchmark',
-  buffett: 'Berkshire Hathaway annual cash & T-bill holdings',
+  buffett: 'US stock market cap ÷ GDP vs long-run trend, plus Berkshire Hathaway cash holdings',
   sofr:    'Daily overnight repo rate collateralized by U.S. Treasury securities — NY Fed',
   ppi:     'Monthly price changes received by domestic producers — BLS',
 };
