@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-05T17:08:56.910008Z",
+  "last_updated": "2026-11-05T19:16:31.503826Z",
   "source": "FRED \u2014 Wilshire 5000 Full Cap (WILL5000INDFC) / Nominal GDP",
   "source_note": "Wilshire 5000 Full Cap Index \u00f7 US Nominal GDP \u00d7 100. Index points \u2248 total US public equity market cap in $B. Bands = \u00b11\u03c3 / \u00b12\u03c3 from log-linear trend over full history.",
   "source_urls": [
@@ -8,11 +8,11 @@
     "https://api.db.nomics.world/v22/series/BEA/NIPA-T10105/A191RC-Q?observations=1&format=json"
   ],
   "current": {
-    "ratio_pct": 232.4,
-    "market_cap_billions": 76711.0,
+    "ratio_pct": 232.1,
+    "market_cap_billions": 76613.0,
     "gdp_billions": 33010.0,
     "trend_pct": 198.0,
-    "deviation_pct": 17.4,
+    "deviation_pct": 17.2,
     "std_devs": 0.76,
     "valuation": "FAIR VALUE"
   },
@@ -733,7 +733,7 @@
       "ratio_pct": 67.5,
       "trend_pct": 73.41,
       "band_plus1": 90.52,
-      "band_plus2": 111.61,
+      "band_plus2": 111.6,
       "band_minus1": 59.54,
       "band_minus2": 48.29
     },
@@ -1596,7 +1596,7 @@
       "date": "2014-12-31",
       "ratio_pct": 132.25,
       "trend_pct": 142.47,
-      "band_plus1": 175.67,
+      "band_plus1": 175.66,
       "band_plus2": 216.59,
       "band_minus1": 115.55,
       "band_minus2": 93.72
