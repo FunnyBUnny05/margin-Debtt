@@ -6,14 +6,11 @@ import {
 import { SectorZScore } from './components/SectorZScore';
 import { BuffettIndicator } from './components/BuffettIndicator';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { CORS_PROXIES } from './components/SectorZScore/utils/corsProxies';
 import { SofrRate } from './components/SofrRate';
 import { PpiIndex } from './components/PpiIndex';
 import { ExportCsvButton } from './components/ExportCsvButton';
 import { ChartToggle } from './components/ChartToggle';
 import { formatDate } from './utils/formatDate';
-
-const FINRA_CSV_URL = 'https://www.finra.org/sites/default/files/2021-03/margin-statistics.csv';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -169,30 +166,10 @@ export default function App() {
       setLoading(true);
       setError(null);
 
+      // margin_data.json is refreshed weekly by scripts/fetch_finra_data.py (GitHub Action).
+      // The browser used to try a live FINRA CSV first, but that URL is dead (404) and
+      // FINRA sends no CORS headers, so it only delayed the whole app by up to ~30s.
       const loadMarginData = async () => {
-        const urlsToTry = [FINRA_CSV_URL, ...CORS_PROXIES.map(fn => fn(FINRA_CSV_URL))];
-        for (const url of urlsToTry) {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 10000);
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timer);
-            if (!res.ok) continue;
-            const text = await res.text();
-            const parsed = parseFinraMarginCsv(text);
-            if (parsed.length > 10) {
-              if (!cancelled) {
-                setRawData(parsed);
-                setMetadata({
-                  lastUpdated: new Date().toISOString(),
-                  source: 'FINRA Margin Statistics (Live)',
-                  sourceUrl: 'https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics',
-                });
-              }
-              return;
-            }
-          } catch { /* try next */ }
-        }
         const res = await fetch('./margin_data.json');
         if (!res.ok) throw new Error('Failed to load margin data');
         const json = await res.json();

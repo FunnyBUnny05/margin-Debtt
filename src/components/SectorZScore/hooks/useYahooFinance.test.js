@@ -1,36 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-// Extract functions for testing
-const hydratePrices = (prices) => {
-  if (!prices || !Array.isArray(prices)) return null;
-  return prices.map(p => ({
-    date: new Date(p.date),
-    price: p.price
-  }));
-};
-
-const parseYahooData = (data) => {
-  const result = data?.chart?.result?.[0];
-  if (!result) return null;
-
-  const timestamps = result.timestamp;
-  const quotes = result.indicators?.quote?.[0];
-  const adjClose = result.indicators?.adjclose?.[0]?.adjclose || quotes?.close;
-
-  if (!timestamps || !adjClose) return null;
-
-  const prices = [];
-  for (let i = 0; i < timestamps.length; i++) {
-    if (adjClose[i] != null) {
-      prices.push({
-        date: new Date(timestamps[i] * 1000),
-        price: adjClose[i]
-      });
-    }
-  }
-
-  return prices;
-};
+import { hydratePrices, parseYahooData, parseSnapshot, pickFresher } from './useYahooFinance';
 
 describe('hydratePrices', () => {
   it('should convert date strings to Date objects', () => {
@@ -227,7 +197,8 @@ describe('parseYahooData', () => {
 
     const prices = parseYahooData(yahooResponse);
 
-    expect(prices).toEqual([]);
+    // Production treats an empty series as "no data" so callers fall through to the next source
+    expect(prices).toBeNull();
   });
 
   it('should convert Unix timestamps to JavaScript Date objects', () => {
@@ -353,112 +324,61 @@ describe('parseYahooData', () => {
   });
 });
 
-describe('Stooq CSV parsing (simulated)', () => {
-  const parseStooqCsv = (text) => {
-    const lines = text.trim().split('\n');
-
-    if (lines.length < 2) return [];
-
-    const prices = [];
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',');
-      if (parts.length >= 5) {
-        const dateStr = parts[0];
-        const close = parseFloat(parts[4]);
-        if (!isNaN(close)) {
-          prices.push({
-            date: new Date(dateStr),
-            price: close
-          });
-        }
-      }
-    }
-
-    prices.sort((a, b) => a.date - b.date);
-    return prices;
-  };
-
-  it('should parse valid Stooq CSV', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-01,100,105,99,102,1000000
-2024-01-08,102,108,101,107,1200000`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices).toHaveLength(2);
-    expect(prices[0].price).toBe(102);
-    expect(prices[1].price).toBe(107);
+describe('parseSnapshot', () => {
+  it('parses symbols into Date/price arrays', () => {
+    const out = parseSnapshot({
+      symbols: { SPY: { dates: ['2024-01-01', '2024-01-08'], prices: [470.1, 475.2] } },
+    });
+    expect(out.SPY).toHaveLength(2);
+    expect(out.SPY[0].date.toISOString().slice(0, 10)).toBe('2024-01-01');
+    expect(out.SPY[1].price).toBe(475.2);
   });
 
-  it('should return empty for CSV with less than 2 lines', () => {
-    expect(parseStooqCsv('Header')).toEqual([]);
-    expect(parseStooqCsv('')).toEqual([]);
+  it('skips non-numeric prices and malformed series', () => {
+    const out = parseSnapshot({
+      symbols: {
+        SPY: { dates: ['2024-01-01', '2024-01-08'], prices: [null, 475.2] },
+        BAD: { dates: ['2024-01-01'], prices: [1, 2] },
+        EMPTY: { dates: [], prices: [] },
+      },
+    });
+    expect(out.SPY).toHaveLength(1);
+    expect(out.BAD).toBeUndefined();
+    expect(out.EMPTY).toBeUndefined();
   });
 
-  it('should skip malformed rows', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-01,100,105,99,102,1000000
-invalid,row,data
-2024-01-15,103,109,102,108,1100000`;
+  it('returns {} for garbage input', () => {
+    expect(parseSnapshot(null)).toEqual({});
+    expect(parseSnapshot({})).toEqual({});
+    expect(parseSnapshot({ symbols: 'nope' })).toEqual({});
+  });
+});
 
-    const prices = parseStooqCsv(csv);
+describe('pickFresher', () => {
+  const series = (n, endDay) =>
+    Array.from({ length: n }, (_, i) => ({ date: new Date(Date.UTC(2024, 0, endDay - (n - 1 - i) * 7)), price: i }));
 
-    expect(prices).toHaveLength(2);
-    expect(prices[0].price).toBe(102);
-    expect(prices[1].price).toBe(108);
+  it('prefers live data when it is newer and complete', () => {
+    const snap = series(100, 1);
+    const live = series(100, 8);
+    expect(pickFresher(snap, live)).toBe(live);
   });
 
-  it('should skip rows with invalid close prices', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-01,100,105,99,102,1000000
-2024-01-08,102,108,101,abc,1200000
-2024-01-15,103,109,102,108,1100000`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices).toHaveLength(2);
+  it('keeps the snapshot when live data is truncated', () => {
+    const snap = series(100, 1);
+    const live = series(20, 8);
+    expect(pickFresher(snap, live)).toBe(snap);
   });
 
-  it('should sort prices chronologically', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-15,103,109,102,108,1100000
-2024-01-01,100,105,99,102,1000000
-2024-01-08,102,108,101,107,1200000`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices[0].date).toEqual(new Date('2024-01-01'));
-    expect(prices[1].date).toEqual(new Date('2024-01-08'));
-    expect(prices[2].date).toEqual(new Date('2024-01-15'));
+  it('keeps the snapshot when live data is older', () => {
+    const snap = series(100, 8);
+    const live = series(100, 1);
+    expect(pickFresher(snap, live)).toBe(snap);
   });
 
-  it('should handle rows with extra columns', () => {
-    const csv = `Date,Open,High,Low,Close,Volume,Extra
-2024-01-01,100,105,99,102,1000000,ignored`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices).toHaveLength(1);
-    expect(prices[0].price).toBe(102);
-  });
-
-  it('should handle decimal close prices', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-01,100,105,99,102.75,1000000`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices[0].price).toBe(102.75);
-  });
-
-  it('should skip rows with insufficient columns', () => {
-    const csv = `Date,Open,High,Low,Close,Volume
-2024-01-01,100,105,99
-2024-01-08,102,108,101,107,1200000`;
-
-    const prices = parseStooqCsv(csv);
-
-    expect(prices).toHaveLength(1);
-    expect(prices[0].price).toBe(107);
+  it('falls back to whichever side exists', () => {
+    const s = series(10, 1);
+    expect(pickFresher(undefined, s)).toBe(s);
+    expect(pickFresher(s, null)).toBe(s);
   });
 });

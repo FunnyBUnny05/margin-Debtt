@@ -1,119 +1,161 @@
 #!/usr/bin/env python3
 """
-Fetch AAII Asset Allocation Survey data and convert to JSON for the dashboard.
-AAII publishes data at: https://www.aaii.com/assetallocation
-Note: AAII data typically requires membership access
+Fetch the AAII Asset Allocation Survey history and write it as JSON for the dashboard.
+
+The HTML page (https://www.aaii.com/assetallocation) blocks scripted access, but AAII
+publishes the full monthly history as a public spreadsheet:
+    https://www.aaii.com/files/surveys/asset.xls
+
+Columns 8-10 of that sheet are the headline totals (Stocks = stock funds + stocks,
+Bonds = bond funds + bonds, Cash), stored as fractions (0.701 = 70.1%).
+
+If the download or parse fails, the existing JSON is kept untouched so the dashboard
+never loses data.
 """
 
+import io
 import json
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
 import pandas as pd
 import requests
-from datetime import datetime
-from pathlib import Path
-from bs4 import BeautifulSoup
-import re
 
-AAII_URL = "https://www.aaii.com/assetallocation"
-AAII_MEMBERS_URL = "https://www.aaii.com/sentimentsurvey"
+AAII_XLS_URL = "https://www.aaii.com/files/surveys/asset.xls"
 OUTPUT_PATH = Path(__file__).parent.parent / "public" / "aaii_allocation_data.json"
 
-def fetch_aaii_allocation_data():
-    """Fetch AAII Asset Allocation Survey data."""
-    print(f"Fetching AAII Allocation data from {AAII_URL}")
+# Column positions in the spreadsheet (0-based)
+COL_DATE, COL_STOCKS, COL_BONDS, COL_CASH = 0, 8, 9, 10
 
-    # Try to load existing data first
-    existing_data = []
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+}
+
+
+def now_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def parse_allocation_xls(content: bytes) -> list[dict]:
+    """Turn the AAII spreadsheet into [{date, stocks, bonds, cash}] sorted by date."""
+    df = pd.read_excel(io.BytesIO(content), header=None,
+                       usecols=[COL_DATE, COL_STOCKS, COL_BONDS, COL_CASH])
+    df.columns = ["date", "stocks", "bonds", "cash"]
+
+    # Data rows are the ones whose first column is a real date
+    df["date"] = pd.to_datetime(df["date"], errors="coerce", format="mixed")
+    df = df.dropna(subset=["date"])
+    for col in ("stocks", "bonds", "cash"):
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df = df.dropna(subset=["stocks", "bonds", "cash"])
+
+    # AAII's sheet has year typos (e.g. Feb–Dec 2006 and 2007 are labelled 2005).
+    # Rows are in chronological order, so any date that doesn't move forward is
+    # repaired to "previous survey month + 1" (month-end).
+    fixed_dates = []
+    prev = None
+    for d in df["date"]:
+        if prev is not None and d <= prev:
+            d = (prev + pd.offsets.MonthEnd(1)) if prev.is_month_end else (prev + pd.DateOffset(months=1))
+        fixed_dates.append(d)
+        prev = d
+    df["date"] = fixed_dates
+
+    records = []
+    for row in df.itertuples(index=False):
+        # Sanity check: each share must be a fraction and the three should sum to ~100%
+        total = row.stocks + row.bonds + row.cash
+        if not (0 < row.stocks < 1 and 0 <= row.bonds < 1 and 0 <= row.cash < 1):
+            continue
+        if not (0.97 <= total <= 1.03):
+            continue
+        records.append({
+            "date": row.date.strftime("%Y-%m-%d"),
+            "stocks": round(row.stocks * 100, 1),
+            "bonds": round(row.bonds * 100, 1),
+            "cash": round(row.cash * 100, 1),
+        })
+
+    # One reading per month (keep the latest if AAII ever duplicates a month)
+    by_month = {}
+    for r in records:
+        by_month[r["date"][:7]] = r
+    return [by_month[k] for k in sorted(by_month)]
+
+
+def download_xls(attempts: int = 5) -> bytes:
+    """AAII's bot protection randomly returns 403, so retry with backoff."""
+    last_err = None
+    for i in range(attempts):
+        try:
+            res = requests.get(AAII_XLS_URL, headers=HEADERS, timeout=60)
+            res.raise_for_status()
+            if not res.content.startswith(b"\xd0\xcf\x11\xe0"):  # OLE2 (.xls) magic
+                raise ValueError("response is not an .xls file")
+            return res.content
+        except Exception as e:
+            last_err = e
+            wait = 2 ** (i + 1)
+            print(f"  attempt {i + 1}/{attempts} failed ({e}); retrying in {wait}s")
+            time.sleep(wait)
+    raise RuntimeError(f"download failed after {attempts} attempts: {last_err}")
+
+
+def load_existing() -> dict:
     if OUTPUT_PATH.exists():
-        with open(OUTPUT_PATH, 'r') as f:
-            existing_json = json.load(f)
-            existing_data = existing_json.get('data', [])
-            print(f"Loaded {len(existing_data)} existing records")
+        with open(OUTPUT_PATH) as f:
+            return json.load(f)
+    return {}
+
+
+def main() -> int:
+    existing = load_existing()
+    existing_data = existing.get("data", [])
+    print(f"Existing records: {len(existing_data)}"
+          + (f" (latest {existing_data[-1]['date']})" if existing_data else ""))
 
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-
-        # Try to fetch the AAII page
-        response = requests.get(AAII_URL, headers=headers, timeout=30)
-
-        if response.status_code == 200:
-            print("Successfully connected to AAII website")
-
-            # Try to parse any publicly available data
-            soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Look for asset allocation data in the page
-            # This is a best-effort scraping that may need updates if page structure changes
-
-            # Check if page requires login
-            if 'login' in response.text.lower() or 'member' in response.text.lower():
-                print("AAII data appears to require member login")
-                print("Keeping existing data")
-            else:
-                # Try to find allocation data in page
-                # This would need to be customized based on actual page structure
-                print("Page accessible but data extraction needs customization")
-                print("Keeping existing data")
-
+        if len(sys.argv) > 2 and sys.argv[1] == "--file":
+            # Manual update path: python fetch_aaii_allocation.py --file ~/Downloads/asset.xls
+            print(f"Reading {sys.argv[2]}")
+            content = Path(sys.argv[2]).read_bytes()
         else:
-            print(f"Failed to access AAII website: Status {response.status_code}")
-            print("Keeping existing data")
+            print(f"Downloading {AAII_XLS_URL}")
+            content = download_xls()
+        data = parse_allocation_xls(content)
+    except Exception as e:  # network, HTTP, or parse failure
+        print(f"ERROR: could not fetch/parse AAII spreadsheet: {e}")
+        print("Keeping existing data file unchanged")
+        return 1
 
-    except Exception as e:
-        print(f"Error fetching AAII data: {e}")
-        print("Keeping existing data")
+    # Refuse to shrink the dataset — a truncated download shouldn't wipe history
+    if len(data) < max(100, int(len(existing_data) * 0.9)):
+        print(f"ERROR: parsed only {len(data)} rows (had {len(existing_data)}); keeping existing data")
+        return 1
 
-    # Calculate summary statistics from existing data
-    if existing_data:
-        df = pd.DataFrame(existing_data)
-        avg_stocks = df['stocks'].mean()
-        avg_bonds = df['bonds'].mean()
-        avg_cash = df['cash'].mean()
-        print(f"\nHistorical Averages:")
-        print(f"  Stocks: {avg_stocks:.1f}%")
-        print(f"  Bonds: {avg_bonds:.1f}%")
-        print(f"  Cash: {avg_cash:.1f}%")
-
-    # Return existing data with updated check timestamp
+    latest = data[-1]
+    changed = data != existing_data
     output = {
-        'last_updated': existing_json.get('last_updated', datetime.utcnow().isoformat() + 'Z') if existing_json else datetime.utcnow().isoformat() + 'Z',
-        'last_checked': datetime.utcnow().isoformat() + 'Z',
-        'source': 'AAII Asset Allocation Survey',
-        'source_url': 'https://www.aaii.com/',
-        'data': existing_data,
-        'note': 'AAII Asset Allocation data requires membership access. Manual updates recommended.'
+        "last_updated": now_iso() if changed else existing.get("last_updated", now_iso()),
+        "last_checked": now_iso(),
+        "latest_survey_date": latest["date"],
+        "source": "AAII Asset Allocation Survey",
+        "source_url": "https://www.aaii.com/assetallocation",
+        "data": data,
     }
 
-    return output
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_PATH, "w") as f:
+        json.dump(output, f, indent=2)
 
-def main():
-    try:
-        data = fetch_aaii_allocation_data()
+    print(f"{'Updated' if changed else 'No change'}: {len(data)} records, "
+          f"latest {latest['date']} — stocks {latest['stocks']}%, "
+          f"bonds {latest['bonds']}%, cash {latest['cash']}%")
+    return 0
 
-        # Ensure output directory exists
-        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write JSON
-        with open(OUTPUT_PATH, 'w') as f:
-            json.dump(data, f, indent=2)
-
-        if data['data']:
-            latest = data['data'][-1]
-            print(f"\nLatest data: {latest['date']}")
-            print(f"  Stocks: {latest['stocks']}%")
-            print(f"  Bonds: {latest['bonds']}%")
-            print(f"  Cash: {latest['cash']}%")
-        print(f"Total records: {len(data['data'])}")
-        print(f"Output: {OUTPUT_PATH}")
-
-    except Exception as e:
-        print(f"Error in AAII data fetch: {e}")
-        # Keep existing data file if it exists
-        if OUTPUT_PATH.exists():
-            print("Keeping existing data file")
-        else:
-            raise
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    sys.exit(main())
