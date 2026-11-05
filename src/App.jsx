@@ -38,7 +38,9 @@ const AaiiTooltip = ({ active, payload, label }) => {
       <p style={{ color: 'var(--bb-white)', margin: 0, fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, margin: '4px 0 0 0', fontSize: '13px', fontWeight: '500' }}>
-          {p.name}: {typeof p.value === 'number' ? `${p.value > 0 ? '+' : ''}${p.value.toFixed(1)}%` : p.value}
+          {p.name}: {typeof p.value === 'number'
+            ? `${p.dataKey === 'spread' && p.value > 0 ? '+' : ''}${p.value.toFixed(1)}%`
+            : p.value}
         </p>
       ))}
     </div>
