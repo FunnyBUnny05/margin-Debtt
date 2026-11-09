@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-05T19:16:31.503826Z",
+  "last_updated": "2026-11-09T15:47:32.780075Z",
   "source": "FRED \u2014 Wilshire 5000 Full Cap (WILL5000INDFC) / Nominal GDP",
   "source_note": "Wilshire 5000 Full Cap Index \u00f7 US Nominal GDP \u00d7 100. Index points \u2248 total US public equity market cap in $B. Bands = \u00b11\u03c3 / \u00b12\u03c3 from log-linear trend over full history.",
   "source_urls": [
@@ -8,12 +8,12 @@
     "https://api.db.nomics.world/v22/series/BEA/NIPA-T10105/A191RC-Q?observations=1&format=json"
   ],
   "current": {
-    "ratio_pct": 232.1,
-    "market_cap_billions": 76613.0,
+    "ratio_pct": 222.8,
+    "market_cap_billions": 73558.0,
     "gdp_billions": 33010.0,
     "trend_pct": 198.0,
-    "deviation_pct": 17.2,
-    "std_devs": 0.76,
+    "deviation_pct": 12.5,
+    "std_devs": 0.56,
     "valuation": "FAIR VALUE"
   },
   "data": [
