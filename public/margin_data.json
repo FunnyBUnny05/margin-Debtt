@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-09T15:44:14.792109Z",
+  "last_updated": "2026-11-16T15:20:53.639713Z",
   "source": "FINRA Margin Statistics",
   "source_url": "https://www.finra.org/investors/learn-to-invest/advanced-investing/margin-statistics",
   "data": [
@@ -1787,6 +1787,11 @@
       "date": "2026-09",
       "margin_debt": 1480054,
       "yoy_growth": 31.4
+    },
+    {
+      "date": "2026-10",
+      "margin_debt": 1448360,
+      "yoy_growth": 22.4
     }
   ]
 }
