@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-16T15:20:53.967627Z",
+  "last_updated": "2026-11-23T17:45:50.862531Z",
   "source": "Federal Reserve Bank of New York \u2014 SOFR",
   "source_url": "https://www.newyorkfed.org/markets/reference-rates/sofr",
   "data": [
@@ -19379,6 +19379,51 @@
       "percentile_75": 3.95,
       "percentile_99": 3.97,
       "volume_bn": 3092
+    },
+    {
+      "date": "2026-11-16",
+      "rate": 3.93,
+      "percentile_1": 3.87,
+      "percentile_25": 3.9,
+      "percentile_75": 3.98,
+      "percentile_99": 4.0,
+      "volume_bn": 3170
+    },
+    {
+      "date": "2026-11-17",
+      "rate": 3.92,
+      "percentile_1": 3.87,
+      "percentile_25": 3.9,
+      "percentile_75": 3.97,
+      "percentile_99": 3.99,
+      "volume_bn": 3173
+    },
+    {
+      "date": "2026-11-18",
+      "rate": 3.9,
+      "percentile_1": 3.85,
+      "percentile_25": 3.88,
+      "percentile_75": 3.95,
+      "percentile_99": 3.98,
+      "volume_bn": 3134
+    },
+    {
+      "date": "2026-11-19",
+      "rate": 3.91,
+      "percentile_1": 3.85,
+      "percentile_25": 3.88,
+      "percentile_75": 3.95,
+      "percentile_99": 3.98,
+      "volume_bn": 3161
+    },
+    {
+      "date": "2026-11-20",
+      "rate": 3.92,
+      "percentile_1": 3.86,
+      "percentile_25": 3.9,
+      "percentile_75": 3.97,
+      "percentile_99": 4.0,
+      "volume_bn": 3141
     }
   ]
 }
